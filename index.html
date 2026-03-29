@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Haushaltsplan"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<link rel="manifest" href="manifest.json"/>
+<!-- iOS Apple Touch Icons — alle Größen -->
+<link rel="apple-touch-icon"                            href="icons/icon-180.png"/>
+<link rel="apple-touch-icon" sizes="57x57"   href="icons/icon-57.png"/>
+<link rel="apple-touch-icon" sizes="60x60"   href="icons/icon-60.png"/>
+<link rel="apple-touch-icon" sizes="72x72"   href="icons/icon-76.png"/>
+<link rel="apple-touch-icon" sizes="76x76"   href="icons/icon-76.png"/>
+<link rel="apple-touch-icon" sizes="114x114" href="icons/icon-120.png"/>
+<link rel="apple-touch-icon" sizes="120x120" href="icons/icon-120.png"/>
+<link rel="apple-touch-icon" sizes="144x144" href="icons/icon-152.png"/>
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png"/>
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png"/>
+<link rel="icon" type="image/png" sizes="32x32"   href="icons/icon-32.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+<title>Haushaltsplan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   LIQUID GLASS DARK — Design System
+   Inspiriert von Apple's Liquid Glass (iOS 26 preview)
+═══════════════════════════════════════════════════════════ */
+:root {
+  /* Core palette */
+  --bg:            #0a0a0f;
+  --bg2:           #111118;
+  --bg3:           #16161f;
+
+  /* Liquid Glass surfaces */
+  --glass:         rgba(255,255,255,0.07);
+  --glass-hover:   rgba(255,255,255,0.11);
+  --glass-active:  rgba(255,255,255,0.15);
+  --glass-border:  rgba(255,255,255,0.10);
+  --glass-strong:  rgba(255,255,255,0.14);
+  --glass-input:   rgba(255,255,255,0.06);
+
+  /* Blur */
+  --blur-sm:       blur(12px);
+  --blur-md:       blur(20px);
+  --blur-lg:       blur(40px);
+
+  /* Accent */
+  --accent:        #4f9eff;
+  --accent2:       #7bb8ff;
+  --gold:          #f5a623;
+  --gold2:         #ffd070;
+
+  /* Semantic */
+  --green:         #34d399;
+  --green-dim:     rgba(52,211,153,0.15);
+  --red:           #f87171;
+  --red-dim:       rgba(248,113,113,0.15);
+  --blue-dim:      rgba(79,158,255,0.15);
+  --amber-dim:     rgba(245,166,35,0.15);
+
+  /* Text */
+  --t1:            rgba(255,255,255,0.92);
+  --t2:            rgba(255,255,255,0.55);
+  --t3:            rgba(255,255,255,0.30);
+
+  /* Borders */
+  --sep:           rgba(255,255,255,0.08);
+
+  /* Radii */
+  --r-xs:  8px;
+  --r-sm:  12px;
+  --r-md:  16px;
+  --r-lg:  22px;
+  --r-xl:  28px;
+
+  /* Safe areas */
+  --sat: env(safe-area-inset-top,    0px);
+  --sar: env(safe-area-inset-right,  0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left,   0px);
+
+  /* Nav height */
+  --nav-h: 56px;
+}
+
+/* ── RESET & BASE ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--t1);
+  min-height: 100%;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  /* Animated background mesh */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(79,158,255,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(245,166,35,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(52,211,153,0.05) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+.header {
+  position: sticky; top: 0; z-index: 90;
+  padding: calc(var(--sat) + 14px) 18px 14px;
+  background: rgba(10,10,15,0.72);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { display: flex; flex-direction: column; gap: 1px; }
+.header-title {
+  font-size: 20px; font-weight: 700; color: var(--t1);
+  letter-spacing: -0.4px;
+}
+.header-sub { font-size: 11px; color: var(--t3); letter-spacing: 0.3px; }
+.year-pill {
+  background: var(--glass-strong);
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+  border: 1px solid var(--glass-border);
+  color: var(--gold); font-weight: 700; font-size: 13px;
+  padding: 6px 14px; border-radius: 20px;
+  cursor: pointer; border: 1px solid rgba(245,166,35,0.3);
+  transition: background .15s;
+  white-space: nowrap;
+}
+.year-pill:active { background: var(--glass-active); }
+
+/* ── MAIN SCROLL AREA ─────────────────────────────────────── */
+.main {
+  padding: 16px 14px calc(var(--sab) + var(--nav-h) + 20px);
+  min-height: 100vh;
+}
+
+/* ── GLASS CARD ───────────────────────────────────────────── */
+.card {
+  background: var(--glass);
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  /* Inner highlight */
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 4px 24px rgba(0,0,0,0.3);
+}
+.card-title {
+  font-size: 14px; font-weight: 600; color: var(--t2);
+  text-transform: uppercase; letter-spacing: 0.6px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 7px;
+}
+
+/* ── HERO CARD ────────────────────────────────────────────── */
+.hero {
+  border-radius: var(--r-xl);
+  padding: 22px 20px 18px;
+  margin-bottom: 12px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(79,158,255,0.18) 0%, rgba(52,211,153,0.08) 50%, rgba(245,166,35,0.06) 100%);
+  border-radius: inherit;
+}
+.hero::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: rgba(14,20,40,0.85);
+  backdrop-filter: var(--blur-md); -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--glass-border);
+  border-radius: inherit;
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-lbl {
+  font-size: 10px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--t3); margin-bottom: 5px;
+}
+.hero-val {
+  font-size: 40px; font-weight: 700; letter-spacing: -1.5px;
+  color: var(--t1); line-height: 1;
+}
+.hero-val.pos { color: var(--green); }
+.hero-val.neg { color: var(--red); }
+.hero-sub {
+  display: flex; gap: 0; margin-top: 18px;
+  padding-top: 14px; border-top: 1px solid var(--sep);
+}
+.hsi { flex: 1; padding-right: 8px; }
+.hsi:last-child { padding-right: 0; }
+.hsi-lbl { font-size: 9px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--t3); margin-bottom: 3px; }
+.hsi-val { font-size: 13px; font-weight: 600; color: var(--t2); font-variant-numeric: tabular-nums; }
+
+/* ── TILE GRID ────────────────────────────────────────────── */
+.tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.tile {
+  background: var(--glass);
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  padding: 13px 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2);
+}
+.tile-lbl { font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--t3); margin-bottom: 4px; }
+.tile-val { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--t1); }
+.tile-val.g { color: var(--green); }
+.tile-val.r { color: var(--red); }
+.tile-val.b { color: var(--accent); }
+.tile-val.a { color: var(--gold); }
+
+/* ── ROWS ─────────────────────────────────────────────────── */
+.row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 0; border-bottom: 1px solid var(--sep);
+  gap: 8px;
+}
+.row:last-child { border-bottom: none; }
+.row-name { font-size: 14px; color: var(--t1); flex: 1; min-width: 0; }
+.row-name-small { font-size: 13px; }
+.row-amt { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--t1); }
+.row-amt.e { color: var(--green); }
+.row-amt.k { color: var(--red); }
+.row-amt.s { color: var(--accent); }
+.row-edit-btn {
+  width: 28px; height: 28px; flex-shrink: 0;
+  border-radius: 8px; border: none;
+  background: var(--glass); color: var(--t2);
+  font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.row-edit-btn:active { background: var(--glass-active); }
+
+/* ── SECTION HEADER ───────────────────────────────────────── */
+.sec-hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0 8px; border-bottom: 1px solid var(--sep);
+  margin-bottom: 4px;
+}
+.sec-hdr-name { font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--t3); }
+.sec-hdr-val { font-size: 12px; font-weight: 600; color: var(--t2); font-variant-numeric: tabular-nums; }
+
+/* ── TOTAL FOOTER ─────────────────────────────────────────── */
+.total-footer {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  margin-top: 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.total-row {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.total-row-label { font-size: 13px; color: var(--t2); }
+.total-row-val { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.total-saldo-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--sep);
+}
+.total-saldo-label { font-size: 14px; font-weight: 700; color: var(--t1); }
+.total-saldo-val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.total-saldo-val.pos { color: var(--green); }
+.total-saldo-val.neg { color: var(--red); }
+
+/* ── MONTH CHIPS ──────────────────────────────────────────── */
+.month-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 14px; }
+.mchip {
+  padding: 9px 4px; border-radius: var(--r-sm);
+  border: 1px solid var(--glass-border);
+  font-size: 11px; font-weight: 600; text-align: center;
+  cursor: pointer; color: var(--t2);
+  background: var(--glass);
+  transition: all .15s;
+}
+.mchip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(79,158,255,0.4);
+}
+
+/* ── FORMS ────────────────────────────────────────────────── */
+.field { margin-bottom: 12px; }
+.lbl {
+  font-size: 11px; font-weight: 700; letter-spacing: .7px;
+  text-transform: uppercase; color: var(--t3); margin-bottom: 6px;
+}
+.inp, .sel {
+  width: 100%; padding: 13px 14px;
+  background: var(--glass-input);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
+  color: var(--t1); font-family: inherit; font-size: 15px;
+  appearance: none; -webkit-appearance: none; outline: none;
+  transition: border-color .2s, background .2s;
+}
+.inp::placeholder { color: var(--t3); }
+.inp:focus, .sel:focus {
+  border-color: var(--accent);
+  background: rgba(79,158,255,0.08);
+}
+.sw { position: relative; }
+.sw::after {
+  content: '▾'; position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--t3); pointer-events: none; font-size: 12px;
+}
+.inp[type=number] { -moz-appearance: textfield; }
+.inp[type=number]::-webkit-inner-spin-button,
+.inp[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+/* Dark option elements */
+option { background: #1a1a2e; color: var(--t1); }
+
+/* ── BUTTONS ──────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 18px; border-radius: var(--r-sm); border: none;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .15s; color: var(--t1);
+}
+.btn:active { transform: scale(.97); }
+.btn-full { width: 100%; padding: 15px; }
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 4px 16px rgba(79,158,255,0.35);
+}
+.btn-primary:active { background: var(--accent2); }
+.btn-green {
+  background: var(--green); color: #000;
+  box-shadow: 0 4px 16px rgba(52,211,153,0.3);
+}
+.btn-red {
+  background: var(--red); color: #fff;
+  box-shadow: 0 4px 16px rgba(248,113,113,0.3);
+}
+.btn-ghost {
+  background: var(--glass); border: 1px solid var(--glass-border); color: var(--t2);
+}
+.btn-ghost:active { background: var(--glass-active); }
+.btn-sm { padding: 7px 11px; font-size: 12px; border-radius: var(--r-xs); }
+.btn-icon {
+  width: 32px; height: 32px; padding: 0; border-radius: var(--r-xs);
+  background: var(--glass); border: 1px solid var(--glass-border); color: var(--t2);
+  font-size: 14px;
+}
+
+/* ── TAGS ─────────────────────────────────────────────────── */
+.tag {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 10px; font-weight: 700; letter-spacing: .3px;
+}
+.tag-E { background: var(--green-dim); color: var(--green); }
+.tag-F { background: var(--blue-dim); color: var(--accent); }
+.tag-V { background: var(--amber-dim); color: var(--gold); }
+.tag-K { background: var(--red-dim); color: var(--red); }
+.tag-S { background: rgba(52,211,153,0.12); color: #6ee7b7; }
+
+/* ── KREDIT CARD ──────────────────────────────────────────── */
+.kredit-item {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--red);
+  border-radius: var(--r-md);
+  padding: 15px; margin-bottom: 10px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 12px rgba(0,0,0,0.25);
+}
+.kredit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.kredit-name { font-weight: 600; font-size: 15px; color: var(--t1); }
+.krow { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+.krow span:first-child { color: var(--t3); }
+.krow span:last-child { font-weight: 500; color: var(--t2); font-variant-numeric: tabular-nums; }
+.kprog { height: 4px; background: var(--red-dim); border-radius: 2px; margin-top: 12px; }
+.kprog-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width .5s; }
+.kprog-lbl { font-size: 10px; color: var(--t3); text-align: right; margin-top: 4px; }
+
+/* ── SETTINGS CAT ROW ─────────────────────────────────────── */
+.cat-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 0; border-bottom: 1px solid var(--sep);
+}
+.cat-row:last-child { border-bottom: none; }
+.cat-row-info { flex: 1; min-width: 0; }
+.cat-row-name { font-size: 14px; color: var(--t1); margin-bottom: 3px; }
+.cat-row-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cat-actions { display: flex; gap: 5px; flex-shrink: 0; }
+
+/* ── YEAR MANAGER ─────────────────────────────────────────── */
+.year-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-radius: var(--r-sm);
+  background: transparent; border: 1px solid transparent;
+  cursor: pointer; transition: all .15s; margin-bottom: 3px;
+}
+.year-item:active { background: var(--glass); }
+.year-item.active-year { background: var(--blue-dim); border-color: rgba(79,158,255,0.3); }
+.year-item-num { font-size: 16px; color: var(--t1); font-weight: 500; }
+.year-item.active-year .year-item-num { color: var(--accent); font-weight: 700; }
+
+/* ── OVERLAY / BOTTOM SHEET ───────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.sheet {
+  width: 100%; max-height: 92vh; overflow-y: auto;
+  background: rgba(18,18,28,0.96);
+  backdrop-filter: var(--blur-lg); -webkit-backdrop-filter: var(--blur-lg);
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  padding: 12px 18px calc(var(--sab) + 24px);
+  transform: translateY(100%);
+  transition: transform .32s cubic-bezier(.32,.72,0,1);
+  box-shadow: 0 -20px 60px rgba(0,0,0,0.6),
+              inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.overlay.open .sheet { transform: translateY(0); }
+.sheet-handle {
+  width: 36px; height: 4px; background: var(--glass-border);
+  border-radius: 2px; margin: 0 auto 16px;
+}
+.sheet-title { font-size: 18px; font-weight: 700; color: var(--t1); margin-bottom: 18px; }
+.sheet-divider { height: 1px; background: var(--sep); margin: 14px 0; }
+
+/* ── TOAST ────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: calc(var(--sab) + var(--nav-h) + 12px); left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: rgba(30,30,45,0.92);
+  backdrop-filter: var(--blur-md); -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--glass-border);
+  color: var(--t1); padding: 11px 18px;
+  border-radius: 30px; font-size: 13px; font-weight: 500;
+  opacity: 0; transition: all .28s; pointer-events: none;
+  white-space: nowrap; z-index: 999;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  max-width: calc(100vw - 32px);
+  overflow: hidden; text-overflow: ellipsis;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok  { border-color: rgba(52,211,153,.4); }
+.toast.err { border-color: rgba(248,113,113,.4); color: var(--red); }
+
+/* ── BOTTOM NAVIGATION ────────────────────────────────────── */
+.bnav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  height: calc(var(--nav-h) + var(--sab));
+  background: rgba(12,12,18,0.88);
+  backdrop-filter: var(--blur-lg); -webkit-backdrop-filter: var(--blur-lg);
+  border-top: 1px solid var(--glass-border);
+  box-shadow: 0 -4px 30px rgba(0,0,0,0.4),
+              inset 0 1px 0 rgba(255,255,255,0.07);
+  display: flex; align-items: flex-start; padding-top: 6px;
+  padding-bottom: var(--sab);
+}
+.bnav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; cursor: pointer;
+  padding: 0; height: var(--nav-h); padding-top: 4px;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.bnav-icon {
+  font-size: 22px; transition: transform .2s;
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 28px;
+}
+.bnav-label {
+  font-size: 10px; font-weight: 500; color: var(--t3);
+  transition: color .2s; letter-spacing: .1px;
+}
+.bnav-btn.active .bnav-label { color: var(--accent); font-weight: 700; }
+.bnav-btn.active .bnav-icon { transform: scale(1.1); }
+/* Active indicator pill */
+.bnav-btn.active::before {
+  content: '';
+  position: absolute; top: 2px;
+  left: 50%; transform: translateX(-50%);
+  width: 32px; height: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(79,158,255,0.6);
+}
+
+/* ── INSTALL BANNER ───────────────────────────────────────── */
+.install-banner {
+  background: var(--glass);
+  border: 1px solid rgba(245,166,35,0.25);
+  border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 14px;
+}
+.install-banner-title { color: var(--gold); font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+.install-banner-text { color: var(--t3); font-size: 12px; line-height: 1.6; }
+
+/* ── MISC ─────────────────────────────────────────────────── */
+.divider { height: 1px; background: var(--sep); margin: 8px 0; }
+.gap-row { display: flex; gap: 8px; }
+.gap-row > * { flex: 1; }
+.mt8 { margin-top: 8px; }
+.mt12 { margin-top: 12px; }
+.mt16 { margin-top: 16px; }
+
+/* Scrollbar hidden globally */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header" id="appHeader">
+  <div class="header-left">
+    <div class="header-title">Haushaltsplan</div>
+    <div class="header-sub" id="headerSub">Lade…</div>
+  </div>
+  <button class="year-pill" id="yearPill" onclick="openYearSheet()">–</button>
+</header>
+
+<!-- MAIN -->
+<main class="main" id="main"></main>
+
+<!-- TOAST -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- BOTTOM NAV (only navigation) -->
+<nav class="bnav" id="bnav">
+  <button class="bnav-btn active" data-v="dashboard">
+    <span class="bnav-icon">◉</span>
+    <span class="bnav-label">Dashboard</span>
+  </button>
+  <button class="bnav-btn" data-v="eingabe">
+    <span class="bnav-icon">✎</span>
+    <span class="bnav-label">Anpassen</span>
+  </button>
+  <button class="bnav-btn" data-v="uebersicht">
+    <span class="bnav-icon">≡</span>
+    <span class="bnav-label">Übersicht</span>
+  </button>
+  <button class="bnav-btn" data-v="kredite">
+    <span class="bnav-icon">⬡</span>
+    <span class="bnav-label">Kredite</span>
+  </button>
+  <button class="bnav-btn" data-v="einstellungen">
+    <span class="bnav-icon">⚙</span>
+    <span class="bnav-label">Einstellungen</span>
+  </button>
+</nav>
+
+<!-- YEAR SHEET -->
+<div class="overlay" id="yearOverlay">
+  <div class="sheet" id="yearSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Jahr auswählen</div>
+    <div id="yearSheetBody"></div>
+    <div class="sheet-divider"></div>
+    <div id="yearSheetFooter"></div>
+  </div>
+</div>
+
+<!-- GENERIC SHEET -->
+<div class="overlay" id="genOverlay">
+  <div class="sheet" id="genSheet">
+    <div class="sheet-handle"></div>
+    <div id="genBody"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════
+const MS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const MF = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const TL = { E:'Einnahmen', F:'Fixkosten', V:'Variabel', K:'Kredit', S:'Sparen' };
+const RC = { E:'e', K:'k', S:'s' };   // row-amount colour classes
+
+/** @type {Array<{id:string,g:string,p:string,d:number,t:string}>} */
+const DC = [
+  {id:'c1', g:'Einnahmen',           p:'Gehalt (netto)',          d:3500,  t:'E'},
+  {id:'c2', g:'Einnahmen',           p:'Elterngeld',              d:0,     t:'E'},
+  {id:'c3', g:'Einnahmen',           p:'Kindergeld',              d:250,   t:'E'},
+  {id:'c4', g:'Einnahmen',           p:'Sonstige Einnahmen',      d:0,     t:'E'},
+  {id:'c5', g:'Wohnen',              p:'Miete / Wohnkosten',      d:900,   t:'F'},
+  {id:'c6', g:'Wohnen',              p:'Strom',                   d:80,    t:'F'},
+  {id:'c7', g:'Wohnen',              p:'Gas / Heizung',           d:120,   t:'F'},
+  {id:'c8', g:'Wohnen',              p:'Wasser',                  d:40,    t:'F'},
+  {id:'c9', g:'Wohnen',              p:'Rundfunkbeitrag (GEZ)',   d:18.36, t:'F'},
+  {id:'c10',g:'Wohnen',              p:'Hausrat-Versicherung',    d:15,    t:'F'},
+  {id:'c11',g:'Wohnen',              p:'Haftpflicht-Vers.',       d:10,    t:'F'},
+  {id:'c12',g:'Mobilität',           p:'KFZ-Versicherung (LVM)',  d:60,    t:'F'},
+  {id:'c13',g:'Mobilität',           p:'KFZ-Steuer (mtl.)',       d:20,    t:'F'},
+  {id:'c14',g:'Mobilität',           p:'Toyota / Autokredit',     d:0,     t:'F'},
+  {id:'c15',g:'Mobilität',           p:'TÜV-Rücklage (mtl.)',     d:10,    t:'F'},
+  {id:'c16',g:'Kommunikation',       p:'Klarmobil / SIM',         d:10,    t:'F'},
+  {id:'c17',g:'Kommunikation',       p:'Magenta / Internet',      d:45,    t:'F'},
+  {id:'c18',g:'Kommunikation',       p:'TV / Giga-Kabel',         d:25,    t:'F'},
+  {id:'c19',g:'Versicherungen',      p:'ERGO-Versicherung',       d:30,    t:'F'},
+  {id:'c20',g:'Versicherungen',      p:'Berufsunfähigkeit',       d:50,    t:'F'},
+  {id:'c21',g:'Versicherungen',      p:'Allianz',                 d:40,    t:'F'},
+  {id:'c22',g:'Versicherungen',      p:'Reiserücktritt',          d:5,     t:'F'},
+  {id:'c23',g:'Abos',                p:'Apple / Spotify',         d:15,    t:'F'},
+  {id:'c24',g:'Abos',                p:'Amazon Prime',            d:9,     t:'F'},
+  {id:'c25',g:'Abos',                p:'Mitgliedschaft',          d:10,    t:'F'},
+  {id:'c26',g:'Variable Ausgaben',   p:'Lebensmittel / Einkauf',  d:400,   t:'V'},
+  {id:'c27',g:'Variable Ausgaben',   p:'Drogerie / Hygiene',      d:50,    t:'V'},
+  {id:'c28',g:'Variable Ausgaben',   p:'Benzin / Mobilität',      d:80,    t:'V'},
+  {id:'c29',g:'Variable Ausgaben',   p:'Kinder (allgemein)',      d:100,   t:'V'},
+  {id:'c30',g:'Variable Ausgaben',   p:'Kleidung',                d:50,    t:'V'},
+  {id:'c31',g:'Variable Ausgaben',   p:'Essen gehen / Freizeit',  d:80,    t:'V'},
+  {id:'c32',g:'Variable Ausgaben',   p:'Gesundheit / Arzt',       d:30,    t:'V'},
+  {id:'c33',g:'Variable Ausgaben',   p:'Online-Shopping',         d:50,    t:'V'},
+  {id:'c34',g:'Variable Ausgaben',   p:'Sonstige Ausgaben',       d:50,    t:'V'},
+  {id:'c35',g:'Sonderausgaben',      p:'Urlaub (mtl. Rücklage)',  d:100,   t:'V'},
+  {id:'c36',g:'Sonderausgaben',      p:'Weihnachten (mtl.)',      d:50,    t:'V'},
+  {id:'c37',g:'Sonderausgaben',      p:'Geburtstage / Geschenke', d:30,    t:'V'},
+  {id:'c38',g:'Sonderausgaben',      p:'Nachzahlung Strom/Gas',   d:0,     t:'V'},
+  {id:'c39',g:'Kredite',             p:'Hanseatic Bank',          d:200,   t:'K'},
+  {id:'c40',g:'Kredite',             p:'Auxmoney',                d:150,   t:'K'},
+  {id:'c41',g:'Kredite',             p:'Barclays',                d:100,   t:'K'},
+  {id:'c42',g:'Kredite',             p:'Consor / Rahmenkredit',   d:80,    t:'K'},
+  {id:'c43',g:'Kredite',             p:'ISOFI / Finanz',          d:50,    t:'K'},
+  {id:'c44',g:'Sparen & Investieren',p:'Monatsgeld / Tagesgeld',  d:200,   t:'S'},
+  {id:'c45',g:'Sparen & Investieren',p:'Investitionen / ETF',     d:100,   t:'S'},
+  {id:'c46',g:'Sparen & Investieren',p:'Sparbetrag sonstiges',    d:50,    t:'S'},
+  {id:'c47',g:'Sparen & Investieren',p:'Babysafe / Kindersparen', d:50,    t:'S'},
+];
+
+/** @type {Array<{id:string,n:string,r:number,m:number,z:number,b:string,g:number}>} */
+const DK = [
+  {id:'k1',n:'Hanseatic Bank', r:8000,m:200,z:12.9,b:'2028-06',g:1200},
+  {id:'k2',n:'Auxmoney',       r:5000,m:150,z:9.9, b:'2027-12',g:900},
+  {id:'k3',n:'Barclays',       r:3500,m:100,z:14.9,b:'2028-03',g:600},
+  {id:'k4',n:'Consor/Rahmen',  r:2000,m:80, z:11.5,b:'2027-06',g:480},
+  {id:'k5',n:'ISOFI/Finanz',   r:1500,m:50, z:10.0,b:'2026-12',g:300},
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE  (single source of truth)
+// ═══════════════════════════════════════════════════════════════════════════
+const now = new Date();
+let S = {
+  view:    'dashboard',
+  year:    now.getFullYear(),
+  month:   now.getMonth(),
+  years:   [],          // user-managed year list
+  data:    {},          // {year_month_catId: number}
+  cats:    [],
+  kredite: [],
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PERSISTENCE  (debounced to avoid thrashing)
+// ═══════════════════════════════════════════════════════════════════════════
+const LS_KEY = 'hp4';
+let _persistTimer = null;
+
+function persist() {
+  clearTimeout(_persistTimer);
+  _persistTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        data:    S.data,
+        cats:    S.cats,
+        kredite: S.kredite,
+        years:   S.years,
+      }));
+    } catch (e) {
+      // localStorage quota exceeded – silently ignore in read path
+      console.warn('persist failed:', e);
+    }
+  }, 300);
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const p    = JSON.parse(raw);
+      S.data     = p.data    || {};
+      S.cats     = Array.isArray(p.cats)    && p.cats.length    ? p.cats    : deepClone(DC);
+      S.kredite  = Array.isArray(p.kredite) && p.kredite.length ? p.kredite : deepClone(DK);
+      S.years    = Array.isArray(p.years)   && p.years.length   ? p.years   : defaultYears();
+    } else {
+      S.cats    = deepClone(DC);
+      S.kredite = deepClone(DK);
+      S.years   = defaultYears();
+    }
+  } catch (e) {
+    S.cats    = deepClone(DC);
+    S.kredite = deepClone(DK);
+    S.years   = defaultYears();
+  }
+  // Clamp selected year to available years
+  if (!S.years.includes(S.year)) S.year = S.years[0] || now.getFullYear();
+}
+
+function defaultYears() {
+  const y = now.getFullYear();
+  return [y, y+1, y+2];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
+function deepClone(x) { return JSON.parse(JSON.stringify(x)); }
+function uid() { return 'x' + Math.random().toString(36).slice(2, 9); }
+
+/** Safe HTML escape to prevent XSS when rendering user data */
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/** German locale currency formatter (cached) */
+const _fmtFull  = new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR', maximumFractionDigits:2 });
+const _fmtShort = new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR', maximumFractionDigits:0 });
+function fmt(v)  { return _fmtFull.format(v); }
+function fmtS(v) { return Math.abs(v) >= 1000 ? _fmtShort.format(v) : _fmtFull.format(v); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA ACCESSORS
+// ═══════════════════════════════════════════════════════════════════════════
+const dkey = (y, m, id) => `${y}_${m}_${id}`;
+
+function gv(y, m, cat) {
+  const k = dkey(y, m, cat.id);
+  return S.data[k] !== undefined ? S.data[k] : cat.d;
+}
+function sv(y, m, cat, val) {
+  const k = dkey(y, m, cat.id);
+  if (val === cat.d) delete S.data[k];
+  else              S.data[k] = val;
+  persist();
+}
+function isCustom(y, m, cat) { return S.data[dkey(y, m, cat.id)] !== undefined; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CALC  (pure, no side-effects)
+// ═══════════════════════════════════════════════════════════════════════════
+function calcMonth(y, m) {
+  let e=0, f=0, v=0, k=0, s=0;
+  for (const cat of S.cats) {
+    const val = gv(y, m, cat);
+    if      (cat.t === 'E') e += val;
+    else if (cat.t === 'F') f += val;
+    else if (cat.t === 'V') v += val;
+    else if (cat.t === 'K') k += val;
+    else if (cat.t === 'S') s += val;
+  }
+  const aus = f + v + k + s;
+  return { e, f, v, k, s, aus, saldo: e - aus };
+}
+
+function calcYear(y) {
+  let r = { e:0, f:0, v:0, k:0, s:0, aus:0, saldo:0 };
+  for (let m = 0; m < 12; m++) {
+    const x = calcMonth(y, m);
+    r.e+=x.e; r.f+=x.f; r.v+=x.v; r.k+=x.k; r.s+=x.s;
+    r.aus+=x.aus; r.saldo+=x.saldo;
+  }
+  return r;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GROUP HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function getGroups() {
+  /** @type {Map<string, typeof DC>} */
+  const map = new Map();
+  for (const cat of S.cats) {
+    if (!map.has(cat.g)) map.set(cat.g, []);
+    map.get(cat.g).push(cat);
+  }
+  return map;
+}
+function uniqueGroups() { return [...new Set(S.cats.map(c => c.g))]; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DOM HELPERS  (DocumentFragment-based for performance)
+// ═══════════════════════════════════════════════════════════════════════════
+function setHTML(el, html) {
+  // Use innerHTML but only on controlled template strings (not user input)
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW: DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════
+function vDashboard() {
+  const y = S.year, mo = S.month;
+  const m  = calcMonth(y, mo);
+  const yr = calcYear(y);
+  const spPct = m.e > 0 ? ((m.s / m.e) * 100).toFixed(0) : 0;
+  const krPct = m.e > 0 ? ((m.k / m.e) * 100).toFixed(0) : 0;
+
+  const standalone = window.navigator.standalone === true;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const installHtml = (ios && !standalone)
+    ? `<div class="install-banner">
+        <div class="install-banner-title">📲 Als App installieren</div>
+        <div class="install-banner-text">Safari → Teilen-Symbol (□↑) → „Zum Home-Bildschirm" → Hinzufügen</div>
+       </div>`
+    : '';
+
+  const chips = MS.map((x, i) =>
+    `<div class="mchip${i === mo ? ' active' : ''}" data-mi="${i}">${x}</div>`
+  ).join('');
+
+  return `
+    ${installHtml}
+    <div class="month-grid" id="monthGrid">${chips}</div>
+
+    <div class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <div class="hero-lbl">Netto-Saldo · ${MF[mo]} ${y}</div>
+        <div class="hero-val ${m.saldo >= 0 ? 'pos' : 'neg'}">${fmtS(m.saldo)}</div>
+        <div class="hero-sub">
+          <div class="hsi"><div class="hsi-lbl">Einnahmen</div><div class="hsi-val">${fmtS(m.e)}</div></div>
+          <div class="hsi"><div class="hsi-lbl">Ausgaben</div><div class="hsi-val">${fmtS(m.aus)}</div></div>
+          <div class="hsi"><div class="hsi-lbl">Zeitraum</div><div class="hsi-val">${MS[mo]} ${y}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile-grid">
+      <div class="tile"><div class="tile-lbl">Fixkosten</div><div class="tile-val">${fmtS(m.f)}</div></div>
+      <div class="tile"><div class="tile-lbl">Variabel</div><div class="tile-val">${fmtS(m.v)}</div></div>
+      <div class="tile"><div class="tile-lbl">Kredite</div><div class="tile-val r">${fmtS(m.k)}</div></div>
+      <div class="tile"><div class="tile-lbl">Sparen</div><div class="tile-val b">${fmtS(m.s)}</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Jahresübersicht ${y}</div>
+      <div class="row"><span class="row-name">Einnahmen gesamt</span><span class="row-amt e">${fmtS(yr.e)}</span></div>
+      <div class="row"><span class="row-name">Ausgaben gesamt</span><span class="row-amt">${fmtS(yr.aus)}</span></div>
+      <div class="row"><span class="row-name">Jahres-Saldo</span><span class="row-amt ${yr.saldo >= 0 ? 'e' : 'k'}">${fmtS(yr.saldo)}</span></div>
+      <div class="row"><span class="row-name">Sparquote (aktueller Monat)</span><span class="row-amt s">${spPct} %</span></div>
+      <div class="row"><span class="row-name">Kreditlast (aktueller Monat)</span><span class="row-amt k">${krPct} %</span></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW: ANPASSEN
+// ═══════════════════════════════════════════════════════════════════════════
+function vEingabe() {
+  const posOpts = S.cats.map(c =>
+    `<option value="${esc(c.id)}">${esc(c.p)}</option>`
+  ).join('');
+  const yOpts = S.years.map(y =>
+    `<option value="${y}"${y === S.year ? ' selected' : ''}>${y}</option>`
+  ).join('');
+  const mOpts = ['Alle Monate', ...MF].map((x, i) =>
+    `<option value="${i === 0 ? 'all' : i - 1}">${esc(x)}</option>`
+  ).join('');
+  const mcOpts = MF.map((x, i) =>
+    `<option value="${i}"${i === S.month ? ' selected' : ''}>${esc(x)}</option>`
+  ).join('');
+
+  return `
+    <div class="card">
+      <div class="card-title">Wert anpassen</div>
+      <div class="field"><div class="lbl">Kategorie / Position</div>
+        <div class="sw"><select class="sel" id="ip">${posOpts}</select></div></div>
+      <div class="field"><div class="lbl">Jahr</div>
+        <div class="sw"><select class="sel" id="iy">${yOpts}</select></div></div>
+      <div class="field"><div class="lbl">Monat</div>
+        <div class="sw"><select class="sel" id="im">${mOpts}</select></div></div>
+      <div class="field"><div class="lbl">Neuer Betrag (€)</div>
+        <input class="inp" type="number" id="ia" inputmode="decimal"
+          placeholder="0,00" step="0.01" min="0" autocomplete="off"/></div>
+      <button class="btn btn-primary btn-full" onclick="submitVal()">Übernehmen</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Wert prüfen</div>
+      <div class="field"><div class="lbl">Position</div>
+        <div class="sw"><select class="sel" id="cp" onchange="checkVal()">${posOpts}</select></div></div>
+      <div class="gap-row field">
+        <div class="sw"><select class="sel" id="cy2" onchange="checkVal()">${yOpts}</select></div>
+        <div class="sw"><select class="sel" id="cm2" onchange="checkVal()">${mcOpts}</select></div>
+      </div>
+      <div id="cr" style="padding:13px;background:var(--glass-input);border:1px solid var(--glass-border);border-radius:var(--r-sm);font-size:14px;color:var(--t3);text-align:center">
+        Position und Monat wählen
+      </div>
+    </div>`;
+}
+
+function checkVal() {
+  const cid = document.getElementById('cp')?.value;
+  const y   = parseInt(document.getElementById('cy2')?.value);
+  const m   = parseInt(document.getElementById('cm2')?.value);
+  const el  = document.getElementById('cr');
+  if (!el || !cid || isNaN(y) || isNaN(m)) return;
+  const cat = S.cats.find(x => x.id === cid);
+  if (!cat) return;
+  const v  = gv(y, m, cat);
+  const cu = isCustom(y, m, cat);
+  el.innerHTML = `
+    <div style="font-size:26px;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums">${fmt(v)}</div>
+    <div style="font-size:12px;color:${cu ? 'var(--green)' : 'var(--t3)'};margin-top:4px">
+      ${cu ? '✎ Angepasster Wert' : '⊡ Standardwert · ' + fmt(cat.d)}
+    </div>`;
+}
+
+function submitVal() {
+  const cid = document.getElementById('ip')?.value;
+  const y   = parseInt(document.getElementById('iy')?.value);
+  const mo  = document.getElementById('im')?.value;
+  const a   = parseFloat(document.getElementById('ia')?.value);
+
+  if (!cid)            return toast('Bitte eine Kategorie wählen', 'err');
+  if (isNaN(a) || a < 0) return toast('Bitte einen gültigen Betrag eingeben', 'err');
+
+  const cat = S.cats.find(x => x.id === cid);
+  if (!cat) return;
+
+  if (mo === 'all') {
+    for (let m = 0; m < 12; m++) sv(y, m, cat, a);
+    toast(`${esc(cat.p)} · alle Monate ${y} · ${fmt(a)}`);
+  } else {
+    const m = parseInt(mo);
+    sv(y, m, cat, a);
+    toast(`${esc(cat.p)} · ${MF[m]} ${y} · ${fmt(a)}`);
+  }
+  const ia = document.getElementById('ia');
+  if (ia) ia.value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW: ÜBERSICHT  (with total footer + inline edit)
+// ═══════════════════════════════════════════════════════════════════════════
+function vUebersicht() {
+  const y = S.year, mo = S.month;
+  const yOpts = S.years.map(x =>
+    `<option value="${x}"${x === y ? ' selected' : ''}>${x}</option>`
+  ).join('');
+  const mOpts = MF.map((x, i) =>
+    `<option value="${i}"${i === mo ? ' selected' : ''}>${esc(x)}</option>`
+  ).join('');
+
+  let einnahmen = 0, ausgaben = 0;
+  let secs = '';
+
+  for (const [grp, items] of getGroups()) {
+    let grpTot = 0, rows = '';
+    for (const cat of items) {
+      const v = gv(y, mo, cat);
+      grpTot += v;
+      if (cat.t === 'E') einnahmen += v; else ausgaben += v;
+      const cls = RC[cat.t] || '';
+      const customDot = isCustom(y, mo, cat) ? ' <span style="color:var(--accent);font-size:10px">✎</span>' : '';
+      rows += `
+        <div class="row">
+          <span class="row-name row-name-small">${esc(cat.p)}${customDot}</span>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <span class="row-amt ${cls}">${fmtS(v)}</span>
+            <button class="row-edit-btn" onclick="openEditValue('${esc(cat.id)}','${y}','${mo}')" title="Bearbeiten">✎</button>
+          </div>
+        </div>`;
+    }
+    secs += `
+      <div style="margin-bottom:16px">
+        <div class="sec-hdr">
+          <span class="sec-hdr-name">${esc(grp)}</span>
+          <span class="sec-hdr-val">${fmtS(grpTot)}</span>
+        </div>
+        ${rows}
+      </div>`;
+  }
+
+  const saldo = einnahmen - ausgaben;
+  const footer = `
+    <div class="total-footer">
+      <div class="total-row">
+        <span class="total-row-label">Einnahmen gesamt</span>
+        <span class="total-row-val" style="color:var(--green)">${fmtS(einnahmen)}</span>
+      </div>
+      <div class="total-row">
+        <span class="total-row-label">Ausgaben gesamt</span>
+        <span class="total-row-val" style="color:var(--red)">${fmtS(ausgaben)}</span>
+      </div>
+      <div class="total-saldo-row">
+        <span class="total-saldo-label">Netto-Saldo</span>
+        <span class="total-saldo-val ${saldo >= 0 ? 'pos' : 'neg'}">${fmtS(saldo)}</span>
+      </div>
+    </div>`;
+
+  return `
+    <div class="gap-row" style="margin-bottom:12px">
+      <div class="sw"><select class="sel" onchange="selYear(this.value)">${yOpts}</select></div>
+      <div class="sw"><select class="sel" onchange="selMonth(parseInt(this.value))">${mOpts}</select></div>
+    </div>
+    <div class="card">
+      <div class="card-title">${MF[mo]} ${y}</div>
+      ${secs}
+      ${footer}
+    </div>`;
+}
+
+/**
+ * Opens bottom sheet to edit a single category value inline from Übersicht.
+ * @param {string} catId
+ * @param {string|number} year
+ * @param {string|number} month
+ */
+function openEditValue(catId, year, month) {
+  const y   = parseInt(year);
+  const mo  = parseInt(month);
+  const cat = S.cats.find(c => c.id === catId);
+  if (!cat) return;
+  const current = gv(y, mo, cat);
+  const cu = isCustom(y, mo, cat);
+
+  openGenSheet(`
+    <div class="sheet-title">Betrag anpassen</div>
+    <div style="font-size:13px;color:var(--t3);margin-bottom:3px">${esc(cat.p)}</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:16px">${MF[mo]} ${y}</div>
+    <div class="field">
+      <div class="lbl">Aktueller Wert</div>
+      <div style="font-size:22px;font-weight:700;color:var(--t1);margin-bottom:4px;font-variant-numeric:tabular-nums">${fmt(current)}</div>
+      ${cu ? '<div style="font-size:11px;color:var(--accent)">✎ Angepasst</div>' : `<div style="font-size:11px;color:var(--t3)">Standard: ${fmt(cat.d)}</div>`}
+    </div>
+    <div class="field mt16">
+      <div class="lbl">Neuer Betrag (€)</div>
+      <input class="inp" type="number" id="ev-amt" inputmode="decimal"
+        placeholder="${current}" step="0.01" min="0" value="${current}" autocomplete="off"/>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:2" onclick="saveEditValue('${esc(catId)}','${y}','${mo}')">Speichern</button>
+      ${cu ? `<button class="btn btn-ghost" style="flex:1" onclick="resetEditValue('${esc(catId)}','${y}','${mo}')">Reset</button>` : ''}
+    </div>`);
+
+  // Auto-select input value for quick edit
+  requestAnimationFrame(() => {
+    const inp = document.getElementById('ev-amt');
+    if (inp) { inp.focus(); inp.select(); }
+  });
+}
+
+function saveEditValue(catId, year, month) {
+  const cat = S.cats.find(c => c.id === catId);
+  if (!cat) return;
+  const a = parseFloat(document.getElementById('ev-amt')?.value);
+  if (isNaN(a) || a < 0) return toast('Ungültiger Betrag', 'err');
+  sv(parseInt(year), parseInt(month), cat, a);
+  closeGenSheet();
+  render();
+  toast(`${esc(cat.p)} · ${fmt(a)}`);
+}
+
+function resetEditValue(catId, year, month) {
+  const cat = S.cats.find(c => c.id === catId);
+  if (!cat) return;
+  delete S.data[dkey(parseInt(year), parseInt(month), cat.id)];
+  persist();
+  closeGenSheet();
+  render();
+  toast(`${esc(cat.p)} auf Standard zurückgesetzt`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW: KREDITE
+// ═══════════════════════════════════════════════════════════════════════════
+function vKredite() {
+  const tR = S.kredite.reduce((s, k) => s + k.r, 0);
+  const tM = S.kredite.reduce((s, k) => s + k.m, 0);
+  const tG = S.kredite.reduce((s, k) => s + k.g, 0);
+
+  const cards = S.kredite.map(k => {
+    const ges = k.r + k.g;
+    const pct = ges > 0 ? Math.min(100, Math.round((k.g / ges) * 100)) : 0;
+    return `
+      <div class="kredit-item">
+        <div class="kredit-header">
+          <span class="kredit-name">${esc(k.n)}</span>
+          <button class="btn btn-ghost btn-sm" onclick="editKredit('${esc(k.id)}')">✎ Bearbeiten</button>
+        </div>
+        <div class="krow"><span>Restschuld</span><span>${fmt(k.r)}</span></div>
+        <div class="krow"><span>Monatl. Rate</span><span>${fmt(k.m)}</span></div>
+        <div class="krow"><span>Zinssatz</span><span>${Number(k.z).toFixed(2)} %</span></div>
+        <div class="krow"><span>Laufzeit bis</span><span>${esc(k.b)}</span></div>
+        <div class="krow"><span>Bereits getilgt</span><span>${fmt(k.g)}</span></div>
+        <div class="kprog"><div class="kprog-fill" style="width:${pct}%"></div></div>
+        <div class="kprog-lbl">${pct} % getilgt</div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <div class="hero-lbl">Gesamtschulden</div>
+        <div class="hero-val neg">${fmtS(tR)}</div>
+        <div class="hero-sub">
+          <div class="hsi"><div class="hsi-lbl">Monatl. Raten</div><div class="hsi-val">${fmtS(tM)}</div></div>
+          <div class="hsi"><div class="hsi-lbl">Getilgt</div><div class="hsi-val">${fmtS(tG)}</div></div>
+          <div class="hsi"><div class="hsi-lbl">Anzahl</div><div class="hsi-val">${S.kredite.length}</div></div>
+        </div>
+      </div>
+    </div>
+    ${cards}
+    <button class="btn btn-primary btn-full mt8" onclick="addKredit()">+ Neuen Kredit hinzufügen</button>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW: EINSTELLUNGEN
+// ═══════════════════════════════════════════════════════════════════════════
+function vEinstellungen() {
+  const grps = getGroups();
+  let catHTML = '';
+  for (const [grp, items] of grps) {
+    const rows = items.map(cat => `
+      <div class="cat-row">
+        <div class="cat-row-info">
+          <div class="cat-row-name">${esc(cat.p)}</div>
+          <div class="cat-row-meta">
+            <span class="tag tag-${cat.t}">${TL[cat.t]}</span>
+            <span style="font-size:11px;color:var(--t3)">${fmt(cat.d)}</span>
+          </div>
+        </div>
+        <div class="cat-actions">
+          <button class="btn btn-icon" onclick="editCat('${esc(cat.id)}')">✎</button>
+          <button class="btn btn-icon" style="color:var(--red);background:var(--red-dim)" onclick="delCat('${esc(cat.id)}')">×</button>
+        </div>
+      </div>`).join('');
+    catHTML += `
+      <div style="margin-bottom:8px">
+        <div class="sec-hdr" style="margin-bottom:6px">
+          <span class="sec-hdr-name">${esc(grp)}</span>
+        </div>
+        ${rows}
+      </div>`;
+  }
+
+  return `
+    <div class="card">
+      <div class="card-title">Kategorien verwalten</div>
+      ${catHTML}
+      <button class="btn btn-primary btn-full mt12" onclick="addCat()">+ Kategorie hinzufügen</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Jahre verwalten</div>
+      ${S.years.map(y => `
+        <div class="row">
+          <span class="row-name" style="font-weight:${y===S.year?700:400};color:${y===S.year?'var(--accent)':'var(--t1)'}">${y}</span>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            ${y === S.year
+              ? '<span style="font-size:11px;color:var(--accent);padding:0 4px">Aktiv</span>'
+              : `<button class="btn btn-icon" style="color:var(--red);background:var(--red-dim)" onclick="delYear(${y})">×</button>`
+            }
+          </div>
+        </div>`).join('')}
+      <button class="btn btn-ghost btn-full mt12" onclick="openAddYear()">+ Jahr hinzufügen</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Daten &amp; Speicher</div>
+      <div class="row"><span class="row-name">Angepasste Werte</span><span class="row-amt">${Object.keys(S.data).length}</span></div>
+      <div class="row"><span class="row-name">Kategorien</span><span class="row-amt">${S.cats.length}</span></div>
+      <div class="row"><span class="row-name">Kredite</span><span class="row-amt">${S.kredite.length}</span></div>
+      <div class="row"><span class="row-name">Jahre</span><span class="row-amt">${S.years.length}</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+        <button class="btn btn-ghost btn-full" onclick="resetData()">Alle Werte zurücksetzen</button>
+        <button class="btn btn-ghost btn-full" style="color:var(--red)" onclick="resetAll()">App komplett zurücksetzen</button>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// YEAR SHEET
+// ═══════════════════════════════════════════════════════════════════════════
+function openYearSheet() {
+  const body = document.getElementById('yearSheetBody');
+  const footer = document.getElementById('yearSheetFooter');
+
+  body.innerHTML = S.years.map(y => `
+    <div class="year-item${y === S.year ? ' active-year' : ''}"
+         onclick="selYear(${y});closeYearSheet()">
+      <span class="year-item-num">${y}</span>
+      ${y === S.year ? '<span style="font-size:12px;color:var(--accent)">✓ Aktiv</span>' : ''}
+    </div>`).join('');
+
+  footer.innerHTML = `<button class="btn btn-ghost btn-full" onclick="openAddYear()">+ Jahr hinzufügen</button>`;
+
+  document.getElementById('yearOverlay').classList.add('open');
+}
+function closeYearSheet() {
+  document.getElementById('yearOverlay').classList.remove('open');
+}
+
+function openAddYear() {
+  const allYears = Array.from({length:28},(_,i)=>2025+i);
+  const available = allYears.filter(y => !S.years.includes(y));
+  if (!available.length) return toast('Alle Jahre bereits vorhanden', 'err');
+  const opts = available.map(y => `<option value="${y}">${y}</option>`).join('');
+  openGenSheet(`
+    <div class="sheet-title">Jahr hinzufügen</div>
+    <div class="field"><div class="lbl">Jahr wählen</div>
+      <div class="sw"><select class="sel" id="add-year">${opts}</select></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveAddYear()">Hinzufügen</button>`);
+}
+
+function saveAddYear() {
+  const y = parseInt(document.getElementById('add-year')?.value);
+  if (!y) return;
+  if (!S.years.includes(y)) {
+    S.years = [...S.years, y].sort((a, b) => a - b);
+    persist();
+  }
+  closeGenSheet();
+  // Close year sheet too if open
+  closeYearSheet();
+  render();
+  toast(`Jahr ${y} hinzugefügt`);
+}
+
+function delYear(y) {
+  if (S.years.length <= 1) return toast('Mindestens ein Jahr muss vorhanden sein', 'err');
+  if (!confirm(`Jahr ${y} wirklich entfernen? Alle Werte für ${y} bleiben gespeichert.`)) return;
+  S.years = S.years.filter(x => x !== y);
+  if (S.year === y) S.year = S.years[0];
+  persist();
+  render();
+  toast(`Jahr ${y} entfernt`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// KREDIT MODALS
+// ═══════════════════════════════════════════════════════════════════════════
+function kreditForm(k = {}) {
+  return `
+    <div class="field"><div class="lbl">Name</div>
+      <input class="inp" id="kn" value="${esc(k.n||'')}" placeholder="z.B. Deutsche Bank"/></div>
+    <div class="field"><div class="lbl">Restschuld (€)</div>
+      <input class="inp" type="number" id="kr" value="${k.r ?? ''}" min="0" step="0.01" inputmode="decimal" placeholder="0.00"/></div>
+    <div class="field"><div class="lbl">Monatl. Rate (€)</div>
+      <input class="inp" type="number" id="km" value="${k.m ?? ''}" min="0" step="0.01" inputmode="decimal" placeholder="0.00"/></div>
+    <div class="field"><div class="lbl">Zinssatz (%)</div>
+      <input class="inp" type="number" id="kz" value="${k.z ?? ''}" min="0" step="0.001" inputmode="decimal" placeholder="0.00"/></div>
+    <div class="field"><div class="lbl">Laufzeit bis (JJJJ-MM)</div>
+      <input class="inp" id="kb" value="${esc(k.b||'')}" placeholder="2030-12"
+        pattern="[0-9]{4}-[0-9]{2}"/></div>
+    <div class="field"><div class="lbl">Bereits getilgt (€)</div>
+      <input class="inp" type="number" id="kg" value="${k.g ?? 0}" min="0" step="0.01" inputmode="decimal" placeholder="0.00"/></div>`;
+}
+
+function readKreditForm(existing = {}) {
+  const n = document.getElementById('kn')?.value.trim();
+  const r = parseFloat(document.getElementById('kr')?.value);
+  const m = parseFloat(document.getElementById('km')?.value);
+  const z = parseFloat(document.getElementById('kz')?.value);
+  const b = document.getElementById('kb')?.value.trim();
+  const g = parseFloat(document.getElementById('kg')?.value) || 0;
+  if (!n)                    { toast('Bitte einen Namen eingeben', 'err'); return null; }
+  if (isNaN(r)||isNaN(m)||isNaN(z)) { toast('Bitte alle Pflichtfelder ausfüllen', 'err'); return null; }
+  return { ...existing, n, r, m, z, b: b || '', g };
+}
+
+function addKredit() {
+  openGenSheet(`
+    <div class="sheet-title">Neuen Kredit hinzufügen</div>
+    ${kreditForm()}
+    <button class="btn btn-primary btn-full mt8" onclick="saveNewKredit()">Speichern</button>`);
+}
+function saveNewKredit() {
+  const k = readKreditForm();
+  if (!k) return;
+  S.kredite.push({ id: uid(), ...k });
+  persist(); closeGenSheet(); render(); toast(`${esc(k.n)} hinzugefügt`);
+}
+
+function editKredit(kid) {
+  const k = S.kredite.find(x => x.id === kid);
+  if (!k) return;
+  openGenSheet(`
+    <div class="sheet-title">Kredit bearbeiten</div>
+    ${kreditForm(k)}
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary" style="flex:2" onclick="saveEditKredit('${esc(kid)}')">Speichern</button>
+      <button class="btn btn-red" style="flex:1" onclick="delKredit('${esc(kid)}')">Löschen</button>
+    </div>`);
+}
+function saveEditKredit(kid) {
+  const k = S.kredite.find(x => x.id === kid);
+  if (!k) return;
+  const updated = readKreditForm(k);
+  if (!updated) return;
+  Object.assign(k, updated);
+  persist(); closeGenSheet(); render(); toast(`${esc(k.n)} gespeichert`);
+}
+function delKredit(kid) {
+  const k = S.kredite.find(x => x.id === kid);
+  if (!k || !confirm(`"${k.n}" wirklich löschen?`)) return;
+  S.kredite = S.kredite.filter(x => x.id !== kid);
+  persist(); closeGenSheet(); render(); toast(`${esc(k.n)} gelöscht`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CATEGORY MODALS
+// ═══════════════════════════════════════════════════════════════════════════
+function catForm(cat = {}) {
+  const gOpts = uniqueGroups().map(g => `<option value="${esc(g)}"${g===cat.g?' selected':''}>${esc(g)}</option>`).join('');
+  const types = ['E','F','V','K','S'];
+  const typeOpts = types.map(t =>
+    `<option value="${t}"${t===(cat.t||'F')?' selected':''}>${TL[t]} (${t})</option>`
+  ).join('');
+  return `
+    <div class="field"><div class="lbl">Bezeichnung</div>
+      <input class="inp" id="cp2" value="${esc(cat.p||'')}" placeholder="z.B. Netflix"/></div>
+    <div class="field">
+      <div class="lbl">Gruppe</div>
+      <div class="sw" style="margin-bottom:7px"><select class="sel" id="cg">${gOpts}</select></div>
+      <input class="inp" id="cgn" value="" placeholder="… oder neue Gruppe eingeben"/>
+    </div>
+    <div class="field"><div class="lbl">Typ</div>
+      <div class="sw"><select class="sel" id="ct">${typeOpts}</select></div>
+    </div>
+    <div class="field"><div class="lbl">Standard-Betrag (€)</div>
+      <input class="inp" type="number" id="cd" value="${cat.d ?? 0}" min="0" step="0.01" inputmode="decimal"/></div>`;
+}
+
+function readCatForm(existing = {}) {
+  const p  = document.getElementById('cp2')?.value.trim();
+  const gn = document.getElementById('cgn')?.value.trim();
+  const gs = document.getElementById('cg')?.value;
+  const g  = gn || gs;
+  const t  = document.getElementById('ct')?.value || 'F';
+  const d  = parseFloat(document.getElementById('cd')?.value) || 0;
+  if (!p) { toast('Bitte eine Bezeichnung eingeben', 'err'); return null; }
+  if (!g) { toast('Bitte eine Gruppe wählen oder eingeben', 'err'); return null; }
+  return { ...existing, g, p, d, t };
+}
+
+function addCat() {
+  openGenSheet(`
+    <div class="sheet-title">Kategorie hinzufügen</div>
+    ${catForm()}
+    <button class="btn btn-primary btn-full mt8" onclick="saveNewCat()">Speichern</button>`);
+}
+function saveNewCat() {
+  const c = readCatForm();
+  if (!c) return;
+  S.cats.push({ id: uid(), ...c });
+  persist(); closeGenSheet(); render(); toast(`"${esc(c.p)}" hinzugefügt`);
+}
+
+function editCat(cid) {
+  const cat = S.cats.find(x => x.id === cid);
+  if (!cat) return;
+  openGenSheet(`
+    <div class="sheet-title">Kategorie bearbeiten</div>
+    ${catForm(cat)}
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary" style="flex:2" onclick="saveEditCat('${esc(cid)}')">Speichern</button>
+      <button class="btn btn-red" style="flex:1" onclick="delCat('${esc(cid)}')">Löschen</button>
+    </div>`);
+}
+function saveEditCat(cid) {
+  const cat = S.cats.find(x => x.id === cid);
+  if (!cat) return;
+  const updated = readCatForm(cat);
+  if (!updated) return;
+  Object.assign(cat, updated);
+  persist(); closeGenSheet(); render(); toast(`"${esc(cat.p)}" gespeichert`);
+}
+
+function delCat(cid) {
+  const cat = S.cats.find(x => x.id === cid);
+  if (!cat) return;
+  if (!confirm(`"${cat.p}" entfernen?\nAlle gespeicherten Werte dieser Kategorie gehen verloren.`)) return;
+  // Clean orphaned data entries
+  for (const k of Object.keys(S.data)) {
+    if (k.endsWith(`_${cid}`)) delete S.data[k];
+  }
+  S.cats = S.cats.filter(x => x.id !== cid);
+  persist(); closeGenSheet(); render(); toast(`"${esc(cat.p)}" entfernt`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════════════════════════════
+function resetData() {
+  if (!confirm('Alle angepassten Werte zurücksetzen?\nKategorien und Kredite bleiben erhalten.')) return;
+  S.data = {};
+  persist(); render(); toast('Werte zurückgesetzt');
+}
+function resetAll() {
+  if (!confirm('App komplett zurücksetzen?\nAlle Daten, Kategorien, Kredite und Jahre werden gelöscht.')) return;
+  S.data    = {};
+  S.cats    = deepClone(DC);
+  S.kredite = deepClone(DK);
+  S.years   = defaultYears();
+  S.year    = S.years[0];
+  persist(); render(); toast('App zurückgesetzt');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OVERLAY / SHEET
+// ═══════════════════════════════════════════════════════════════════════════
+function openGenSheet(html) {
+  document.getElementById('genBody').innerHTML = html;
+  document.getElementById('genOverlay').classList.add('open');
+  // Focus first focusable element after animation
+  setTimeout(() => {
+    const first = document.querySelector('#genSheet input, #genSheet select');
+    if (first) first.focus();
+  }, 350);
+}
+function closeGenSheet() {
+  document.getElementById('genOverlay').classList.remove('open');
+}
+
+// Close sheets on backdrop click
+document.getElementById('yearOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('yearOverlay')) closeYearSheet();
+}, { passive: true });
+document.getElementById('genOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('genOverlay')) closeGenSheet();
+}, { passive: true });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDER ENGINE  (minimal DOM diff via ID check)
+// ═══════════════════════════════════════════════════════════════════════════
+function render() {
+  const v   = S.view;
+  const main = document.getElementById('main');
+
+  // Build HTML for active view
+  let html = '';
+  if      (v === 'dashboard')    html = vDashboard();
+  else if (v === 'eingabe')      html = vEingabe();
+  else if (v === 'uebersicht')   html = vUebersicht();
+  else if (v === 'kredite')      html = vKredite();
+  else if (v === 'einstellungen')html = vEinstellungen();
+
+  // Swap content
+  main.innerHTML = html;
+
+  // Update bottom nav active state
+  document.querySelectorAll('.bnav-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.v === v)
+  );
+
+  // Update header pill
+  document.getElementById('yearPill').textContent = S.year;
+  document.getElementById('headerSub').textContent =
+    `${MF[S.month]} ${S.year}`;
+
+  // Attach month-chip listeners (dashboard only) via delegation
+  const grid = document.getElementById('monthGrid');
+  if (grid) {
+    grid.addEventListener('click', e => {
+      const chip = e.target.closest('[data-mi]');
+      if (chip) selMonth(parseInt(chip.dataset.mi));
+    }, { passive: true });
+  }
+
+  // Re-check val if on Anpassen view
+  if (v === 'eingabe') checkVal();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════════
+function nav(v) {
+  S.view = v;
+  render();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+function selYear(y)  { S.year  = parseInt(y);  render(); }
+function selMonth(i) { S.month = parseInt(i);  render(); }
+
+// ── Bottom nav delegation (passive for scroll performance)
+document.getElementById('bnav').addEventListener('click', e => {
+  const btn = e.target.closest('[data-v]');
+  if (btn) nav(btn.dataset.v);
+}, { passive: true });
+
+// ── Keyboard: Escape closes sheets
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeGenSheet(); closeYearSheet(); }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════════════════
+let _toastTimer = null;
+function toast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  void t.offsetWidth;           // force reflow for animation restart
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SERVICE WORKER
+// ═══════════════════════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('./sw.js').catch(() => {}),
+    { passive: true }
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════════════════
+load();
+render();
+</script>
+</body>
+</html>
