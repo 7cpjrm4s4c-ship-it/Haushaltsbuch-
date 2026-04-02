@@ -1539,10 +1539,12 @@ function executeImport(){
 
 // Track checked state for cleanup
 let _cleanupChecked=new Set();
+let _cleanupAllIds=[];  // stores all orphan IDs for delete confirmation
 
 function openCleanupSheet(orphans,importedCount,newCats,updVals){
   // Pre-select all orphans
   _cleanupChecked=new Set(orphans.map(c=>c.id));
+  _cleanupAllIds=orphans.map(c=>c.id);  // store for delete button
   _renderCleanupSheet(orphans,importedCount,newCats,updVals);
 }
 
@@ -1571,13 +1573,13 @@ function _renderCleanupSheet(orphans,importedCount,newCats,updVals){
       Diese Kategorien existieren in der App, fehlen aber in der importierten Datei. Auswahl treffen und danach löschen oder behalten.
     </div>
     <div class="cleanup-sel-row">
-      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="setAllCleanup(true,${JSON.stringify(orphans.map(c=>c.id))})">Alle auswählen</button>
-      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="setAllCleanup(false,${JSON.stringify(orphans.map(c=>c.id))})">Keine auswählen</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="setAllCleanup(true)">Alle auswählen</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="setAllCleanup(false)">Keine auswählen</button>
     </div>
     <div class="cleanup-list" id="cleanupList">${rows}</div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-ghost" style="flex:1" onclick="closeGenSheet();render();toast('Import abgeschlossen')">Alle behalten</button>
-      <button class="btn btn-red" style="flex:2" id="cleanupDelBtn" onclick="confirmCleanupDelete(${JSON.stringify(orphans.map(c=>c.id))})" ${selCount===0?'disabled':''}>
+      <button class="btn btn-red" style="flex:2" id="cleanupDelBtn" onclick="confirmCleanupDelete()" ${selCount===0?'disabled':''}>
         ${selCount>0?selCount+' löschen':'Auswahl treffen'}
       </button>
     </div>`);
@@ -1602,7 +1604,8 @@ function toggleCleanup(catId,e){
   }
 }
 
-function setAllCleanup(selectAll,allIds){
+function setAllCleanup(selectAll){
+  const allIds=_cleanupAllIds;
   if(selectAll)allIds.forEach(id=>_cleanupChecked.add(id));
   else _cleanupChecked.clear();
   // Re-render just the list
@@ -1621,7 +1624,8 @@ function setAllCleanup(selectAll,allIds){
   if(btn){const n=_cleanupChecked.size;btn.disabled=n===0;btn.textContent=n>0?n+' löschen':'Auswahl treffen';}
 }
 
-function confirmCleanupDelete(allIds){
+function confirmCleanupDelete(){
+  const allIds=_cleanupAllIds;
   const toDelete=allIds.filter(id=>_cleanupChecked.has(id));
   if(!toDelete.length)return;
   const cats=toDelete.map(id=>S.cats.find(c=>c.id===id)).filter(Boolean);
