@@ -524,6 +524,83 @@ option { background: #1a1a2e; color: var(--t1); }
 /* Scrollbar hidden globally */
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; }
+
+/* ── IMPORT SCREEN ────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed var(--glass-border);
+  border-radius: var(--r-lg);
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--glass);
+  position: relative;
+}
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(79,158,255,0.08);
+  box-shadow: 0 0 0 3px rgba(79,158,255,0.15);
+}
+.drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon { font-size: 38px; margin-bottom: 10px; line-height: 1; }
+.drop-title { font-size: 15px; font-weight: 700; color: var(--t1); margin-bottom: 5px; }
+.drop-sub   { font-size: 12px; color: var(--t3); line-height: 1.5; }
+.drop-sub b { color: var(--accent); }
+
+.import-table-wrap {
+  overflow-x: auto; border-radius: var(--r-sm);
+  border: 1px solid var(--glass-border);
+  margin-bottom: 12px;
+  max-height: 260px; overflow-y: auto;
+}
+.import-table {
+  width: 100%; border-collapse: collapse; font-size: 11px;
+  font-family: Arial, sans-serif;
+}
+.import-table th {
+  background: var(--glass-strong); color: var(--t2);
+  padding: 8px 10px; text-align: left;
+  font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  position: sticky; top: 0; white-space: nowrap;
+}
+.import-table td {
+  padding: 7px 10px; border-top: 1px solid var(--sep);
+  color: var(--t1); white-space: nowrap; max-width: 140px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.import-table tr:hover td { background: var(--glass); }
+.import-table .ok   { color: var(--green); }
+.import-table .warn { color: var(--gold); }
+.import-table .err  { color: var(--red); }
+
+.import-stat {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px;
+}
+.import-stat-item {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm); padding: 10px 8px; text-align: center;
+}
+.import-stat-val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.import-stat-lbl { font-size: 9px; font-weight: 700; letter-spacing: .7px;
+  text-transform: uppercase; color: var(--t3); margin-top: 2px; }
+
+.map-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.map-label { font-size: 12px; color: var(--t2); width: 80px; flex-shrink: 0; }
+.map-arrow { color: var(--t3); font-size: 12px; }
+
+.template-box {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 12px;
+}
+.template-code {
+  font-family: 'Courier New', monospace; font-size: 10px; color: var(--t2);
+  line-height: 1.7; white-space: pre; overflow-x: auto;
+}
+.template-header { font-weight: 700; color: var(--accent); }
 </style>
 </head>
 <body>
@@ -564,6 +641,10 @@ option { background: #1a1a2e; color: var(--t1); }
   <button class="bnav-btn" data-v="einstellungen">
     <span class="bnav-icon">⚙</span>
     <span class="bnav-label">Einstellungen</span>
+  </button>
+  <button class="bnav-btn" data-v="import">
+    <span class="bnav-icon">⤵</span>
+    <span class="bnav-label">Import</span>
   </button>
 </nav>
 
@@ -1461,6 +1542,7 @@ function render() {
   else if (v === 'uebersicht')   html = vUebersicht();
   else if (v === 'kredite')      html = vKredite();
   else if (v === 'einstellungen')html = vEinstellungen();
+  else if (v === 'import')       html = vImport();
 
   // Swap content
   main.innerHTML = html;
@@ -1522,6 +1604,356 @@ function toast(msg, type = 'ok') {
   t.classList.add('show');
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CSV / TSV IMPORT
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * State for import session — reset each time the import view loads.
+ * @type {{raw:string, rows:Array, parsed:Array, errors:Array, fileName:string}}
+ */
+let IMP = { raw:'', rows:[], parsed:[], errors:[], fileName:'' };
+
+// ── VIEW ────────────────────────────────────────────────────────────────────
+function vImport() {
+  const hasData = IMP.parsed.length > 0;
+  const ok   = IMP.parsed.filter(r => r._status === 'ok').length;
+  const warn = IMP.parsed.filter(r => r._status === 'warn').length;
+  const err  = IMP.parsed.filter(r => r._status === 'err').length;
+
+  const previewRows = IMP.parsed.slice(0, 50).map(r => `
+    <tr>
+      <td class="${r._status}">${esc(r.pos||'–')}</td>
+      <td>${esc(r.gruppe||'–')}</td>
+      <td>${r.typ ? `<span class="tag tag-${r.typ}">${TL[r.typ]||r.typ}</span>` : '–'}</td>
+      <td style="text-align:right">${r.betrag != null ? fmt(r.betrag) : '–'}</td>
+      <td>${r.jahre ? esc(r.jahre.join(', ')) : '–'}</td>
+      <td>${r.monate ? esc(r.monate.join(', ')) : '–'}</td>
+      <td class="${r._status}" style="font-size:10px">${esc(r._msg||'✓')}</td>
+    </tr>`).join('');
+
+  return `
+    <div class="card">
+      <div class="card-title">CSV / TSV Import</div>
+
+      <div class="drop-zone" id="dropZone"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="handleDrop(event)">
+        <input type="file" accept=".csv,.tsv,.txt" onchange="handleFileInput(this)"/>
+        <div class="drop-icon">📂</div>
+        <div class="drop-title">${IMP.fileName ? esc(IMP.fileName) : 'Datei auswählen oder hierher ziehen'}</div>
+        <div class="drop-sub">
+          ${IMP.fileName
+            ? `<b>${IMP.rows.length} Zeilen</b> geladen · andere Datei wählen`
+            : '.csv oder .tsv · Trennzeichen wird automatisch erkannt'}
+        </div>
+      </div>
+    </div>
+
+    ${!hasData ? `
+    <div class="card">
+      <div class="card-title">Vorlage &amp; Format</div>
+      <div class="drop-sub" style="margin-bottom:10px">
+        Spaltenreihenfolge ist <b style="color:var(--accent)">egal</b> — die App erkennt sie automatisch anhand der Überschriften.
+        Pflichtfelder: <b style="color:var(--accent)">Position</b> und <b style="color:var(--accent)">Betrag</b>.
+      </div>
+      <div class="template-box">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:6px;font-weight:700;">SPALTEN (Kopfzeile erforderlich)</div>
+        <div class="template-code"><span class="template-header">Position</span>    Name der Ausgabe/Einnahme
+<span class="template-header">Gruppe</span>      Kategorie-Gruppe (z.B. Wohnen)
+<span class="template-header">Typ</span>         E · F · V · K · S
+<span class="template-header">Betrag</span>      Monatlicher Betrag (z.B. 950 oder 950,00)
+<span class="template-header">Jahr</span>        2025 · 2026 · alle (optional)
+<span class="template-header">Monat</span>       Januar…Dezember · alle (optional)</div>
+      </div>
+      <div class="template-box">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:6px;font-weight:700;">BEISPIEL CSV</div>
+        <div class="template-code">Position;Gruppe;Typ;Betrag;Jahr;Monat
+Miete / Wohnkosten;Wohnen;F;950;alle;alle
+Gehalt (netto);Einnahmen;E;3500;2026;alle
+Strom;Wohnen;F;80;2026;Januar
+Netflix;Abos;F;12,99;alle;alle</div>
+      </div>
+      <button class="btn btn-ghost btn-full" onclick="downloadTemplate()">⬇ Vorlage herunterladen</button>
+    </div>` : `
+
+    <div class="import-stat">
+      <div class="import-stat-item">
+        <div class="import-stat-val" style="color:var(--green)">${ok}</div>
+        <div class="import-stat-lbl">Bereit</div>
+      </div>
+      <div class="import-stat-item">
+        <div class="import-stat-val" style="color:var(--gold)">${warn}</div>
+        <div class="import-stat-lbl">Warnungen</div>
+      </div>
+      <div class="import-stat-item">
+        <div class="import-stat-val" style="color:var(--red)">${err}</div>
+        <div class="import-stat-lbl">Fehler</div>
+      </div>
+    </div>
+
+    ${IMP.parsed.length > 0 ? `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="import-table-wrap">
+        <table class="import-table">
+          <thead><tr>
+            <th>Position</th><th>Gruppe</th><th>Typ</th>
+            <th>Betrag</th><th>Jahr(e)</th><th>Monat(e)</th><th>Status</th>
+          </tr></thead>
+          <tbody>${previewRows}</tbody>
+        </table>
+      </div>
+    </div>
+    ${IMP.parsed.length > 50 ? `<div style="text-align:center;font-size:11px;color:var(--t3);margin-bottom:10px">Zeige 50 von ${IMP.parsed.length} Einträgen</div>` : ''}
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-ghost" style="flex:1" onclick="IMP={raw:'',rows:[],parsed:[],errors:[],fileName:''};render()">✕ Verwerfen</button>
+      <button class="btn btn-primary" style="flex:2" onclick="executeImport()" ${ok===0?'disabled':''}>
+        ⤵ ${ok} Einträge importieren
+      </button>
+    </div>` : ''}
+    `}`;
+}
+
+// ── FILE HANDLING ────────────────────────────────────────────────────────────
+function handleFileInput(input) {
+  const file = input.files[0];
+  if (file) readFile(file);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone')?.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) readFile(file);
+}
+function readFile(file) {
+  IMP.fileName = file.name;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    IMP.raw = ev.target.result;
+    parseCSV(IMP.raw);
+    render();
+  };
+  reader.onerror = () => toast('Datei konnte nicht gelesen werden', 'err');
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ── CSV / TSV PARSER ─────────────────────────────────────────────────────────
+function parseCSV(raw) {
+  // Normalize line endings
+  const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+    .split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  if (lines.length < 2) {
+    IMP.rows = []; IMP.parsed = []; IMP.errors = ['Datei hat weniger als 2 Zeilen'];
+    return;
+  }
+
+  // Auto-detect delimiter from header line
+  const header = lines[0];
+  const delim = detectDelimiter(header);
+
+  // Parse header → column index map (case-insensitive, trimmed)
+  const headers = splitLine(header, delim).map(h => h.toLowerCase().trim()
+    .replace(/['"]/g, '').replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue'));
+
+  const COL = {
+    pos:    findCol(headers, ['position','pos','name','bezeichnung','titel']),
+    gruppe: findCol(headers, ['gruppe','group','kategorie','category']),
+    typ:    findCol(headers, ['typ','type','art']),
+    betrag: findCol(headers, ['betrag','amount','wert','value','preis','price','summe']),
+    jahr:   findCol(headers, ['jahr','year','jahre','years']),
+    monat:  findCol(headers, ['monat','month','monate','months']),
+  };
+
+  IMP.rows    = lines.slice(1);
+  IMP.parsed  = [];
+  IMP.errors  = [];
+
+  for (let i = 0; i < IMP.rows.length; i++) {
+    const line = IMP.rows[i];
+    if (!line.trim()) continue;
+    const cols = splitLine(line, delim).map(c => c.trim().replace(/^["']|["']$/g, ''));
+
+    const get = idx => (idx >= 0 && idx < cols.length) ? cols[idx].trim() : '';
+
+    const pos    = get(COL.pos);
+    const gruppe = get(COL.gruppe);
+    const typRaw = get(COL.typ).toUpperCase();
+    const betRaw = get(COL.betrag).replace(',', '.').replace(/[^\d.-]/g, '');
+    const jahrRaw  = get(COL.jahr);
+    const monatRaw = get(COL.monat);
+
+    let _status = 'ok', _msg = '';
+
+    // Validate
+    if (!pos) { _status = 'err'; _msg = 'Position fehlt'; }
+
+    const betrag = parseFloat(betRaw);
+    if (isNaN(betrag)) { _status = 'err'; _msg = 'Betrag ungültig'; }
+
+    const typ = normalizeTyp(typRaw);
+    if (!typ && _status !== 'err') { _status = 'warn'; _msg = `Typ '${typRaw}' unbekannt → F`; }
+
+    // Resolve Jahre
+    const jahre = resolveJahre(jahrRaw);
+    if (!jahre.length && _status === 'ok') { _status = 'warn'; _msg = `Jahr '${jahrRaw}' unbekannt → aktuelle Jahre`; }
+
+    // Resolve Monate
+    const monate = resolveMonate(monatRaw);
+
+    IMP.parsed.push({
+      pos, gruppe: gruppe || 'Import', typ: typ || 'F',
+      betrag: isNaN(betrag) ? null : betrag,
+      jahre: jahre.length ? jahre : S.years,
+      monate,
+      _status, _msg, _raw: line,
+    });
+  }
+}
+
+function detectDelimiter(line) {
+  const counts = { ';': 0, ',': 0, '\t': 0, '|': 0 };
+  for (const c of line) if (counts[c] !== undefined) counts[c]++;
+  return Object.entries(counts).sort((a,b) => b[1]-a[1])[0][0];
+}
+
+function splitLine(line, delim) {
+  // Handles quoted fields
+  const result = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if ((c === '"' || c === "'") && !inQ) { inQ = true; continue; }
+    if ((c === '"' || c === "'") && inQ)  { inQ = false; continue; }
+    if (c === delim && !inQ) { result.push(cur); cur = ''; continue; }
+    cur += c;
+  }
+  result.push(cur);
+  return result;
+}
+
+function findCol(headers, aliases) {
+  for (const alias of aliases) {
+    const idx = headers.findIndex(h => h === alias || h.includes(alias));
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
+function normalizeTyp(raw) {
+  const map = {
+    'E':'E','EINNAHME':'E','EINNAHMEN':'E','INCOME':'E',
+    'F':'F','FIX':'F','FIXKOSTEN':'F','FIXED':'F',
+    'V':'V','VAR':'V','VARIABEL':'V','VARIABLE':'V',
+    'K':'K','KREDIT':'K','CREDIT':'K','LOAN':'K',
+    'S':'S','SPAR':'S','SPAREN':'S','SAVE':'S','SAVING':'S','SAVINGS':'S',
+  };
+  return map[raw] || null;
+}
+
+function resolveJahre(raw) {
+  if (!raw || raw.toLowerCase().trim() === 'alle' || raw.toLowerCase().trim() === 'all') return S.years;
+  // Support "2025,2026" or "2025-2027" ranges
+  const nums = raw.split(/[,;\/\s]+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 2000 && n <= 2100);
+  if (nums.length === 0) return [];
+  // Range: "2025-2027"
+  if (raw.includes('-') && nums.length === 2) {
+    const [a, b] = nums;
+    const range = [];
+    for (let y = Math.min(a,b); y <= Math.max(a,b); y++) range.push(y);
+    return range;
+  }
+  return nums;
+}
+
+function resolveMonate(raw) {
+  if (!raw || raw.toLowerCase().trim() === 'alle' || raw.toLowerCase().trim() === 'all' || !raw.trim()) {
+    return Array.from({length:12}, (_,i) => i); // 0–11
+  }
+  const MONTH_MAP = {};
+  MF.forEach((m, i) => { MONTH_MAP[m.toLowerCase()] = i; });
+  MS.forEach((m, i) => { MONTH_MAP[m.toLowerCase()] = i; });
+  // Also numeric
+  const result = [];
+  for (const part of raw.split(/[,;\/\s]+/)) {
+    const p = part.trim().toLowerCase();
+    if (MONTH_MAP[p] !== undefined) { result.push(MONTH_MAP[p]); continue; }
+    const n = parseInt(p);
+    if (!isNaN(n) && n >= 1 && n <= 12) result.push(n - 1);
+  }
+  return result.length ? [...new Set(result)].sort() : Array.from({length:12}, (_,i) => i);
+}
+
+// ── EXECUTE IMPORT ───────────────────────────────────────────────────────────
+function executeImport() {
+  const toImport = IMP.parsed.filter(r => r._status !== 'err' && r.betrag != null);
+  if (!toImport.length) { toast('Keine gültigen Einträge', 'err'); return; }
+
+  let newCats = 0, updatedVals = 0;
+
+  for (const row of toImport) {
+    // Find or create category
+    let cat = S.cats.find(c =>
+      c.p.toLowerCase().trim() === row.pos.toLowerCase().trim()
+    );
+
+    if (!cat) {
+      // Create new category
+      cat = { id: uid(), g: row.gruppe || 'Import', p: row.pos, d: row.betrag, t: row.typ };
+      S.cats.push(cat);
+      newCats++;
+    }
+
+    // Set values for each year/month combination
+    for (const year of row.jahre) {
+      for (const month of row.monate) {
+        sv(year, month, cat, row.betrag);
+        updatedVals++;
+      }
+    }
+  }
+
+  persist();
+  IMP = { raw:'', rows:[], parsed:[], errors:[], fileName:'' };
+  render();
+  toast(`✅ ${toImport.length} Einträge · ${newCats} neue Kategorien · ${updatedVals} Werte`);
+}
+
+// ── TEMPLATE DOWNLOAD ────────────────────────────────────────────────────────
+function downloadTemplate() {
+  const rows = [
+    'Position;Gruppe;Typ;Betrag;Jahr;Monat',
+    'Gehalt (netto);Einnahmen;E;3500;alle;alle',
+    'Kindergeld;Einnahmen;E;250;alle;alle',
+    'Miete / Wohnkosten;Wohnen;F;900;alle;alle',
+    'Strom;Wohnen;F;80;alle;alle',
+    'Gas / Heizung;Wohnen;F;120;2026;alle',
+    'Klarmobil / SIM;Kommunikation;F;10;alle;alle',
+    'Magenta / Internet;Kommunikation;F;45;alle;alle',
+    'Berufsunfähigkeit;Versicherungen;F;50;alle;alle',
+    'Netflix;Abos;F;12,99;2026;alle',
+    'Lebensmittel / Einkauf;Variable Ausgaben;V;400;alle;alle',
+    'Benzin / Mobilität;Variable Ausgaben;V;80;alle;alle',
+    'Urlaub (mtl. Rücklage);Sonderausgaben;V;100;alle;alle',
+    'Hanseatic Bank;Kredite;K;200;2026;alle',
+    'Monatsgeld / Tagesgeld;Sparen & Investieren;S;200;alle;alle',
+    '',
+    '# Hinweise:',
+    '# Typ: E=Einnahmen F=Fixkosten V=Variabel K=Kredit S=Sparen',
+    '# Jahr: 2025 | 2026 | alle | 2025,2026 | 2025-2028',
+    '# Monat: Januar | alle | Januar,März | 1,3,6',
+  ].join('\n');
+
+  const blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'Haushaltsplan_Vorlage.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Vorlage heruntergeladen');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
