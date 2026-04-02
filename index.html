@@ -398,6 +398,21 @@ option{background:#1a1a2e;color:var(--t1)}
 .tx-amt{font-size:13px;font-weight:600;color:var(--red);font-variant-numeric:tabular-nums}
 .tx-time{font-size:10px;color:var(--t3)}
 
+/* ── CLEANUP CONFIRM SHEET */
+.cleanup-list{display:flex;flex-direction:column;gap:0;max-height:50vh;overflow-y:auto;
+  border:1px solid var(--glass-border);border-radius:var(--r-sm);margin-bottom:14px}
+.cleanup-row{display:flex;align-items:center;gap:10px;padding:11px 13px;
+  border-bottom:1px solid var(--sep);cursor:pointer;transition:background .1s}
+.cleanup-row:last-child{border-bottom:none}
+.cleanup-row:active{background:var(--glass)}
+.cleanup-cb{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--glass-border);
+  background:var(--glass-input);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:11px;transition:all .15s}
+.cleanup-cb.checked{background:var(--red);border-color:var(--red)}
+.cleanup-info{flex:1;min-width:0}
+.cleanup-name{font-size:13px;color:var(--t1);font-weight:500}
+.cleanup-meta{font-size:11px;color:var(--t3);margin-top:1px}
+.cleanup-sel-row{display:flex;gap:8px;margin-bottom:10px}
 /* ── IMPORT SCREEN */
 .drop-zone{
   border:2px dashed var(--glass-border);border-radius:var(--r-lg);
@@ -425,23 +440,255 @@ option{background:#1a1a2e;color:var(--t1)}
 .template-box{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:12px}
 .template-code{font-family:'Courier New',monospace;font-size:10px;color:var(--t2);line-height:1.7;white-space:pre;overflow-x:auto}
 .template-header{font-weight:700;color:var(--accent)}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE LAYOUT — Tablet (≥600px) + Desktop (≥1024px)
+═══════════════════════════════════════════════════════════ */
+
+/* Shared: center & constrain on large screens */
+@media (min-width: 600px) {
+  /* Scrollbar visible on desktop */
+  ::-webkit-scrollbar { display: block; width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
+  * { scrollbar-width: thin; scrollbar-color: var(--glass-border) transparent; }
+
+  /* App shell: sidebar layout */
+  body { display: flex; flex-direction: column; }
+  
+  .app-shell {
+    display: flex;
+    flex: 1;
+    min-height: 100vh;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Sidebar nav — replaces bottom nav */
+  .bnav {
+    position: sticky;
+    top: 0;
+    left: 0;
+    bottom: auto;
+    height: 100vh;
+    width: 220px;
+    flex-shrink: 0;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 24px 12px 24px;
+    border-top: none;
+    border-right: 1px solid var(--glass-border);
+    box-shadow: 2px 0 20px rgba(0,0,0,.2), inset -1px 0 0 rgba(255,255,255,.05);
+    overflow-y: auto;
+    gap: 4px;
+    display: flex;
+    z-index: 90;
+  }
+  .bnav-btn {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    height: auto;
+    padding: 11px 14px;
+    border-radius: var(--r-sm);
+    width: 100%;
+  }
+  .bnav-btn.active::before {
+    /* Remove top pill indicator */
+    display: none;
+  }
+  .bnav-btn.active {
+    background: var(--glass-strong);
+  }
+  .bnav-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  .bnav-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--t2);
+    letter-spacing: 0;
+  }
+  .bnav-btn.active .bnav-label {
+    color: var(--t1);
+    font-weight: 600;
+  }
+  .bnav-btn.active .bnav-icon {
+    stroke: #fff;
+    transform: none;
+  }
+  /* Sidebar year pill at top */
+  .bnav::before {
+    content: attr(data-year);
+    display: block;
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 6px 14px 18px;
+    border-bottom: 1px solid var(--sep);
+    margin-bottom: 8px;
+    letter-spacing: .3px;
+  }
+
+  /* Header: hide on desktop, year pill handled by sidebar */
+  .header {
+    display: none;
+  }
+
+  /* Main content area */
+  .content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow-y: auto;
+  }
+  .main {
+    padding: 28px 32px 40px;
+    max-width: 900px;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  /* Tiles: 4 columns on tablet+ */
+  .tile-grid { grid-template-columns: repeat(4, 1fr); }
+
+  /* Hero: larger text */
+  .hero-val { font-size: 48px; }
+
+  /* Month chips: all 12 in one row */
+  .month-grid { grid-template-columns: repeat(6, 1fr); }
+
+  /* Cards: slightly larger padding */
+  .card { padding: 20px 22px; }
+
+  /* Overlays/sheets: centered dialog on desktop */
+  .overlay {
+    align-items: center;
+    justify-content: center;
+  }
+  .sheet {
+    width: 520px;
+    max-width: 90vw;
+    border-radius: var(--r-xl);
+    border: 1px solid var(--glass-border);
+    max-height: 85vh;
+  }
+  .sheet-handle { display: none; }
+
+  /* Toast: above content, not above nav */
+  .toast {
+    bottom: 28px;
+    left: 50%;
+  }
+
+  /* Cat grid: 3 columns on tablet */
+  .cat-grid-ausgaben { grid-template-columns: repeat(3, 1fr); }
+
+  /* Import table: wider */
+  .import-table-wrap { max-height: 40vh; }
+}
+
+@media (min-width: 1024px) {
+  .bnav { width: 240px; }
+
+  .main {
+    padding: 32px 40px 48px;
+    max-width: 1000px;
+  }
+
+  /* Dashboard: 2-column layout for cards */
+  .desktop-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .desktop-2col .hero,
+  .desktop-2col .tile-grid,
+  .desktop-2col .month-grid {
+    grid-column: 1 / -1;
+  }
+
+  /* Tiles: 4 columns */
+  .tile-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  /* Larger hero */
+  .hero-val { font-size: 52px; }
+
+  /* Cat grid: 3 cols */
+  .cat-grid-ausgaben { grid-template-columns: repeat(3, 1fr); }
+
+  /* Month chips: 12 in one row */
+  .month-grid { grid-template-columns: repeat(12, 1fr); }
+  .mchip { font-size: 10px; padding: 7px 4px; }
+}
+
+/* Desktop-only sidebar year label via JS */
+@media (min-width: 600px) {
+  .sidebar-header {
+    padding: 0 14px 16px;
+    border-bottom: 1px solid var(--sep);
+    margin-bottom: 8px;
+  }
+  .sidebar-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--t1);
+    letter-spacing: -.3px;
+    margin-bottom: 2px;
+  }
+  .sidebar-year {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--glass-strong);
+    border: 1px solid rgba(245,166,35,.3);
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 16px;
+    margin-top: 4px;
+  }
+  .sidebar-sub {
+    font-size: 11px;
+    color: var(--t3);
+    margin-top: 2px;
+  }
+  /* Page title shown at top of content on desktop */
+  .desktop-page-title {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--t1);
+    letter-spacing: -.5px;
+    margin-bottom: 20px;
+  }
+}
+@media (max-width: 599px) {
+  .sidebar-header { display: none; }
+  .desktop-page-title { display: none; }
+  .content-area { flex: 1; }
+  .app-shell { display: contents; }
+}
+
 </style>
 </head>
 <body>
 
-<header class="header" id="appHeader">
-  <div class="header-left">
-    <div class="header-title" id="headerTitle">Haushaltsplan</div>
-    <div class="header-sub" id="headerSub">Lade…</div>
-  </div>
-  <button class="year-pill" id="yearPill" onclick="openYearSheet()">–</button>
-</header>
-
-<main class="main" id="main"></main>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-<!-- BOTTOM NAV — alle Icons: weiß, gleiche Größe, SVG -->
+<div class="app-shell" id="appShell">
 <nav class="bnav" id="bnav">
+  <div class="sidebar-header">
+    <div class="sidebar-title">Haushaltsplan</div>
+    <div class="sidebar-sub" id="sidebarSub">Lade…</div>
+    <div class="sidebar-year" id="sidebarYear" onclick="openYearSheet()">2026 ▾</div>
+  </div>
   <button class="bnav-btn active" data-v="dashboard">
     <svg class="bnav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="bnav-label">Dashboard</span>
@@ -467,6 +714,18 @@ option{background:#1a1a2e;color:var(--t1)}
     <span class="bnav-label">Import</span>
   </button>
 </nav>
+<div class="content-area">
+<header class="header" id="appHeader">
+  <div class="header-left">
+    <div class="header-title" id="headerTitle">Haushaltsplan</div>
+    <div class="header-sub" id="headerSub">Lade…</div>
+  </div>
+  <button class="year-pill" id="yearPill" onclick="openYearSheet()">–</button>
+</header>
+<main class="main" id="main"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div><!-- /content-area -->
+</div><!-- /app-shell -->
 
 <!-- YEAR SHEET -->
 <div class="overlay" id="yearOverlay">
@@ -688,6 +947,7 @@ function vDashboard() {
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const chips=MS.map((x,i)=>`<div class="mchip${i===mo?' active':''}" data-mi="${i}">${x}</div>`).join('');
   return`
+    <div class="desktop-page-title">Dashboard</div>
     ${ios&&!standalone?`<div class="install-banner"><div class="install-banner-title">Als App installieren</div><div class="install-banner-text">Safari → Teilen-Symbol → „Zum Home-Bildschirm" → Hinzufügen</div></div>`:''}
     <div class="month-grid" id="monthGrid">${chips}</div>
     <div class="hero">
@@ -765,6 +1025,7 @@ function vAusgaben() {
 
   const amtDisplay=S.ausgabeAmt||'0';
   return`
+    <div class="desktop-page-title">Ausgaben</div>
     <div class="card">
       <div class="card-title">Ausgaben · ${MF[mo]} ${y}</div>
       <div class="amt-display">
@@ -867,6 +1128,7 @@ function vUebersicht() {
   }
   const saldo=einnahmen-ausgaben;
   return`
+    <div class="desktop-page-title">Übersicht</div>
     <div class="gap-row" style="margin-bottom:12px">
       <div class="sw"><select class="sel" onchange="selYear(this.value)">${yOpts}</select></div>
       <div class="sw"><select class="sel" onchange="selMonth(parseInt(this.value))">${mOpts}</select></div>
@@ -967,6 +1229,7 @@ function vKredite() {
     </div>`;
   }).join('');
   return`
+    <div class="desktop-page-title">Kredite</div>
     <div class="hero"><div class="hero-bg"></div>
       <div class="hero-content">
         <div class="hero-lbl">Gesamtschulden</div>
@@ -1005,6 +1268,7 @@ function vEinstellungen() {
       ${rows}</div>`;
   }
   return`
+    <div class="desktop-page-title">Einstellungen</div>
     <div class="card">
       <div class="card-title">Kategorien verwalten</div>
       ${catHTML}
@@ -1079,6 +1343,7 @@ function vImport() {
       <td class="${r._status}" style="font-size:10px">${esc(r._msg||'✓')}</td>
     </tr>`).join('');
   return`
+    <div class="desktop-page-title">Import</div>
     <div class="card">
       <div class="card-title">CSV / TSV Import</div>
       <div class="drop-zone" id="dropZone"
@@ -1192,13 +1457,134 @@ function executeImport(){
   const toImp=IMP.parsed.filter(r=>r._status!=='err'&&r.betrag!=null);
   if(!toImp.length){toast('Keine gültigen Einträge','err');return;}
   let newCats=0,updVals=0;
+  // Names from CSV (normalised for comparison)
+  const csvNames=new Set(toImp.map(r=>r.pos.toLowerCase().trim()));
   for(const row of toImp){
     let cat=S.cats.find(c=>c.p.toLowerCase().trim()===row.pos.toLowerCase().trim());
-    if(!cat){cat={id:uid(),g:row.gruppe||'Import',p:row.pos,d:row.betrag,t:row.typ};S.cats.push(cat);newCats++;}
-    for(const year of row.jahre)for(const month of row.monate){sv(year,month,cat,row.betrag);updVals++;}
+    if(!cat){
+      cat={id:uid(),g:row.gruppe||'Import',p:row.pos,d:0,t:row.typ};
+      S.cats.push(cat);newCats++;
+    }
+    const monthSet=new Set(row.monate);
+    for(const year of row.jahre){
+      for(let m=0;m<12;m++){
+        if(monthSet.has(m)){S.data[dkey(year,m,cat.id)]=row.betrag;updVals++;}
+        else{S.data[dkey(year,m,cat.id)]=0;}
+      }
+    }
   }
-  persist();IMP={raw:'',rows:[],parsed:[],errors:[],fileName:''};
-  render();toast(`✅ ${toImp.length} Einträge · ${newCats} neue Kat. · ${updVals} Werte`);
+  persist();
+  const importedCount=toImp.length,newCatsCount=newCats,updValsCount=updVals;
+  IMP={raw:'',rows:[],parsed:[],errors:[],fileName:''};
+  // Find categories NOT in CSV → offer to delete
+  const orphans=S.cats.filter(c=>!csvNames.has(c.p.toLowerCase().trim()));
+  if(orphans.length>0){
+    openCleanupSheet(orphans,importedCount,newCatsCount,updValsCount);
+  } else {
+    render();
+    toast(`✅ ${importedCount} Einträge · ${newCatsCount} neue Kat. · ${updValsCount} Werte`);
+  }
+}
+
+// Track checked state for cleanup
+let _cleanupChecked=new Set();
+
+function openCleanupSheet(orphans,importedCount,newCats,updVals){
+  // Pre-select all orphans
+  _cleanupChecked=new Set(orphans.map(c=>c.id));
+  _renderCleanupSheet(orphans,importedCount,newCats,updVals);
+}
+
+function _renderCleanupSheet(orphans,importedCount,newCats,updVals){
+  const rows=orphans.map(cat=>{
+    const checked=_cleanupChecked.has(cat.id);
+    const dataCount=Object.keys(S.data).filter(k=>k.endsWith('_'+cat.id)).length;
+    return`<div class="cleanup-row" onclick="toggleCleanup('${esc(cat.id)}',event)">
+      <div class="cleanup-cb${checked?' checked':''}">${checked?'✓':''}</div>
+      <div class="cleanup-info">
+        <div class="cleanup-name">${esc(cat.p)}</div>
+        <div class="cleanup-meta"><span class="tag tag-${cat.t}">${TL[cat.t]}</span> · ${esc(cat.g)}${dataCount>0?' · '+dataCount+' Wert'+(dataCount===1?'':' e'):''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const selCount=_cleanupChecked.size;
+  openGenSheet(`
+    <div class="sheet-title">Import abgeschlossen</div>
+    <div style="background:var(--green-dim);border:1px solid rgba(52,211,153,.2);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--green)">
+      ✅ ${importedCount} Einträge importiert · ${newCats} neue Kategorien · ${updVals} Werte gesetzt
+    </div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:6px;font-weight:600">
+      ${orphans.length} Kategorie${orphans.length===1?'':'n'} nicht in der CSV:
+    </div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:10px;line-height:1.5">
+      Diese Kategorien existieren in der App, fehlen aber in der importierten Datei. Auswahl treffen und danach löschen oder behalten.
+    </div>
+    <div class="cleanup-sel-row">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="setAllCleanup(true,${JSON.stringify(orphans.map(c=>c.id))})">Alle auswählen</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="setAllCleanup(false,${JSON.stringify(orphans.map(c=>c.id))})">Keine auswählen</button>
+    </div>
+    <div class="cleanup-list" id="cleanupList">${rows}</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeGenSheet();render();toast('Import abgeschlossen')">Alle behalten</button>
+      <button class="btn btn-red" style="flex:2" id="cleanupDelBtn" onclick="confirmCleanupDelete(${JSON.stringify(orphans.map(c=>c.id))})" ${selCount===0?'disabled':''}>
+        ${selCount>0?selCount+' löschen':'Auswahl treffen'}
+      </button>
+    </div>`);
+}
+
+function toggleCleanup(catId,e){
+  e.stopPropagation();
+  if(_cleanupChecked.has(catId))_cleanupChecked.delete(catId);
+  else _cleanupChecked.add(catId);
+  // Update just the row and button without full re-render
+  const row=document.querySelector(\`.cleanup-row[onclick*="'${catId}'"]\`);
+  if(row){
+    const cb=row.querySelector('.cleanup-cb');
+    const checked=_cleanupChecked.has(catId);
+    if(cb){cb.className='cleanup-cb'+(checked?' checked':'');cb.textContent=checked?'✓':'';}
+  }
+  const btn=document.getElementById('cleanupDelBtn');
+  if(btn){
+    const n=_cleanupChecked.size;
+    btn.disabled=n===0;
+    btn.textContent=n>0?n+' löschen':'Auswahl treffen';
+  }
+}
+
+function setAllCleanup(selectAll,allIds){
+  if(selectAll)allIds.forEach(id=>_cleanupChecked.add(id));
+  else _cleanupChecked.clear();
+  // Re-render just the list
+  const list=document.getElementById('cleanupList');
+  if(list){
+    list.querySelectorAll('.cleanup-row').forEach(row=>{
+      const m=row.getAttribute('onclick').match(/'([^']+)'/);
+      if(!m)return;
+      const id=m[1];
+      const checked=_cleanupChecked.has(id);
+      const cb=row.querySelector('.cleanup-cb');
+      if(cb){cb.className='cleanup-cb'+(checked?' checked':'');cb.textContent=checked?'✓':'';}
+    });
+  }
+  const btn=document.getElementById('cleanupDelBtn');
+  if(btn){const n=_cleanupChecked.size;btn.disabled=n===0;btn.textContent=n>0?n+' löschen':'Auswahl treffen';}
+}
+
+function confirmCleanupDelete(allIds){
+  const toDelete=allIds.filter(id=>_cleanupChecked.has(id));
+  if(!toDelete.length)return;
+  const cats=toDelete.map(id=>S.cats.find(c=>c.id===id)).filter(Boolean);
+  const names=cats.map(c=>'• '+c.p).join('\n');
+  if(!confirm(`${toDelete.length} Kategorie${toDelete.length===1?'':'n'} löschen?\n\n${names}\n\nAlle gespeicherten Werte dieser Kategorien werden ebenfalls gelöscht.`))return;
+  let deletedCats=0,deletedVals=0;
+  for(const id of toDelete){
+    const keysToDelete=Object.keys(S.data).filter(k=>k.endsWith('_'+id));
+    keysToDelete.forEach(k=>{delete S.data[k];deletedVals++;});
+    S.cats=S.cats.filter(c=>c.id!==id);
+    deletedCats++;
+  }
+  persist();closeGenSheet();render();
+  toast(`🗑 ${deletedCats} Kategorie${deletedCats===1?'':'n'} · ${deletedVals} Werte gelöscht`);
 }
 function downloadTemplate(){
   const rows=['Position;Gruppe;Typ;Betrag;Jahr;Monat','Gehalt (netto);Einnahmen;E;3500;alle;alle','Miete / Wohnkosten;Wohnen;F;900;alle;alle','Strom;Wohnen;F;80;alle;alle','Lebensmittel / Einkauf;Variable Ausgaben;V;400;alle;alle','Netflix;Abos;F;12,99;alle;alle','Hanseatic Bank;Kredite;K;200;2026;alle','Monatsgeld / Tagesgeld;Sparen & Investieren;S;200;alle;alle','','# Typ: E=Einnahmen F=Fixkosten V=Variabel K=Kredit S=Sparen','# Jahr: 2025 | alle | 2025,2026 | 2025-2028','# Monat: Januar | alle | Jan,Mär | 1,3,6'].join('\n');
@@ -1344,9 +1730,18 @@ function render(){
   else if(v==='import')       html=vImport();
   document.getElementById('main').innerHTML=html;
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
-  document.getElementById('yearPill').textContent=S.year;
-  document.getElementById('headerTitle').textContent=VIEW_TITLES[v]||'Haushaltsplan';
-  document.getElementById('headerSub').textContent=`${MF[S.month]} ${S.year}`;
+  // Mobile header
+  const yp=document.getElementById('yearPill');
+  if(yp)yp.textContent=S.year;
+  const ht=document.getElementById('headerTitle');
+  if(ht)ht.textContent=VIEW_TITLES[v]||'Haushaltsplan';
+  const hs=document.getElementById('headerSub');
+  if(hs)hs.textContent=`${MF[S.month]} ${S.year}`;
+  // Sidebar (desktop)
+  const sy=document.getElementById('sidebarYear');
+  if(sy)sy.textContent=`${S.year} ▾`;
+  const ss=document.getElementById('sidebarSub');
+  if(ss)ss.textContent=`${MF[S.month]} ${S.year}`;
   const grid=document.getElementById('monthGrid');
   if(grid){grid.addEventListener('click',e=>{const c=e.target.closest('[data-mi]');if(c)selMonth(parseInt(c.dataset.mi));},{passive:true});}
 }
