@@ -999,7 +999,7 @@ function vDashboard() {
   const chips=MS.map((x,i)=>`<div class="mchip${i===mo?' active':''}" data-mi="${i}">${x}</div>`).join('');
   return`
     <div class="desktop-page-title">Dashboard</div>
-    ${ios&&!standalone?`<div class="install-banner"><div class="install-banner-title">Als App installieren</div><div class="install-banner-text">Safari → Teilen-Symbol → „Zum Home-Bildschirm" → Hinzufügen</div></div>`:''}
+    ${ios&&!standalone?`<div class="install-banner"><div class="install-banner-title">Als App installieren</div><div class="install-banner-text">Safari: Teilen-Symbol antippen, dann "Zum Home-Bildschirm" waehlen</div></div>`:''}
     <div class="month-grid" id="monthGrid">${chips}</div>
     <div class="hero">
       <div class="hero-bg"></div>
@@ -1588,7 +1588,7 @@ function toggleCleanup(catId,e){
   if(_cleanupChecked.has(catId))_cleanupChecked.delete(catId);
   else _cleanupChecked.add(catId);
   // Update just the row and button without full re-render
-  const row=document.querySelector(\`.cleanup-row[onclick*="'${catId}'"]\`);
+  const row=document.querySelector(`.cleanup-row[onclick*="'${catId}'"]`);
   if(row){
     const cb=row.querySelector('.cleanup-cb');
     const checked=_cleanupChecked.has(catId);
@@ -1773,12 +1773,17 @@ const VIEW_TITLES={dashboard:'Haushaltsplan',ausgaben:'Ausgaben',uebersicht:'Üb
 function render(){
   const v=S.view;
   let html='';
-  if     (v==='dashboard')    html=vDashboard();
-  else if(v==='ausgaben')     html=vAusgaben();
-  else if(v==='uebersicht')   html=vUebersicht();
-  else if(v==='kredite')      html=vKredite();
-  else if(v==='einstellungen')html=vEinstellungen();
-  else if(v==='import')       html=vImport();
+  try {
+    if     (v==='dashboard')    html=vDashboard();
+    else if(v==='ausgaben')     html=vAusgaben();
+    else if(v==='uebersicht')   html=vUebersicht();
+    else if(v==='kredite')      html=vKredite();
+    else if(v==='einstellungen')html=vEinstellungen();
+    else if(v==='import')       html=vImport();
+  } catch(err) {
+    html='<div style="padding:20px;color:#f87171;font-family:Arial">Fehler: '+err.message+'</div>';
+    console.error('render error:',err);
+  }
   document.getElementById('main').innerHTML=html;
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
   // Mobile header
@@ -1827,7 +1832,11 @@ if('serviceWorker' in navigator){
 // ═══════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════
-load();render();
+try { load(); } catch(e) { console.error('load() error:',e); }
+try { render(); } catch(e) {
+  document.getElementById('main').innerHTML='<div style="padding:20px;color:#f87171;font-family:Arial">Start-Fehler: '+e.message+'</div>';
+  console.error('boot render error:',e);
+}
 </script>
 </body>
 </html>
