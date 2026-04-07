@@ -49,10 +49,10 @@
   --nav-h: 72px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{height:100%;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+html,body{overflow-x:hidden;overscroll-behavior-x:none;}
 body{
   font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-  background:#0a0a0f;color:var(--t1);min-height:100%;
+  background:#0a0a0f;color:var(--t1);
   overscroll-behavior:none;-webkit-font-smoothing:antialiased;
   -webkit-tap-highlight-color:transparent;
   overflow-x:hidden;max-width:100vw;
@@ -69,16 +69,19 @@ body{
 
 /* ── HEADER */
 .header{
-  position:sticky;top:0;z-index:90;
+  position:fixed;top:0;left:0;right:0;
+  z-index:100;
   padding:calc(var(--sat) + 14px) 18px 14px;
-  background:rgba(10,10,15,.72);
+  background:rgba(10,10,15,.88);
   backdrop-filter:var(--blur-md);-webkit-backdrop-filter:var(--blur-md);
   border-bottom:1px solid var(--glass-border);
+  box-shadow:0 1px 0 rgba(255,255,255,.06),0 4px 20px rgba(0,0,0,.3);
   display:flex;align-items:center;justify-content:space-between;
-  transition:transform .35s cubic-bezier(.32,.72,0,1),opacity .25s;
+  /* MediSchrank: opacity fade, not transform — avoids stacking context issues */
+  transition:opacity .3s ease;
+  will-change:opacity;
 }
-.header.hide{
-  transform:translateY(-100%);
+.header.hidden{
   opacity:0;
   pointer-events:none;
 }
@@ -95,7 +98,13 @@ body{
 .year-pill:active{background:rgba(255,255,255,.18)}
 
 /* ── MAIN */
-.main{padding:16px 14px calc(var(--sab) + var(--nav-h) + 30px);min-height:100vh}
+.main{
+  padding-top:calc(var(--sat) + 58px);
+  padding-left:14px;
+  padding-right:14px;
+  padding-bottom:calc(max(var(--sab),8px) + 76px);
+  min-height:100dvh;
+}
 
 /* ── CARD */
 .card{
@@ -318,19 +327,23 @@ option{background:#1a1a2e;color:var(--t1)}
 
 /* ── PILL NAV (Apple Music style, full-width) */
 .bnav-wrap{
-  position:fixed;bottom:calc(var(--sab) + 10px);left:10px;right:10px;
-  z-index:100;
+  position:fixed;
+  bottom:max(var(--sab),8px);
+  left:16px;right:16px;
+  z-index:300;
 }
 .bnav{
   width:100%;
-  background:rgba(20,20,26,.95);
-  backdrop-filter:var(--blur-lg);-webkit-backdrop-filter:var(--blur-lg);
-  border-radius:100px;
-  border:1px solid rgba(255,255,255,.09);
-  box-shadow:0 10px 44px rgba(0,0,0,.65),0 2px 8px rgba(0,0,0,.5),
-             inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.35);
-  padding:5px;
-  display:flex;align-items:stretch;
+  background:rgba(20,20,26,.88);
+  backdrop-filter:blur(32px) saturate(1.8);-webkit-backdrop-filter:blur(32px) saturate(1.8);
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  border-top-color:rgba(255,255,255,.18);
+  box-shadow:0 8px 32px rgba(0,0,0,.55),
+             0 1px 0 rgba(255,255,255,.10) inset,
+             0 -1px 0 rgba(0,0,0,.30) inset;
+  padding:6px;
+  display:flex;align-items:stretch;gap:0;
   position:relative;isolation:isolate;
 }
 .bnav-slider{
@@ -477,17 +490,7 @@ option{background:#1a1a2e;color:var(--t1)}
   ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
   * { scrollbar-width: thin; scrollbar-color: var(--glass-border) transparent; }
 
-  /* App shell: sidebar layout */
-  body { display: flex; flex-direction: column; }
   
-  .app-shell {
-    display: flex;
-    flex: 1;
-    min-height: 100vh;
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-  }
 
   /* Sidebar nav — replaces pill nav on desktop */
   .bnav-wrap {
@@ -580,14 +583,7 @@ option{background:#1a1a2e;color:var(--t1)}
     display: none;
   }
 
-  /* Main content area */
-  .content-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    overflow-y: auto;
-  }
+  
   .main {
     padding: 28px 32px 40px;
     max-width: 900px;
@@ -671,71 +667,31 @@ option{background:#1a1a2e;color:var(--t1)}
 
 /* Desktop-only sidebar year label via JS */
 @media (min-width: 600px) {
-  .sidebar-header {
-    padding: 0 14px 16px;
-    border-bottom: 1px solid var(--sep);
-    margin-bottom: 8px;
+  /* Desktop: center the pill nav */
+  .bnav-wrap {
+    left: max(16px, calc(50% - 324px));
+    right: max(16px, calc(50% - 324px));
   }
-  .sidebar-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--t1);
-    letter-spacing: -.3px;
-    margin-bottom: 2px;
-  }
-  .sidebar-year {
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--glass-strong);
-    border: 1px solid rgba(245,166,35,.3);
-    color: var(--gold);
-    font-weight: 700;
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 16px;
-    margin-top: 4px;
-  }
-  .sidebar-sub {
-    font-size: 11px;
-    color: var(--t3);
-    margin-top: 2px;
-  }
-  /* Page title shown at top of content on desktop */
-  .desktop-page-title {
-    display: block;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--t1);
-    letter-spacing: -.5px;
-    margin-bottom: 20px;
-  }
-}
-@media (max-width: 599px) {
-  /* Mobile: pill nav is already responsive, just hide sidebar */
-  .app-shell { display: block; width: 100%; min-height: 100vh; }
-  .sidebar-header { display: none; }
-  .desktop-page-title { display: none; }
-  .content-area { display: block; }
-  /* Pill nav stays as-is on mobile — no overrides needed */
-  .header { display: flex !important; }
-  .main { padding: 16px 14px calc(var(--sab) + var(--nav-h) + 30px) !important; }
+  .main { padding-left: 24px; padding-right: 24px; }
 }
 
 </style>
 </head>
 <body>
 
-<div class="app-shell" id="appShell">
+<header class="header" id="appHeader">
+  <div class="header-left">
+    <div class="header-title" id="headerTitle">Haushaltsplan</div>
+    <div class="header-sub" id="headerSub">Lade…</div>
+  </div>
+  <button class="year-pill" id="yearPill" onclick="openYearSheet()">–</button>
+</header>
+<main class="main" id="main"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <div class="bnav-wrap" id="bnavWrap">
 <nav class="bnav" id="bnav">
   <div class="bnav-slider" id="bnavSlider"></div>
-  <div class="sidebar-header">
-    <div class="sidebar-title">Haushaltsplan</div>
-    <div class="sidebar-sub" id="sidebarSub">Lade…</div>
-    <div class="sidebar-year" id="sidebarYear" onclick="openYearSheet()">2026 ▾</div>
-  </div>
   <button class="bnav-btn active" data-v="dashboard">
     <svg class="bnav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="bnav-label">Dashboard</span>
@@ -761,18 +717,7 @@ option{background:#1a1a2e;color:var(--t1)}
     <span class="bnav-label">Import</span>
   </button>
 </nav>
-<div class="content-area">
-<header class="header" id="appHeader">
-  <div class="header-left">
-    <div class="header-title" id="headerTitle">Haushaltsplan</div>
-    <div class="header-sub" id="headerSub">Lade…</div>
-  </div>
-  <button class="year-pill" id="yearPill" onclick="openYearSheet()">–</button>
-</header>
-<main class="main" id="main"></main>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-</div><!-- /content-area -->
-</div><!-- /app-shell -->
+</div><!-- /bnav-wrap -->
 
 <!-- YEAR SHEET -->
 <div class="overlay" id="yearOverlay">
@@ -1811,8 +1756,11 @@ const _slider = document.getElementById('bnavSlider');
 
 function _moveSlider(activeBtn) {
   if (!_slider || !activeBtn) return;
-  _slider.style.left  = activeBtn.offsetLeft + 'px';
-  _slider.style.width = activeBtn.offsetWidth + 'px';
+  var navRect = _bnav.getBoundingClientRect();
+  var btnRect = activeBtn.getBoundingClientRect();
+  if (!navRect.width) return;
+  _slider.style.left  = (btnRect.left - navRect.left) + 'px';
+  _slider.style.width = btnRect.width + 'px';
 }
 
 function _initSlider() {
@@ -1833,21 +1781,25 @@ if (document.readyState === 'complete') {
   window.addEventListener('load', _initSlider, { once: true });
 }
 
-// ── HEADER HIDE/SHOW on scroll ────────────────────────────────────
-const _header = document.getElementById('appHeader');
-const _mainEl = document.querySelector('.main');
-let   _lastScrollY = 0;
-
-function _onMainScroll() {
-  const y = window.scrollY || document.documentElement.scrollTop;
-  if (y > _lastScrollY && y > 30) {
-    _header.classList.add('hide');    // scrolling down → hide
-  } else if (y < _lastScrollY) {
-    _header.classList.remove('hide'); // scrolling up → show
+// ── HEADER HIDE/SHOW — rAF polling (MediSchrank approach, works on iOS PWA)
+(function(){
+  var hdr = document.getElementById('appHeader');
+  if (!hdr) return;
+  var prev = 0;
+  function check() {
+    var y = window.scrollY || document.documentElement.scrollTop || 0;
+    if (y !== prev) {
+      if (y > 60 && y > prev) {
+        hdr.classList.add('hidden');
+      } else if (y < prev || y <= 60) {
+        hdr.classList.remove('hidden');
+      }
+      prev = y;
+    }
+    requestAnimationFrame(check);
   }
-  _lastScrollY = y;
-}
-window.addEventListener('scroll', _onMainScroll, { passive: true });
+  check();
+})();
 
 // ── NAVIGATION ───────────────────────────────────────────────────
 function nav(v) {
@@ -1865,10 +1817,51 @@ function nav(v) {
 function selYear(y){S.year=parseInt(y);render();}
 function selMonth(i){S.month=parseInt(i);render();}
 
-document.getElementById('bnav').addEventListener('click',e=>{
-  const b=e.target.closest('[data-v]');
-  if(b) nav(b.dataset.v);
-},{passive:true});
+// ── NAV TOUCH DRAG (MediSchrank NavSlider approach) ──────────
+(function(){
+  var bnav = document.getElementById('bnav');
+  if (!bnav) return;
+  var dragging = false, startX = 0, startLeft = 0;
+  var VIEWS = ['dashboard','ausgaben','uebersicht','kredite','einstellungen','import'];
+
+  bnav.addEventListener('click', function(e) {
+    var b = e.target.closest('[data-v]');
+    if (b) nav(b.dataset.v);
+  }, { passive: true });
+
+  bnav.addEventListener('touchstart', function(e) {
+    var btn = e.target.closest('.bnav-btn');
+    if (!btn) return;
+    startX = e.touches[0].clientX;
+    startLeft = parseFloat(_slider.style.left) || 0;
+    dragging = true;
+    _slider.style.transition = 'none';
+  }, { passive: true });
+
+  bnav.addEventListener('touchmove', function(e) {
+    if (!dragging) return;
+    var dx = e.touches[0].clientX - startX;
+    var navRect = bnav.getBoundingClientRect();
+    var newLeft = Math.max(0, Math.min(navRect.width - parseFloat(_slider.style.width||60), startLeft + dx));
+    _slider.style.left = newLeft + 'px';
+  }, { passive: true });
+
+  bnav.addEventListener('touchend', function(e) {
+    if (!dragging) return;
+    dragging = false;
+    // Snap to nearest button
+    var x = e.changedTouches[0].clientX;
+    var navRect = bnav.getBoundingClientRect();
+    var btns = Array.from(bnav.querySelectorAll('.bnav-btn'));
+    var best = btns[0], bestDist = Infinity;
+    btns.forEach(function(b) {
+      var r = b.getBoundingClientRect();
+      var dist = Math.abs(x - (r.left + r.width/2));
+      if (dist < bestDist) { bestDist = dist; best = b; }
+    });
+    if (best && best.dataset.v) nav(best.dataset.v);
+  }, { passive: true });
+})();
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeGenSheet();closeYearSheet();}});
 
 // Re-calc slider on resize

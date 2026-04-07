@@ -1,5 +1,5 @@
 /* Service Worker v6 — Network-first with fallback */
-const CACHE = 'hp-v6';
+const CACHE = 'hp-v7';
 const SHELL = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
