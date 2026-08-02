@@ -1,0 +1,15 @@
+:root{--app-header-height:88px;--page-top-gap:24px}
+.main{
+  padding-top:calc(var(--app-header-height) + var(--page-top-gap))!important;
+}
+.desktop-page-title{
+  margin:0 0 6px!important;
+  padding:0!important;
+  line-height:1.15;
+  position:relative;
+  z-index:1;
+}
+.desktop-page-title+*{margin-top:0}
+@media(max-width:599px){
+  :root{--page-top-gap:24px}
+}
