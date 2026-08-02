@@ -1182,12 +1182,3 @@ function toast(msg,type='ok'){
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}),{passive:true});
 }
-
-// ═══════════════════════════════════════════════
-// BOOT
-// ═══════════════════════════════════════════════
-try { load(); } catch(e) { console.error('load() error:',e); }
-try { render(); } catch(e) {
-  document.getElementById('main').innerHTML='<div style="padding:20px;color:#f87171;font-family:Arial">Start-Fehler: '+e.message+'</div>';
-  console.error('boot render error:',e);
-}
