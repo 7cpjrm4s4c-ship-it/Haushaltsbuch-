@@ -1,0 +1,13 @@
+/* Abschließende Abstands- und Verwaltungsanpassungen */
+@media (max-width:599px){
+  .main{padding-top:calc(var(--sat) + 78px)}
+}
+.desktop-page-title{margin:10px 0 18px}
+.category-tools{display:flex;justify-content:flex-end;margin-top:12px}
+.category-manager-list{display:flex;flex-direction:column;gap:8px}
+.category-manager-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--glass-border);border-radius:var(--r-sm);background:var(--glass-input)}
+.category-manager-name{font-size:14px;font-weight:600;color:var(--t1)}
+.category-manager-meta{font-size:11px;color:var(--t3);margin-top:3px}
+.category-manager-actions{display:flex;gap:6px}
+.category-manager-actions .row-edit-btn{width:34px;height:34px}
+.annual-note{font-size:11px;color:var(--t3);line-height:1.5;margin-top:-4px;margin-bottom:12px}
