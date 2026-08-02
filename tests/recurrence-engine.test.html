@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<title>Tests – Wiederkehrende Zahlungen</title>
+<script src="../js/recurrence-engine.js"></script>
+<pre id="out"></pre>
+<script>
+'use strict';
+const out = document.getElementById('out');
+let passed = 0;
+let failed = 0;
+function test(name, fn) {
+  try { fn(); passed++; out.textContent += `✓ ${name}\n`; }
+  catch (error) { failed++; out.textContent += `✗ ${name}: ${error.message}\n`; }
+}
+function equal(actual, expected) {
+  if (actual !== expected) throw new Error(`erwartet ${expected}, erhalten ${actual}`);
+}
+const E = RecurrenceEngine;
+
+test('Vierteljährlich ab März', () => {
+  const rule = {period:'quarterly', amount:300, startYear:2026, startMonth:2};
+  equal(E.isDue(rule, 2026, 2), true);
+  equal(E.isDue(rule, 2026, 3), false);
+  equal(E.isDue(rule, 2026, 5), true);
+  equal(E.isDue(rule, 2026, 8), true);
+  equal(E.isDue(rule, 2026, 11), true);
+});
+
+test('Dritteljährlich bedeutet alle vier Monate', () => {
+  const rule = {period:'fourMonthly', amount:120, startYear:2026, startMonth:0};
+  equal(E.isDue(rule, 2026, 0), true);
+  equal(E.isDue(rule, 2026, 4), true);
+  equal(E.isDue(rule, 2026, 8), true);
+  equal(E.isDue(rule, 2026, 9), false);
+});
+
+test('Jährlich ab November', () => {
+  const rule = {period:'annual', amount:900, startYear:2026, startMonth:10};
+  equal(E.isDue(rule, 2026, 10), true);
+  equal(E.isDue(rule, 2027, 10), true);
+  equal(E.isDue(rule, 2027, 9), false);
+});
+
+test('Neueste Gehaltsanpassung gewinnt', () => {
+  const values = [
+    {catId:'salary', amount:3500, year:2026, month:0},
+    {catId:'salary', amount:3700, year:2026, month:3},
+  ];
+  equal(E.latestAdjustment(values, 'salary', 2026, 2).amount, 3500);
+  equal(E.latestAdjustment(values, 'salary', 2026, 3).amount, 3700);
+});
+
+test('Manueller Monatswert hat Vorrang', () => {
+  const category = {id:'insurance', d:50};
+  const value = E.resolveValue({
+    manualValue:75,
+    rules:[{catId:'insurance', period:'annual', amount:600, startYear:2026, startMonth:0}],
+    adjustments:[], category, year:2026, month:0,
+  });
+  equal(value, 75);
+});
+
+out.textContent += `\n${passed} bestanden, ${failed} fehlgeschlagen`;
+document.title = failed ? 'FEHLER – Tests' : 'OK – Tests';
+</script>
+</html>
