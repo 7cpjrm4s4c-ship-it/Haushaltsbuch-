@@ -1,0 +1,45 @@
+name: App-Start auslagern
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/extract-bootstrap.yml'
+      - 'tools/extract-bootstrap.mjs'
+
+permissions:
+  contents: write
+
+jobs:
+  extract-bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Bootstrap auslagern
+        run: node tools/extract-bootstrap.mjs
+      - name: Tests ausführen
+        run: npm run check
+      - name: Struktur prüfen
+        run: |
+          test -f js/bootstrap.js
+          grep -q 'js/recurrence-engine.js' index.html
+          grep -q 'recurring-payments.js' index.html
+          grep -q 'js/bootstrap.js' index.html
+          ! grep -q '// BOOT' js/app.js
+          grep -q 'load();' js/bootstrap.js
+      - name: Änderungen übernehmen
+        run: |
+          if git diff --quiet && [ -z "$(git status --porcelain)" ]; then
+            echo 'Keine Änderungen erforderlich.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html js/app.js js/bootstrap.js
+          git commit -m 'Lagere App-Start aus und binde Module geordnet ein'
+          git push origin main
