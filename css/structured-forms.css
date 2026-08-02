@@ -1,0 +1,22 @@
+/* Strukturierte Formulare für alle Module außer Dashboard */
+.form-card{display:flex;flex-direction:column;gap:12px}
+.form-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.form-grid.two{grid-template-columns:1fr 1fr}
+.form-actions{display:flex;gap:8px;align-items:center}
+.form-actions>*{flex:1}
+.field-hint{font-size:11px;color:var(--t3);line-height:1.45;margin-top:5px}
+.compact-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.compact-toolbar .wide{grid-column:1/-1}
+.list-card{padding:0;overflow:hidden}
+.list-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--sep)}
+.list-body{padding:0 16px}
+.compact-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--sep)}
+.compact-row:last-child{border-bottom:none}
+.compact-main{flex:1;min-width:0}
+.compact-title{font-size:14px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compact-sub{font-size:11px;color:var(--t3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compact-value{font-size:13px;font-weight:600;white-space:nowrap}
+.section-toggle{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.section-toggle button{white-space:nowrap}
+.empty-state{padding:20px;text-align:center;color:var(--t3);font-size:13px}
+@media(max-width:420px){.form-grid.two,.compact-toolbar{grid-template-columns:1fr}.compact-toolbar .wide{grid-column:auto}}
