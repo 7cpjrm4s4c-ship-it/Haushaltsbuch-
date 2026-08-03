@@ -1096,7 +1096,7 @@ function nav(v) {
   S.view = v;
   render();  // sets .active class on bnav buttons
   window.scrollTo({ top: 0, behavior: 'instant' });
-  _header.classList.remove('hidden');
+  document.getElementById('appHeader')?.classList.remove('hidden');
   // Snap slider: two rAFs ensure layout is complete before measuring
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
