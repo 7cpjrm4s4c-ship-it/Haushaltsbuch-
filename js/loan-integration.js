@@ -128,7 +128,10 @@
 
   const originalView = vKredite;
   vKredite = function integratedLoanView() {
-    return originalView() + calculatorMarkup();
+    const view = originalView();
+    const title = '<div class="desktop-page-title">Kredite</div>';
+    const content = view.startsWith(title) ? view.slice(title.length) : view;
+    return `${title}<div class="layout-grid loans-grid"><div class="grid-primary">${content}</div><div class="grid-secondary">${calculatorMarkup()}</div></div>`;
   };
 
   const originalSaveNew = saveNewKredit;
