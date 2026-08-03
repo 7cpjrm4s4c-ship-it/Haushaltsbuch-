@@ -636,14 +636,8 @@ option{background:#1a1a2e;color:var(--t1)}
   }
   .layout-grid > .grid-primary,
   .layout-grid > .grid-secondary { min-width: 0; }
-  .expenses-grid > .grid-primary,
-  .fixed-costs-grid > .grid-primary { grid-column: span 5; }
-  .expenses-grid > .grid-secondary,
-  .fixed-costs-grid > .grid-secondary { grid-column: span 7; }
-  .loans-grid > .grid-primary { grid-column: span 7; }
-  .loans-grid > .grid-secondary { grid-column: span 5; }
-  .dashboard-grid > .grid-primary { grid-column: span 8; }
-  .dashboard-grid > .grid-secondary { grid-column: span 4; }
+  .layout-grid > .grid-primary,
+  .layout-grid > .grid-secondary { grid-column: span 6; }
   .layout-grid .card:last-child { margin-bottom: 0; }
   .annual-overview { position: sticky; top: 98px; }
   .loans-grid .loan-calc-card { margin-top: 0; }
