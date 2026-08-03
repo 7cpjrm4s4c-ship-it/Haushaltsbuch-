@@ -13,3 +13,6 @@
 @media(max-width:599px){
   :root{--page-top-gap:24px}
 }
+@media(min-width:768px){
+  .main{padding-top:112px!important}
+}

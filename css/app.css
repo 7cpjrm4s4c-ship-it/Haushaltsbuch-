@@ -457,11 +457,11 @@ option{background:#1a1a2e;color:var(--t1)}
 .template-header{font-weight:700;color:var(--accent)}
 
 /* ═══════════════════════════════════════════════════════════
-   RESPONSIVE LAYOUT — Tablet (≥600px) + Desktop (≥1024px)
+   RESPONSIVE LAYOUT — Desktop (≥768px) + Wide Desktop (≥1200px)
 ═══════════════════════════════════════════════════════════ */
 
-/* Shared: center & constrain on large screens */
-@media (min-width: 600px) {
+/* Shared desktop layout */
+@media (min-width: 768px) {
   /* Scrollbar visible on desktop */
   ::-webkit-scrollbar { display: block; width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -470,52 +470,41 @@ option{background:#1a1a2e;color:var(--t1)}
 
   
 
-  /* Sidebar nav — replaces pill nav on desktop */
+  /* Horizontal top navigation on desktop */
   .bnav-wrap {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    width: 220px;
-    bottom: auto;
-    left: auto;
+    position: fixed;
+    top: 18px;
+    left: 50%;
     right: auto;
+    bottom: auto;
+    width: min(1120px, calc(100vw - 48px));
+    height: auto;
+    transform: translateX(-50%);
   }
   .bnav {
     position: relative;
-    border-radius: 0;
-    border: none;
-    border-right: 1px solid var(--glass-border);
-    box-shadow: 2px 0 20px rgba(0,0,0,.2);
-    padding: 24px 12px;
-    flex-direction: column;
+    width: 100%;
+    height: auto;
+    padding: 7px;
+    flex-direction: row;
     align-items: stretch;
-    height: 100%;
-    overflow-y: auto;
     gap: 4px;
-    background: rgba(12,12,18,.88);
+    overflow: visible;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 20px;
+    background: rgba(12,12,18,.9);
+    box-shadow: 0 12px 36px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
     isolation: isolate;
-    width: 220px;
-    flex-shrink: 0;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 24px 12px 24px;
-    border-top: none;
-    border-right: 1px solid var(--glass-border);
-    box-shadow: 2px 0 20px rgba(0,0,0,.2), inset -1px 0 0 rgba(255,255,255,.05);
-    overflow-y: auto;
-    gap: 4px;
-    display: flex;
-    z-index: 90;
   }
   .bnav-btn {
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
+    justify-content: center;
+    gap: 9px;
     height: auto;
-    padding: 11px 14px;
+    padding: 12px 16px;
     border-radius: var(--r-sm);
-    width: 100%;
+    width: auto;
   }
   .bnav-btn.active::before {
     /* Remove top pill indicator */
@@ -543,28 +532,21 @@ option{background:#1a1a2e;color:var(--t1)}
     stroke: #fff;
     transform: none;
   }
-  /* Sidebar year pill at top */
+  /* The year remains available inside the individual views. */
   .bnav::before {
-    content: attr(data-year);
-    display: block;
-    color: var(--gold);
-    font-weight: 700;
-    font-size: 13px;
-    padding: 6px 14px 18px;
-    border-bottom: 1px solid var(--sep);
-    margin-bottom: 8px;
-    letter-spacing: .3px;
+    display: none;
   }
 
-  /* Header: hide on desktop, year pill handled by sidebar */
+  /* Header: navigation takes over the desktop top bar */
   .header {
     display: none;
   }
 
   
   .main {
-    padding: 28px 32px 40px;
-    max-width: 900px;
+    margin: 0 auto;
+    padding: 112px 32px 48px;
+    max-width: 1200px;
     width: 100%;
     min-height: 100vh;
   }
@@ -608,13 +590,14 @@ option{background:#1a1a2e;color:var(--t1)}
   .import-table-wrap { max-height: 40vh; }
 }
 
-@media (min-width: 1024px) {
-  .bnav { width: 240px; }
-
+@media (min-width: 1200px) {
   .main {
-    padding: 32px 40px 48px;
-    max-width: 1000px;
+    padding-left: 40px;
+    padding-right: 40px;
+    max-width: 1440px;
   }
+
+  .bnav-wrap { width: min(1280px, calc(100vw - 80px)); }
 
   /* Dashboard: 2-column layout for cards */
   .desktop-2col {
@@ -641,14 +624,4 @@ option{background:#1a1a2e;color:var(--t1)}
   /* Month chips: 12 in one row */
   .month-grid { grid-template-columns: repeat(12, 1fr); }
   .mchip { font-size: 10px; padding: 7px 4px; }
-}
-
-/* Desktop-only sidebar year label via JS */
-@media (min-width: 600px) {
-  /* Desktop: center the pill nav */
-  .bnav-wrap {
-    left: max(16px, calc(50% - 324px));
-    right: max(16px, calc(50% - 324px));
-  }
-  .main { padding-left: 24px; padding-right: 24px; }
 }
