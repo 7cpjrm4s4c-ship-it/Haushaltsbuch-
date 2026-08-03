@@ -511,7 +511,7 @@ option{background:#1a1a2e;color:var(--t1)}
     display: none;
   }
   .bnav-btn.active {
-    background: var(--glass-strong);
+    background: transparent;
   }
   .bnav-icon {
     width: 20px;
