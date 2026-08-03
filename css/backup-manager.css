@@ -5,7 +5,7 @@
 .backup-status strong{font-size:13px;text-align:right}
 .backup-actions{display:grid;gap:8px;margin-top:16px}
 .backup-actions-row{grid-template-columns:1fr 1fr}
-.backup-actions-row .btn:not(.btn-primary){color:#000}
+.backup-actions .btn:not(.btn-primary){color:#000}
 .backup-preview{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .backup-preview>div{padding:12px;border-radius:12px;background:rgba(255,255,255,.045)}
 .backup-preview strong{display:block;margin-top:5px;font-size:16px}
