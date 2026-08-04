@@ -15,23 +15,10 @@
   function syncLoanCategory(loan) {
     let cat = findLinkedCategory(loan);
     if (!cat) {
-      cat = {
-        id: uid(),
-        g: 'Kredite',
-        p: loan.n,
-        d: Number(loan.m) || 0,
-        t: 'K',
-        loanId: loan.id,
-        source: LINK_SOURCE,
-      };
+      cat = { id: uid(), g: 'Kredite', p: loan.n, d: Number(loan.m) || 0, t: 'K', loanId: loan.id, source: LINK_SOURCE };
       S.cats.push(cat);
     } else {
-      cat.g = 'Kredite';
-      cat.p = loan.n;
-      cat.d = Number(loan.m) || 0;
-      cat.t = 'K';
-      cat.loanId = loan.id;
-      cat.source = LINK_SOURCE;
+      cat.g = 'Kredite'; cat.p = loan.n; cat.d = Number(loan.m) || 0; cat.t = 'K'; cat.loanId = loan.id; cat.source = LINK_SOURCE;
     }
     return cat;
   }
@@ -42,27 +29,21 @@
     S.cats = S.cats.filter(cat => cat.source !== LINK_SOURCE || activeIds.has(cat.loanId));
   }
 
-  function removeLoanCategory(loanId) {
-    S.cats = S.cats.filter(cat => cat.loanId !== loanId);
-  }
+  function removeLoanCategory(loanId) { S.cats = S.cats.filter(cat => cat.loanId !== loanId); }
 
   function amortize(principal, annualRate, monthlyPayment) {
     let balance = Math.max(0, Number(principal) || 0);
     const payment = Math.max(0, Number(monthlyPayment) || 0);
     const monthlyRate = Math.max(0, Number(annualRate) || 0) / 1200;
-    let months = 0;
-    let interest = 0;
-
+    let months = 0, interest = 0;
     if (balance <= 0) return { months: 0, interest: 0, total: 0 };
     if (payment <= 0 || (monthlyRate > 0 && payment <= balance * monthlyRate)) return null;
-
     while (balance > 0.005 && months < 1200) {
       const monthInterest = balance * monthlyRate;
       interest += monthInterest;
       balance = Math.max(0, balance + monthInterest - payment);
       months += 1;
     }
-
     if (months >= 1200) return null;
     return { months, interest, total: principal + interest };
   }
@@ -79,8 +60,9 @@
     const result = document.getElementById('specialResult');
     if (!loan || !result) return;
 
-    const baseline = amortize(loan.r, loan.z, loan.m);
-    const reducedPrincipal = Math.max(0, Number(loan.r) - amount);
+    const currentPrincipal = typeof creditBalanceAt === 'function' ? creditBalanceAt(loan, S.year, S.month) : Number(loan.r || 0);
+    const baseline = amortize(currentPrincipal, loan.z, loan.m);
+    const reducedPrincipal = Math.max(0, currentPrincipal - amount);
     const withPayment = amortize(reducedPrincipal, loan.z, loan.m);
 
     if (!baseline || !withPayment) {
@@ -92,6 +74,7 @@
     const savedInterest = Math.max(0, baseline.interest - withPayment.interest);
     result.innerHTML = `
       <div class="loan-calc-grid">
+        <div><span>Restschuld ${MF[S.month]} ${S.year}</span><strong>${fmt(currentPrincipal)}</strong></div>
         <div><span>Neue Restschuld</span><strong>${fmt(reducedPrincipal)}</strong></div>
         <div><span>Laufzeitverkürzung</span><strong>${savedMonths} Monate</strong></div>
         <div><span>Zinsersparnis</span><strong>${fmt(savedInterest)}</strong></div>
@@ -106,25 +89,20 @@
   function calculatorMarkup() {
     if (!S.kredite.length) return '';
     const options = S.kredite.map(loan => `<option value="${esc(loan.id)}">${esc(loan.n)}</option>`).join('');
-    return `
-      <section class="loan-calc-card">
-        <div class="loan-calc-title">Sondertilgung berechnen</div>
-        <div class="loan-calc-sub">Auswirkung auf Laufzeit und Zinsen</div>
-        <div class="loan-calc-fields">
-          <label>Kredit<select class="inp" id="specialLoan">${options}</select></label>
-          <label>Sondertilgung (€)<input class="inp" id="specialAmount" type="number" min="0" step="50" inputmode="decimal" value="500"></label>
-        </div>
-        <button class="btn btn-primary btn-full" onclick="calculateSpecialRepayment()">Berechnen</button>
-        <div id="specialResult"></div>
-      </section>`;
+    return `<section class="loan-calc-card">
+      <div class="loan-calc-title">Sondertilgung berechnen</div>
+      <div class="loan-calc-sub">Basis: berechnete Restschuld für ${MF[S.month]} ${S.year}</div>
+      <div class="loan-calc-fields">
+        <label>Kredit<select class="inp" id="specialLoan">${options}</select></label>
+        <label>Sondertilgung (€)<input class="inp" id="specialAmount" type="number" min="0" step="50" inputmode="decimal" value="500"></label>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="calculateSpecialRepayment()">Berechnen</button>
+      <div id="specialResult"></div>
+    </section>`;
   }
 
   const originalLoad = load;
-  load = function integratedLoad() {
-    originalLoad();
-    syncAllLoans();
-    persist();
-  };
+  load = function integratedLoad() { originalLoad(); syncAllLoans(); persist(); };
 
   const originalView = vKredite;
   vKredite = function integratedLoanView() {
@@ -139,8 +117,7 @@
     const before = new Set(S.kredite.map(loan => loan.id));
     originalSaveNew();
     S.kredite.filter(loan => !before.has(loan.id)).forEach(syncLoanCategory);
-    persist();
-    render();
+    persist(); render();
   };
 
   const originalSaveEdit = saveEditKredit;
@@ -148,8 +125,7 @@
     originalSaveEdit(loanId);
     const loan = S.kredite.find(item => item.id === loanId);
     if (loan) syncLoanCategory(loan);
-    persist();
-    render();
+    persist(); render();
   };
 
   const originalDelete = delKredit;
@@ -157,9 +133,7 @@
     const existed = S.kredite.some(item => item.id === loanId);
     originalDelete(loanId);
     if (existed && !S.kredite.some(item => item.id === loanId)) {
-      removeLoanCategory(loanId);
-      persist();
-      render();
+      removeLoanCategory(loanId); persist(); render();
     }
   };
 })();
