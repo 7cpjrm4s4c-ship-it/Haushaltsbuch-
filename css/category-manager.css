@@ -1,0 +1,15 @@
+/* Kategorieverwaltung im Stil der App */
+.category-manager-intro{color:var(--t3);font-size:13px;line-height:1.5;margin:-4px 0 16px}
+.category-manager-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.category-manager-head .sheet-title{margin:0}
+.category-manager-list{display:grid;gap:10px;margin:8px 0 16px}
+.category-manager-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:12px;padding:14px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid var(--glass-border);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.category-manager-icon{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:rgba(80,155,255,.14);border:1px solid rgba(80,155,255,.24)}
+.category-manager-info{min-width:0}
+.category-manager-name{font-size:16px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.category-manager-meta{font-size:12px;color:var(--t3);margin-top:4px}
+.category-manager-actions{display:flex;gap:8px;align-items:center}
+.category-manager-action{width:42px;height:42px;border-radius:13px;border:1px solid var(--glass-border);display:grid;place-items:center;font-size:18px;background:rgba(255,255,255,.035);color:var(--green);padding:0}
+.category-manager-action.danger{color:var(--red);background:var(--red-dim);border-color:rgba(255,90,100,.28)}
+.category-manager-add{margin-top:4px}
+@media(max-width:420px){.category-manager-row{grid-template-columns:44px minmax(0,1fr) auto;padding:12px;gap:10px}.category-manager-icon{width:42px;height:42px;font-size:19px}.category-manager-action{width:38px;height:38px}.category-manager-name{font-size:15px}}
