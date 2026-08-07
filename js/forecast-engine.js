@@ -65,8 +65,10 @@
       throw new TypeError('Prognose benötigt Berechnungsfunktionen');
     }
 
+    const startAssets=Math.max(0,Number(options.startAssets)||0);
     const months=[];
     let cumulative=0;
+    let accumulatedSavings=0;
     for(let index=start;index<=end;index++){
       const {year,month}=fromMonthIndex(index);
       let income=0,fixed=0,savings=0;
@@ -84,11 +86,15 @@
       const expenses=fixed+variable+creditPayments+savings;
       const saldo=income-expenses;
       cumulative+=saldo;
+      accumulatedSavings+=savings;
+      const assets=startAssets+cumulative+accumulatedSavings;
+      const netWorth=assets-debt;
       months.push({
         year,month,
         income:round2(income),fixed:round2(fixed),variable:round2(variable),
         creditPayments:round2(creditPayments),savings:round2(savings),
         expenses:round2(expenses),saldo:round2(saldo),cumulative:round2(cumulative),debt:round2(debt),
+        accumulatedSavings:round2(accumulatedSavings),assets:round2(assets),netWorth:round2(netWorth),
       });
     }
     return months;
@@ -97,11 +103,11 @@
   function aggregateYears(months){
     const map=new Map();
     for(const item of months||[]){
-      if(!map.has(item.year))map.set(item.year,{year:item.year,income:0,fixed:0,variable:0,creditPayments:0,savings:0,expenses:0,saldo:0,endDebt:0,endCumulative:0});
+      if(!map.has(item.year))map.set(item.year,{year:item.year,income:0,fixed:0,variable:0,creditPayments:0,savings:0,expenses:0,saldo:0,endDebt:0,endCumulative:0,endAssets:0,endNetWorth:0});
       const row=map.get(item.year);
       row.income+=item.income;row.fixed+=item.fixed;row.variable+=item.variable;
       row.creditPayments+=item.creditPayments;row.savings+=item.savings;row.expenses+=item.expenses;row.saldo+=item.saldo;
-      row.endDebt=item.debt;row.endCumulative=item.cumulative;
+      row.endDebt=item.debt;row.endCumulative=item.cumulative;row.endAssets=item.assets;row.endNetWorth=item.netWorth;
     }
     return [...map.values()].map(row=>Object.fromEntries(Object.entries(row).map(([key,value])=>[key,key==='year'?value:round2(value)])));
   }
