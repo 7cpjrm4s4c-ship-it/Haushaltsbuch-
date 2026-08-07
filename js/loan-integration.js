@@ -28,6 +28,7 @@
     S.kredite.forEach(syncLoanCategory);
     S.cats = S.cats.filter(cat => cat.source !== LINK_SOURCE || activeIds.has(cat.loanId));
   }
+  window.syncAllLoans = syncAllLoans;
 
   function removeLoanCategory(loanId) { S.cats = S.cats.filter(cat => cat.loanId !== loanId); }
 
