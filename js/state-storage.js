@@ -1,19 +1,40 @@
-/* Zentrale Lade- und Speicherlogik. Ersetzt die historisch gewachsene load()/persist()-Wrapperkette. */
+/* Zentrale Lade- und Speicherlogik. */
 'use strict';
 
 (function(){
-  function statePayload(){
+  const CORRUPT_BACKUP_KEY = `${LS_KEY}_corrupt_backup`;
+
+  function normalizeState(raw){
+    if(typeof StateSchema !== 'undefined'){
+      return StateSchema.normalize(raw,{defaultYears});
+    }
+    const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
     return {
-      data:S.data||{},
-      cats:Array.isArray(S.cats)?S.cats:[],
-      kredite:Array.isArray(S.kredite)?S.kredite:[],
-      years:Array.isArray(S.years)?S.years:[],
-      buchungen:Array.isArray(S.buchungen)?S.buchungen:[],
-      budgets:S.budgets||{},
-      recurringRules:Array.isArray(S.recurringRules)?S.recurringRules:[],
-      annualAdjustments:Array.isArray(S.annualAdjustments)?S.annualAdjustments:[],
-      percentageAdjustments:Array.isArray(S.percentageAdjustments)?S.percentageAdjustments:[],
+      schemaVersion:1,
+      data:source.data&&typeof source.data==='object'&&!Array.isArray(source.data)?source.data:{},
+      cats:Array.isArray(source.cats)?source.cats:[],
+      kredite:Array.isArray(source.kredite)?source.kredite:[],
+      years:Array.isArray(source.years)&&source.years.length?source.years:defaultYears(),
+      buchungen:Array.isArray(source.buchungen)?source.buchungen:[],
+      budgets:source.budgets&&typeof source.budgets==='object'&&!Array.isArray(source.budgets)?source.budgets:{},
+      recurringRules:Array.isArray(source.recurringRules)?source.recurringRules:[],
+      annualAdjustments:Array.isArray(source.annualAdjustments)?source.annualAdjustments:[],
+      percentageAdjustments:Array.isArray(source.percentageAdjustments)?source.percentageAdjustments:[],
     };
+  }
+
+  function statePayload(){
+    return normalizeState({
+      data:S.data,
+      cats:S.cats,
+      kredite:S.kredite,
+      years:S.years,
+      buchungen:S.buchungen,
+      budgets:S.budgets,
+      recurringRules:S.recurringRules,
+      annualAdjustments:S.annualAdjustments,
+      percentageAdjustments:S.percentageAdjustments,
+    });
   }
 
   function saveStateNow(){
@@ -31,25 +52,29 @@
 
   load=function loadState(){
     let saved=null;
-    try{
-      const raw=localStorage.getItem(LS_KEY);
-      if(raw)saved=JSON.parse(raw);
-    }catch(e){
-      console.warn('load failed',e);
+    const raw=localStorage.getItem(LS_KEY);
+
+    if(raw){
+      try{
+        saved=normalizeState(JSON.parse(raw));
+      }catch(e){
+        console.warn('load failed',e);
+        try{ localStorage.setItem(CORRUPT_BACKUP_KEY,raw); }catch(_){}
+      }
     }
 
     if(!saved){
       applyFactoryState();
     }else{
-      S.data=saved.data&&typeof saved.data==='object'?saved.data:{};
-      S.cats=Array.isArray(saved.cats)?saved.cats:[];
-      S.kredite=Array.isArray(saved.kredite)?saved.kredite:[];
-      S.years=Array.isArray(saved.years)&&saved.years.length?saved.years:defaultYears();
-      S.buchungen=Array.isArray(saved.buchungen)?saved.buchungen:[];
-      S.budgets=saved.budgets&&typeof saved.budgets==='object'?saved.budgets:{};
-      S.recurringRules=Array.isArray(saved.recurringRules)?saved.recurringRules:[];
-      S.annualAdjustments=Array.isArray(saved.annualAdjustments)?saved.annualAdjustments:[];
-      S.percentageAdjustments=Array.isArray(saved.percentageAdjustments)?saved.percentageAdjustments:[];
+      S.data=saved.data;
+      S.cats=saved.cats;
+      S.kredite=saved.kredite;
+      S.years=saved.years;
+      S.buchungen=saved.buchungen;
+      S.budgets=saved.budgets;
+      S.recurringRules=saved.recurringRules;
+      S.annualAdjustments=saved.annualAdjustments;
+      S.percentageAdjustments=saved.percentageAdjustments;
       normalizeVariableCategories();
     }
 
@@ -65,7 +90,7 @@
     if(!Array.isArray(S.years)||!S.years.length)S.years=defaultYears();
     if(!S.years.includes(S.year))S.year=S.years[0]||now.getFullYear();
 
-    // Migrationen und Werkseinstellungen ohne künstlichen Backup-Änderungszähler sichern.
+    // Migrationen und Werkseinstellungen direkt im aktuellen Schema sichern.
     saveStateNow();
   };
 })();
