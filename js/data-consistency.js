@@ -47,7 +47,6 @@ function applyPercentageAdjustments(value, catId, year, month) {
   return Math.round(result * 100) / 100;
 }
 
-// Eine Position hat genau eine maßgebende Datenquelle.
 gv = function consistentValue(year, month, cat) {
   const customKey = dkey(year, month, cat.id);
   if (S.data[customKey] !== undefined) return Number(S.data[customKey] || 0);
@@ -60,7 +59,6 @@ gv = function consistentValue(year, month, cat) {
   return applyPercentageAdjustments(base, cat.id, year, month);
 };
 
-// Dashboard nutzt ausschließlich tatsächlich vorhandene variable Buchungen.
 calcMonth = function consistentMonthCalculation(year, month) {
   let e = 0, f = 0, k = 0, s = 0;
   for (const cat of S.cats) {
@@ -77,8 +75,7 @@ calcMonth = function consistentMonthCalculation(year, month) {
   return { e, f, v, k, s, aus, saldo: e - aus };
 };
 
-// Beim Speichern werden alte Monatsüberschreibungen entfernt, damit der neue Wert sofort gilt.
-savePositionDialog = function saveConsistentPosition(catId) {
+function savePositionDialog(catId) {
   const name = document.getElementById('pos-name')?.value.trim();
   const amount = Number(document.getElementById('pos-amount')?.value);
   const type = document.getElementById('pos-type')?.value;
@@ -100,7 +97,6 @@ savePositionDialog = function saveConsistentPosition(catId) {
     Object.assign(cat, { g: category, p: name, d: amount, t: type });
   }
 
-  // Alte Einzelwerte würden den neuen Regelbetrag sonst weiterhin übersteuern.
   for (const key of Object.keys(S.data || {})) {
     if (key.endsWith(`_${catId}`)) delete S.data[key];
   }
@@ -136,7 +132,7 @@ savePositionDialog = function saveConsistentPosition(catId) {
   closeGenSheet();
   render();
   toast('Position gespeichert');
-};
+}
 
 function orphanVariableBookings(year, month) {
   const categoryIds = new Set(S.cats.filter(cat => cat.t === 'V').map(cat => cat.id));
