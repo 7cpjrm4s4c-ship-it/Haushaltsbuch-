@@ -17,6 +17,12 @@
     return next;
   };
 
+  globalThis.onStatePersistRequested = function backupPersistRequested() {
+    dirty = true;
+    const meta = readMeta();
+    writeMeta({ changesSinceBackup: Number(meta.changesSinceBackup || 0) + 1 });
+  };
+
   const snapshot = () => ({
     format: 'haushaltsbuch-backup',
     version: 2,
@@ -68,22 +74,7 @@
   function previewMarkup(payload) {
     const d = payload.appData || payload;
     const created = payload.createdAt || payload.exportedAt;
-    return `
-      <div class="sheet-title">Backup prüfen</div>
-      <div class="backup-preview">
-        <div><span>Erstellt</span><strong>${esc(dateText(created))}</strong></div>
-        <div><span>Kategorien</span><strong>${d.cats?.length || 0}</strong></div>
-        <div><span>Kredite</span><strong>${d.kredite?.length || 0}</strong></div>
-        <div><span>Buchungen</span><strong>${d.buchungen?.length || 0}</strong></div>
-        <div><span>Haushaltsjahre</span><strong>${d.years?.length || 0}</strong></div>
-        <div><span>Planungsregeln</span><strong>${(d.recurringRules?.length || 0) + (d.annualAdjustments?.length || 0) + (d.percentageAdjustments?.length || 0)}</strong></div>
-      </div>
-      <p class="backup-note">„Ersetzen“ überschreibt die lokalen Daten. „Zusammenführen“ ergänzt Datensätze anhand ihrer ID.</p>
-      <div class="backup-actions">
-        <button class="btn btn-primary" onclick="applyHouseholdBackup('replace')">Alle Daten ersetzen</button>
-        <button class="btn" onclick="applyHouseholdBackup('merge')">Zusammenführen</button>
-        <button class="btn" onclick="closeGenSheet()">Abbrechen</button>
-      </div>`;
+    return `<div class="sheet-title">Backup prüfen</div><div class="backup-preview"><div><span>Erstellt</span><strong>${esc(dateText(created))}</strong></div><div><span>Kategorien</span><strong>${d.cats?.length || 0}</strong></div><div><span>Kredite</span><strong>${d.kredite?.length || 0}</strong></div><div><span>Buchungen</span><strong>${d.buchungen?.length || 0}</strong></div><div><span>Haushaltsjahre</span><strong>${d.years?.length || 0}</strong></div><div><span>Planungsregeln</span><strong>${(d.recurringRules?.length || 0) + (d.annualAdjustments?.length || 0) + (d.percentageAdjustments?.length || 0)}</strong></div></div><p class="backup-note">„Ersetzen“ überschreibt die lokalen Daten. „Zusammenführen“ ergänzt Datensätze anhand ihrer ID.</p><div class="backup-actions"><button class="btn btn-primary" onclick="applyHouseholdBackup('replace')">Alle Daten ersetzen</button><button class="btn" onclick="applyHouseholdBackup('merge')">Zusammenführen</button><button class="btn" onclick="closeGenSheet()">Abbrechen</button></div>`;
   }
 
   window.chooseHouseholdBackup = function chooseHouseholdBackup() {
@@ -142,6 +133,8 @@
       S.annualAdjustments = mergeById(S.annualAdjustments, d.annualAdjustments);
       S.percentageAdjustments = mergeById(S.percentageAdjustments, d.percentageAdjustments);
     }
+    if(typeof syncAllLoans==='function')syncAllLoans();
+    if(typeof sortCategoriesInPlace==='function')sortCategoriesInPlace();
     persist();
     dirty = false;
     writeMeta({ lastImportAt: new Date().toISOString(), changesSinceBackup: 0 });
@@ -151,44 +144,21 @@
     toast(mode === 'replace' ? 'Backup wurde geladen' : 'Backup wurde zusammengeführt');
   };
 
-  const originalPersist = persist;
-  persist = function backupAwarePersist() {
-    dirty = true;
-    const meta = readMeta();
-    writeMeta({ changesSinceBackup: Number(meta.changesSinceBackup || 0) + 1 });
-    originalPersist();
-  };
-
   function backupPanel() {
     const meta = readMeta();
     const count = Number(meta.changesSinceBackup || 0);
-    return `
-      <section class="backup-card">
-        <div class="backup-title">Datensicherung</div>
-        <div class="backup-status"><span>Letztes Backup</span><strong>${esc(dateText(meta.lastBackupAt))}</strong></div>
-        <div class="backup-status"><span>Status</span><strong>${count ? `${count} Änderungen nicht gesichert` : 'Backup aktuell'}</strong></div>
-        <div class="backup-actions backup-actions-row">
-          <button class="btn btn-primary" onclick="createHouseholdBackup()">Backup erstellen</button>
-          <button class="btn" onclick="chooseHouseholdBackup()">Backup laden</button>
-        </div>
-      </section>`;
+    return `<section class="backup-card"><div class="backup-title">Datensicherung</div><div class="backup-status"><span>Letztes Backup</span><strong>${esc(dateText(meta.lastBackupAt))}</strong></div><div class="backup-status"><span>Status</span><strong>${count ? `${count} Änderungen nicht gesichert` : 'Backup aktuell'}</strong></div><div class="backup-actions backup-actions-row"><button class="btn btn-primary" onclick="createHouseholdBackup()">Backup erstellen</button><button class="btn" onclick="chooseHouseholdBackup()">Backup laden</button></div></section>`;
   }
 
   if (typeof vImport === 'function') {
-    const originalImportView = vImport;
-    vImport = function backupImportView() { return backupPanel() + originalImportView(); };
+    const baseImportView = vImport;
+    vImport = function backupImportView() { return backupPanel() + baseImportView(); };
   }
 
   function showStartupPrompt() {
     if (sessionStorage.getItem(SESSION_PROMPT_KEY)) return;
     sessionStorage.setItem(SESSION_PROMPT_KEY, '1');
-    setTimeout(() => openGenSheet(`
-      <div class="sheet-title">Vorhandenes Backup laden?</div>
-      <p class="backup-note">Falls du auf einem anderen Gerät gearbeitet hast, kannst du jetzt die aktuelle JSON-Datei laden.</p>
-      <div class="backup-actions">
-        <button class="btn btn-primary" onclick="closeGenSheet();chooseHouseholdBackup()">Backup laden</button>
-        <button class="btn" onclick="closeGenSheet()">Lokale Daten verwenden</button>
-      </div>`), 500);
+    setTimeout(() => openGenSheet(`<div class="sheet-title">Vorhandenes Backup laden?</div><p class="backup-note">Falls du auf einem anderen Gerät gearbeitet hast, kannst du jetzt die aktuelle JSON-Datei laden.</p><div class="backup-actions"><button class="btn btn-primary" onclick="closeGenSheet();chooseHouseholdBackup()">Backup laden</button><button class="btn" onclick="closeGenSheet()">Lokale Daten verwenden</button></div>`), 500);
   }
 
   window.addEventListener('beforeunload', event => {
