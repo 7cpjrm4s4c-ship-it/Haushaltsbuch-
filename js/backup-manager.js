@@ -11,14 +11,27 @@
     dirty=true;const meta=readMeta();writeMeta({changesSinceBackup:Number(meta.changesSinceBackup||0)+1});
   };
 
+  function normalizeBackupData(value){
+    if(typeof StateSchema!=='undefined')return StateSchema.normalize(value,{defaultYears});
+    const d=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+    return {
+      data:d.data||{},cats:Array.isArray(d.cats)?d.cats:[],kredite:Array.isArray(d.kredite)?d.kredite:[],
+      years:Array.isArray(d.years)&&d.years.length?d.years:defaultYears(),buchungen:Array.isArray(d.buchungen)?d.buchungen:[],budgets:d.budgets||{},
+      recurringRules:Array.isArray(d.recurringRules)?d.recurringRules:[],annualAdjustments:Array.isArray(d.annualAdjustments)?d.annualAdjustments:[],
+      percentageAdjustments:Array.isArray(d.percentageAdjustments)?d.percentageAdjustments:[],amountAdjustments:Array.isArray(d.amountAdjustments)?d.amountAdjustments:[],
+      oneTimeEntries:Array.isArray(d.oneTimeEntries)?d.oneTimeEntries:[],forecastAssets:d.forecastAssets||{},
+    };
+  }
+
   const snapshot=()=>({
-    format:'haushaltsbuch-backup',version:3,createdAt:new Date().toISOString(),appData:{
+    format:'haushaltsbuch-backup',version:3,schemaVersion:typeof StateSchema!=='undefined'?StateSchema.CURRENT_VERSION:2,createdAt:new Date().toISOString(),appData:{
       data:S.data,cats:S.cats,kredite:S.kredite,years:S.years,buchungen:S.buchungen,budgets:S.budgets,
       recurringRules:S.recurringRules||[],annualAdjustments:S.annualAdjustments||[],percentageAdjustments:S.percentageAdjustments||[],
       amountAdjustments:S.amountAdjustments||[],oneTimeEntries:S.oneTimeEntries||[],forecastAssets:S.forecastAssets||{},
     },
   });
   const dateText=value=>value?new Date(value).toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'}):'Noch kein Backup erstellt';
+  const assetTotal=d=>Object.values(d?.forecastAssets||{}).reduce((sum,value)=>sum+Math.max(0,Number(value)||0),0);
   const downloadJson=payload=>{
     const stamp=new Date().toISOString().slice(0,10),blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');
     link.href=url;link.download=`Haushaltsbuch_Backup_${stamp}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -28,7 +41,7 @@
   function previewMarkup(payload){
     const d=payload.appData||payload,created=payload.createdAt||payload.exportedAt;
     const rules=(d.recurringRules?.length||0)+(d.annualAdjustments?.length||0)+(d.percentageAdjustments?.length||0)+(d.amountAdjustments?.length||0)+(d.oneTimeEntries?.length||0);
-    return `<div class="sheet-title">Backup prüfen</div><div class="backup-preview"><div><span>Erstellt</span><strong>${esc(dateText(created))}</strong></div><div><span>Kategorien</span><strong>${d.cats?.length||0}</strong></div><div><span>Kredite</span><strong>${d.kredite?.length||0}</strong></div><div><span>Buchungen</span><strong>${d.buchungen?.length||0}</strong></div><div><span>Haushaltsjahre</span><strong>${d.years?.length||0}</strong></div><div><span>Planungsregeln</span><strong>${rules}</strong></div></div><p class="backup-note">„Ersetzen“ überschreibt die lokalen Daten. „Zusammenführen“ ergänzt Datensätze anhand ihrer ID.</p><div class="backup-actions"><button class="btn btn-primary" onclick="applyHouseholdBackup('replace')">Alle Daten ersetzen</button><button class="btn" onclick="applyHouseholdBackup('merge')">Zusammenführen</button><button class="btn" onclick="closeGenSheet()">Abbrechen</button></div>`;
+    return `<div class="sheet-title">Backup prüfen</div><div class="backup-preview"><div><span>Erstellt</span><strong>${esc(dateText(created))}</strong></div><div><span>Kategorien</span><strong>${d.cats?.length||0}</strong></div><div><span>Kredite</span><strong>${d.kredite?.length||0}</strong></div><div><span>Buchungen</span><strong>${d.buchungen?.length||0}</strong></div><div><span>Haushaltsjahre</span><strong>${d.years?.length||0}</strong></div><div><span>Planungsregeln</span><strong>${rules}</strong></div><div><span>Prognose-Startvermögen</span><strong>${fmt(assetTotal(d))}</strong></div></div><p class="backup-note">„Ersetzen“ überschreibt die lokalen Daten. „Zusammenführen“ ergänzt Datensätze anhand ihrer ID.</p><div class="backup-actions"><button class="btn btn-primary" onclick="applyHouseholdBackup('replace')">Alle Daten ersetzen</button><button class="btn" onclick="applyHouseholdBackup('merge')">Zusammenführen</button><button class="btn" onclick="closeGenSheet()">Abbrechen</button></div>`;
   }
   window.chooseHouseholdBackup=function(){
     let input=document.getElementById('householdBackupInput');
@@ -36,14 +49,16 @@
   };
   const mergeById=(local,incoming)=>{const map=new Map((local||[]).map(item=>[item.id,item]));(incoming||[]).forEach(item=>map.set(item.id,{...(map.get(item.id)||{}),...item}));return [...map.values()];};
   window.applyHouseholdBackup=function(mode){
-    if(!pendingBackup)return;const d=pendingBackup.appData||pendingBackup;
+    if(!pendingBackup)return;
+    const d=normalizeBackupData(pendingBackup.appData||pendingBackup);
     if(mode==='replace'){
-      S.data=d.data||{};S.cats=d.cats||[];S.kredite=d.kredite||[];S.years=d.years||defaultYears();S.buchungen=d.buchungen||[];S.budgets=d.budgets||{};
-      S.recurringRules=d.recurringRules||[];S.annualAdjustments=d.annualAdjustments||[];S.percentageAdjustments=d.percentageAdjustments||[];
-      S.amountAdjustments=d.amountAdjustments||[];S.oneTimeEntries=d.oneTimeEntries||[];S.forecastAssets=d.forecastAssets||{};
+      S.data=d.data;S.cats=d.cats;S.kredite=d.kredite;S.years=d.years;S.buchungen=d.buchungen;S.budgets=d.budgets;
+      S.recurringRules=d.recurringRules;S.annualAdjustments=d.annualAdjustments;S.percentageAdjustments=d.percentageAdjustments;
+      S.amountAdjustments=d.amountAdjustments;S.oneTimeEntries=d.oneTimeEntries;S.forecastAssets=d.forecastAssets;
     }else{
       S.data={...(S.data||{}),...(d.data||{})};S.cats=mergeById(S.cats,d.cats);S.kredite=mergeById(S.kredite,d.kredite);S.years=[...new Set([...(S.years||[]),...(d.years||[])])].sort((a,b)=>a-b);
       S.buchungen=mergeById(S.buchungen,d.buchungen);S.budgets={...(S.budgets||{}),...(d.budgets||{})};S.recurringRules=mergeById(S.recurringRules,d.recurringRules);S.annualAdjustments=mergeById(S.annualAdjustments,d.annualAdjustments);S.percentageAdjustments=mergeById(S.percentageAdjustments,d.percentageAdjustments);S.amountAdjustments=mergeById(S.amountAdjustments,d.amountAdjustments);S.oneTimeEntries=mergeById(S.oneTimeEntries,d.oneTimeEntries);S.forecastAssets={...(S.forecastAssets||{}),...(d.forecastAssets||{})};
+      if(typeof StateSchema!=='undefined')S.forecastAssets=StateSchema.normalize({forecastAssets:S.forecastAssets,years:S.years},{defaultYears}).forecastAssets;
     }
     if(typeof syncAllLoans==='function')syncAllLoans();if(typeof sortCategoriesInPlace==='function')sortCategoriesInPlace();persist();dirty=false;writeMeta({lastImportAt:new Date().toISOString(),changesSinceBackup:0});pendingBackup=null;closeGenSheet();render();toast(mode==='replace'?'Backup wurde geladen':'Backup wurde zusammengeführt');
   };
