@@ -28,6 +28,14 @@ function latestAbsoluteAdjustment(catId, year, month) {
     .sort((a, b) => absoluteMonth(b.year, b.month) - absoluteMonth(a.year, a.month))[0] || null;
 }
 
+function applyAmountAdjustments(value, catId, year, month) {
+  const current = absoluteMonth(year, month);
+  const increase = (S.amountAdjustments || [])
+    .filter(item => item.catId === catId && absoluteMonth(item.year, item.month) <= current)
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  return Number(value || 0) + increase;
+}
+
 function applyPercentageAdjustments(value, catId, year, month) {
   let result = Number(value || 0);
   const current = absoluteMonth(year, month);
@@ -44,19 +52,27 @@ function applyPercentageAdjustments(value, catId, year, month) {
       result *= factor;
     }
   }
-  return Math.round(result * 100) / 100;
+  return result;
+}
+
+function oneTimeValue(catId, year, month) {
+  return (S.oneTimeEntries || [])
+    .filter(item => item.catId === catId && Number(item.year) === Number(year) && Number(item.month) === Number(month))
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
 }
 
 gv = function consistentValue(year, month, cat) {
+  const extra = oneTimeValue(cat.id, year, month);
   const customKey = dkey(year, month, cat.id);
-  if (S.data[customKey] !== undefined) return Number(S.data[customKey] || 0);
+  if (S.data[customKey] !== undefined) return Math.round((Number(S.data[customKey] || 0) + extra) * 100) / 100;
 
   const rule = ruleForCategory(cat.id);
-  if (rule && !ruleIsDue(rule, year, month)) return 0;
+  if (rule && !ruleIsDue(rule, year, month)) return Math.round(extra * 100) / 100;
 
   const absolute = latestAbsoluteAdjustment(cat.id, year, month);
   const base = absolute ? Number(absolute.amount || 0) : Number(rule ? rule.amount : cat.d || 0);
-  return applyPercentageAdjustments(base, cat.id, year, month);
+  const adjusted = applyPercentageAdjustments(applyAmountAdjustments(base, cat.id, year, month), cat.id, year, month);
+  return Math.round((adjusted + extra) * 100) / 100;
 };
 
 calcMonth = function consistentMonthCalculation(year, month) {
@@ -111,14 +127,9 @@ function savePositionDialog(catId) {
 
   S.recurringRules = (S.recurringRules || []).filter(rule => rule.catId !== catId);
   S.recurringRules.push({
-    id: uid(),
-    catId,
-    amount,
+    id: uid(), catId, amount,
     intervalMonths: Number(document.getElementById('pos-interval')?.value || 1),
-    startMonth,
-    startYear,
-    endMonth,
-    endYear,
+    startMonth, startYear, endMonth, endYear,
   });
 
   S.percentageAdjustments = (S.percentageAdjustments || []).filter(item => item.catId !== catId);
@@ -126,12 +137,35 @@ function savePositionDialog(catId) {
   const percent = Number(document.getElementById('pos-inc-percent')?.value);
   if (increaseMonth !== '' && Number.isFinite(percent) && percent !== 0) {
     S.percentageAdjustments.push({
-      id: uid(),
-      catId,
+      id: uid(), catId,
       month: Number(increaseMonth),
       year: Number(document.getElementById('pos-inc-year')?.value || S.year),
-      percent,
-      repeatAnnual: true,
+      percent, repeatAnnual: true,
+    });
+  }
+
+  S.amountAdjustments = (S.amountAdjustments || []).filter(item => item.catId !== catId);
+  const fixedIncrease = Number(document.getElementById('pos-fixed-inc-amount')?.value);
+  const fixedIncreaseMonth = document.getElementById('pos-fixed-inc-month')?.value;
+  if (fixedIncreaseMonth !== '' && Number.isFinite(fixedIncrease) && fixedIncrease !== 0) {
+    S.amountAdjustments.push({
+      id: uid(), catId,
+      month: Number(fixedIncreaseMonth),
+      year: Number(document.getElementById('pos-fixed-inc-year')?.value || S.year),
+      amount: fixedIncrease,
+    });
+  }
+
+  S.oneTimeEntries = (S.oneTimeEntries || []).filter(item => item.catId !== catId);
+  const oneTimeAmount = Number(document.getElementById('pos-once-amount')?.value);
+  const oneTimeMonth = document.getElementById('pos-once-month')?.value;
+  if (oneTimeMonth !== '' && Number.isFinite(oneTimeAmount) && oneTimeAmount !== 0) {
+    S.oneTimeEntries.push({
+      id: uid(), catId,
+      month: Number(oneTimeMonth),
+      year: Number(document.getElementById('pos-once-year')?.value || S.year),
+      amount: oneTimeAmount,
+      label: document.getElementById('pos-once-label')?.value.trim() || 'Einmalzahlung',
     });
   }
 
