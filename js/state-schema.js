@@ -2,7 +2,7 @@
 'use strict';
 
 (function(root){
-  const CURRENT_VERSION = 1;
+  const CURRENT_VERSION = 2;
 
   function isRecord(value){
     return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -26,6 +26,17 @@
     return arrayOrEmpty(fallback).map(Number).filter(Number.isInteger).sort((a,b)=>a-b);
   }
 
+  function normalizeForecastAssets(value){
+    const source=objectOrEmpty(value);
+    const fields=['cash','callMoney','fixedDeposit','etf','depot','other'];
+    const result={};
+    for(const field of fields){
+      const amount=Number(source[field]);
+      result[field]=Number.isFinite(amount)&&amount>=0?amount:0;
+    }
+    return result;
+  }
+
   function normalize(raw, options={}){
     const source = isRecord(raw) ? raw : {};
     return {
@@ -39,6 +50,9 @@
       recurringRules: arrayOrEmpty(source.recurringRules),
       annualAdjustments: arrayOrEmpty(source.annualAdjustments),
       percentageAdjustments: arrayOrEmpty(source.percentageAdjustments),
+      amountAdjustments: arrayOrEmpty(source.amountAdjustments),
+      oneTimeEntries: arrayOrEmpty(source.oneTimeEntries),
+      forecastAssets: normalizeForecastAssets(source.forecastAssets),
     };
   }
 
