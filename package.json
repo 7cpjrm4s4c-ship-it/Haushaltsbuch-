@@ -11,7 +11,8 @@
     "test:forecast:edge": "node tests/forecast-edge-cases.test.mjs",
     "test:planning": "node tests/planning-adjustments.test.mjs",
     "test:phase-a": "node tests/phase-a-contract.test.mjs",
-    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture && npm run test:forecast && npm run test:forecast:edge && npm run test:planning && npm run test:phase-a"
+    "test:phase-b:liquidity": "node tests/phase-b-liquidity.test.mjs",
+    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture && npm run test:forecast && npm run test:forecast:edge && npm run test:planning && npm run test:phase-a && npm run test:phase-b:liquidity"
   },
   "engines": {
     "node": ">=18"
