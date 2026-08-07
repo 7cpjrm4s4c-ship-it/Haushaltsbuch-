@@ -2,7 +2,7 @@
 'use strict';
 
 (function(root){
-  const CURRENT_VERSION = 3;
+  const CURRENT_VERSION = 4;
   const ASSET_FIELDS=['cash','callMoney','fixedDeposit','etf','depot','other'];
   const SAVINGS_TARGETS=new Set(ASSET_FIELDS);
 
@@ -22,45 +22,37 @@
 
   function normalizeForecastAssets(value){
     const source=objectOrEmpty(value),result={};
-    for(const field of ASSET_FIELDS){
-      const amount=Number(source[field]);
-      result[field]=Number.isFinite(amount)&&amount>=0?amount:0;
-    }
+    for(const field of ASSET_FIELDS){const amount=Number(source[field]);result[field]=Number.isFinite(amount)&&amount>=0?amount:0;}
     return result;
   }
 
   function normalizeForecastAssumptions(value){
-    const source=objectOrEmpty(value);
-    const returnsSource=objectOrEmpty(source.annualReturns);
-    const annualReturns={};
+    const source=objectOrEmpty(value),returnsSource=objectOrEmpty(source.annualReturns),annualReturns={};
     for(const field of ASSET_FIELDS)annualReturns[field]=clamp(returnsSource[field],-99,100,0);
     const savingsTarget=SAVINGS_TARGETS.has(source.savingsTarget)?source.savingsTarget:'etf';
-    return {
-      annualReturns,
-      purchasingPowerInflation:clamp(source.purchasingPowerInflation,-20,50,2),
-      savingsTarget,
-    };
+    return {annualReturns,purchasingPowerInflation:clamp(source.purchasingPowerInflation,-20,50,2),savingsTarget};
+  }
+
+  function normalizeFinancialEvents(value){
+    return arrayOrEmpty(value).filter(isRecord).map(item=>({
+      id:String(item.id||''),type:String(item.type||'oneTimeExpense'),title:String(item.title||'Finanzereignis'),
+      startYear:finite(item.startYear,new Date().getFullYear()),startMonth:clamp(item.startMonth,0,11,0),
+      endYear:item.endYear===null||item.endYear===undefined||item.endYear===''?null:finite(item.endYear,null),
+      endMonth:item.endYear===null||item.endYear===undefined||item.endYear===''?null:clamp(item.endMonth,0,11,11),
+      amount:Math.max(0,finite(item.amount,0)),enabled:item.enabled!==false,metadata:objectOrEmpty(item.metadata),
+    }));
   }
 
   function normalize(raw,options={}){
     const source=isRecord(raw)?raw:{};
     return {
-      schemaVersion:CURRENT_VERSION,
-      data:objectOrEmpty(source.data),
-      cats:arrayOrEmpty(source.cats),
-      kredite:arrayOrEmpty(source.kredite),
-      years:normalizeYears(source.years,options.defaultYears),
-      buchungen:arrayOrEmpty(source.buchungen),
-      budgets:objectOrEmpty(source.budgets),
-      recurringRules:arrayOrEmpty(source.recurringRules),
-      annualAdjustments:arrayOrEmpty(source.annualAdjustments),
-      percentageAdjustments:arrayOrEmpty(source.percentageAdjustments),
-      amountAdjustments:arrayOrEmpty(source.amountAdjustments),
-      oneTimeEntries:arrayOrEmpty(source.oneTimeEntries),
-      forecastAssets:normalizeForecastAssets(source.forecastAssets),
-      forecastAssumptions:normalizeForecastAssumptions(source.forecastAssumptions),
+      schemaVersion:CURRENT_VERSION,data:objectOrEmpty(source.data),cats:arrayOrEmpty(source.cats),kredite:arrayOrEmpty(source.kredite),
+      years:normalizeYears(source.years,options.defaultYears),buchungen:arrayOrEmpty(source.buchungen),budgets:objectOrEmpty(source.budgets),
+      recurringRules:arrayOrEmpty(source.recurringRules),annualAdjustments:arrayOrEmpty(source.annualAdjustments),percentageAdjustments:arrayOrEmpty(source.percentageAdjustments),
+      amountAdjustments:arrayOrEmpty(source.amountAdjustments),oneTimeEntries:arrayOrEmpty(source.oneTimeEntries),forecastAssets:normalizeForecastAssets(source.forecastAssets),
+      forecastAssumptions:normalizeForecastAssumptions(source.forecastAssumptions),financialEvents:normalizeFinancialEvents(source.financialEvents),
     };
   }
 
-  root.StateSchema=Object.freeze({CURRENT_VERSION,ASSET_FIELDS:Object.freeze([...ASSET_FIELDS]),normalize,isRecord,normalizeForecastAssumptions});
+  root.StateSchema=Object.freeze({CURRENT_VERSION,ASSET_FIELDS:Object.freeze([...ASSET_FIELDS]),normalize,isRecord,normalizeForecastAssumptions,normalizeFinancialEvents});
 })(typeof globalThis!=='undefined'?globalThis:window);
