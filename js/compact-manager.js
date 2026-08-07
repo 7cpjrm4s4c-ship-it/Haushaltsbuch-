@@ -1,6 +1,45 @@
 /* Kompakte, nach Kategorien sortierte Eintragsverwaltung. */
 'use strict';
 
+VIEW_TITLES.uebersicht='Fixkosten';
+VIEW_TITLES.einstellungen='Fixkosten';
+S.ui=S.ui||{};
+S.ui.fixedType=S.ui.fixedType||'all';
+S.ui.fixedGroup=S.ui.fixedGroup||'all';
+S.ui.fixedSearch=S.ui.fixedSearch||'';
+
+function fixedCostTypeOptions(selected){
+  return [
+    ['all','Alle Bereiche'],
+    ['E','Einnahmen'],
+    ['F','Fixkosten'],
+    ['K','Kredite'],
+    ['S','Sparen'],
+  ].map(([value,label])=>`<option value="${value}"${value===selected?' selected':''}>${label}</option>`).join('');
+}
+
+function fixedCostGroups(selected){
+  const groups=[...new Set(fixedCostCategories().map(cat=>cat.g))].sort((a,b)=>a.localeCompare(b,'de'));
+  return `<option value="all">Alle Kategorien</option>`+groups.map(group=>
+    `<option value="${esc(group)}"${group===selected?' selected':''}>${esc(group)}</option>`
+  ).join('');
+}
+
+function saveStructuredExpense(){
+  const amount=Number(document.getElementById('quick-amount')?.value);
+  const catId=document.getElementById('quick-cat')?.value;
+  const name=document.getElementById('quick-name')?.value.trim()||'';
+  if(!Number.isFinite(amount)||amount<=0)return toast('Bitte Betrag eingeben','err');
+  if(!catId)return toast('Bitte Kategorie auswählen','err');
+  S.buchungen.push({id:uid(),catId,bezeichnung:name,betrag:amount,month:S.month,year:S.year,ts:Date.now()});
+  S.ausgabeAmt='';
+  S.ausgabeBezeichnung='';
+  S.ausgabeCatId=catId;
+  persist();
+  render();
+  toast('Ausgabe gespeichert');
+}
+
 function managerButton(label, action, danger=false){
   return `<button class="btn ${danger?'btn-cancel':'btn-ghost'}" type="button" onclick="event.stopPropagation();${action}">${label}</button>`;
 }
