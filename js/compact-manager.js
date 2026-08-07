@@ -49,8 +49,9 @@ function variableBookingGroups(year, month){
     .filter(cat=>cat.t==='V')
     .slice()
     .sort((a,b)=>String(a.p||'').localeCompare(String(b.p||''),'de',{sensitivity:'base'}));
+  const categoryIds=new Set(categories.map(cat=>cat.id));
   const bookings=getBuchungenForMonth(year,month);
-  return categories.map(cat=>{
+  const regular=categories.map(cat=>{
     const items=bookings.filter(item=>item.catId===cat.id).slice().sort((a,b)=>Number(b.ts||0)-Number(a.ts||0));
     if(!items.length)return '';
     const total=items.reduce((sum,item)=>sum+Number(item.betrag||0),0);
@@ -58,10 +59,19 @@ function variableBookingGroups(year, month){
       <summary><div class="manager-group-title">${esc(cat.p)}</div><div class="manager-group-meta">${items.length} · <span class="manager-total">${fmt(total)}</span></div><span class="manager-chevron">▼</span></summary>
       <div class="manager-group-body">${items.map(item=>`<details class="manager-entry">
         <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung||cat.p)}</div><div class="manager-entry-sub">${new Date(item.ts).toLocaleDateString('de-DE')} · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value" style="color:var(--red)">-${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary>
-        <div class="manager-entry-actions">${managerButton('Bearbeiten',`editBooking('${esc(item.id)}')`)}${managerButton('Löschen',`deleteBooking('${esc(item.id)}')`,true)}</div>
+        <div class="manager-entry-actions">${managerButton('Bearbeiten',`openBookingDialog('${esc(item.id)}')`)}${managerButton('Löschen',`deleteBooking('${esc(item.id)}')`,true)}</div>
       </details>`).join('')}</div>
     </details>`;
   }).join('');
+
+  const orphaned=bookings.filter(item=>!categoryIds.has(item.catId));
+  if(!orphaned.length)return regular;
+  const orphanTotal=orphaned.reduce((sum,item)=>sum+Number(item.betrag||0),0);
+  const orphanRows=orphaned.map(item=>`<details class="manager-entry">
+    <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung||'Ausgabe')}</div><div class="manager-entry-sub">Kategorie nicht mehr vorhanden · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value" style="color:var(--red)">-${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary>
+    <div class="manager-entry-actions">${managerButton('Bearbeiten',`openBookingDialog('${esc(item.id)}')`)}${managerButton('Löschen',`deleteBooking('${esc(item.id)}')`,true)}</div>
+  </details>`).join('');
+  return regular+`<details class="manager-group" open><summary><div class="manager-group-title">Ohne Kategorie</div><div class="manager-group-meta">${orphaned.length} · <span class="manager-total">${fmt(orphanTotal)}</span></div><span class="manager-chevron">▼</span></summary><div class="manager-group-body">${orphanRows}</div></details>`;
 }
 
 function fixedManagerGroups(categories){
@@ -81,7 +91,7 @@ function fixedManagerGroups(categories){
         const interval=INTERVALS.find(([months])=>months===Number(rule?.intervalMonths||1))?.[1]||'Monatlich';
         return `<details class="manager-entry">
           <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(cat.p)}</div><div class="manager-entry-sub">${interval}${rule?` · ab ${MF[rule.startMonth]} ${rule.startYear}`:''}</div></div><div class="manager-entry-value ${RC[cat.t]||''}">${fmtS(gv(S.year,S.month,cat))}</div><span class="manager-chevron">▼</span></summary>
-          <div class="manager-entry-actions">${managerButton('Bearbeiten',`openPositionDialog('${esc(cat.id)}')`)}${managerButton('Löschen',`deleteFixedCost('${esc(cat.id)}')`,true)}</div>
+          <div class="manager-entry-actions">${managerButton('Bearbeiten',`openPositionDialog('${esc(cat.id)}')`)}${managerButton('Löschen',`deleteFixedPosition('${esc(cat.id)}')`,true)}</div>
         </details>`;
       }).join('')}</div>
     </details>`;
@@ -98,6 +108,7 @@ vAusgaben=function(){
       <div class="field"><div class="lbl">Betrag</div><input class="inp" id="quick-amount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00"/></div>
       <div class="field"><div class="lbl">Kategorie</div><div class="sw"><select class="sel" id="quick-cat"><option value="">Bitte auswählen</option>${variableCategoryOptions(S.ausgabeCatId)}</select></div></div>
       <div class="field"><div class="lbl">Bezeichnung</div><input class="inp" id="quick-name" placeholder="z. B. REWE oder Freizeitpark"/></div>
+      <div class="category-tools"><button class="btn btn-ghost" type="button" onclick="openVariableCategoryManager()">Kategorien verwalten</button></div>
       <div class="dialog-actions"><button class="btn btn-cancel" onclick="clearExpenseForm()">Abbrechen</button><button class="btn btn-green" onclick="saveStructuredExpense()">Speichern</button></div>
     </div></div>
     <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title" style="margin:0">Gespeicherte Ausgaben</div><span class="muted">${MF[mo]} ${y}</span></div><div class="manager-groups">${groups||'<div class="manager-empty">Noch keine Ausgaben in diesem Monat.</div>'}</div></div></div>
@@ -111,7 +122,8 @@ vUebersicht=function(){
   return `<div class="desktop-page-title">Fixkosten</div>
     <div class="layout-grid fixed-costs-grid">
     <div class="grid-primary"><div class="card form-card"><div class="card-title">Zeitraum und Filter</div><div class="form-grid two"><div class="field"><div class="lbl">Monat</div><div class="sw"><select class="sel" onchange="selMonth(Number(this.value))">${MF.map((x,i)=>`<option value="${i}"${i===S.month?' selected':''}>${x}</option>`).join('')}</select></div></div><div class="field"><div class="lbl">Jahr</div><div class="sw"><select class="sel" onchange="selYear(Number(this.value))">${S.years.map(y=>`<option value="${y}"${y===S.year?' selected':''}>${y}</option>`).join('')}</select></div></div></div>
-      <div class="compact-toolbar"><input class="inp wide" id="fixed-search" placeholder="Position suchen" value="${esc(S.ui.fixedSearch||'')}"/><button class="btn btn-ghost" onclick="applyFixedSearch()">Suchen</button><div class="sw"><select class="sel" onchange="S.ui.fixedType=this.value;render()">${fixedCostTypeOptions(type)}</select></div><div class="sw"><select class="sel" onchange="S.ui.fixedGroup=this.value;render()">${fixedCostGroups(group)}</select></div></div><button class="btn btn-primary btn-full" onclick="openPositionDialog('')">Position hinzufügen</button>
+      <div class="compact-toolbar"><input class="inp wide" id="fixed-search" placeholder="Position suchen" value="${esc(S.ui.fixedSearch||'')}"/><button class="btn btn-ghost" onclick="applyFixedSearch()">Suchen</button><div class="sw"><select class="sel" onchange="S.ui.fixedType=this.value;render()">${fixedCostTypeOptions(type)}</select></div><div class="sw"><select class="sel" onchange="S.ui.fixedGroup=this.value;render()">${fixedCostGroups(group)}</select></div></div>
+      <button class="btn btn-primary btn-full" onclick="openPositionDialog('')">Position hinzufügen</button><div class="category-tools"><button class="btn btn-ghost" type="button" onclick="openFixedCategoryManager()">Kategorien verwalten</button></div>
     </div></div>
     <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title" style="margin:0">Gespeicherte Positionen</div><span class="muted">${categories.length} Einträge</span></div><div class="manager-groups">${fixedManagerGroups(categories)||'<div class="manager-empty">Keine passenden Positionen.</div>'}</div></div>
     <div class="card"><div class="card-title">Verwaltung</div><div class="form-actions"><button class="btn btn-ghost" onclick="openAddYear()">Jahr hinzufügen</button><button class="btn btn-ghost" onclick="openFixedDataActions()">Daten verwalten</button></div></div></div>
