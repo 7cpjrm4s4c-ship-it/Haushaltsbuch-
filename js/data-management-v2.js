@@ -1,4 +1,4 @@
-/* Datenverwaltung v2: echte Leerzustände, reduzierte Werkseinstellungen und alphabetische Kategorien. */
+/* Werkseinstellungen, Datenverwaltung und alphabetische Kategorien. */
 'use strict';
 
 const PREDEFINED_VARIABLE_CATEGORIES = [
@@ -18,7 +18,7 @@ function sortCategoriesInPlace(){
   });
 }
 
-normalizeVariableCategories=function(){
+function normalizeVariableCategories(){
   const variables=S.cats.filter(c=>c.t==='V');
   const fixed=S.cats.filter(c=>c.t!=='V');
   const byName=new Map(variables.map(c=>[String(c.p||'').trim().toLocaleLowerCase('de'),c]));
@@ -29,7 +29,10 @@ normalizeVariableCategories=function(){
     if(!cat){
       cat={id:uid(),g:'Variable Ausgaben',p:name,d:0,t:'V'};
     }else{
-      cat.g='Variable Ausgaben';cat.p=name;cat.d=0;cat.t='V';
+      cat.g='Variable Ausgaben';
+      cat.p=name;
+      cat.d=0;
+      cat.t='V';
       byName.delete(key);
     }
     canonical.push(cat);
@@ -37,17 +40,19 @@ normalizeVariableCategories=function(){
   const custom=[...byName.values()].map(cat=>({...cat,g:'Variable Ausgaben',d:0,t:'V'}));
   S.cats=[...fixed,...canonical,...custom];
   sortCategoriesInPlace();
-};
+}
 
-variableCategories=function(){
+function variableCategories(){
   return S.cats.filter(cat=>cat.t==='V').slice().sort((a,b)=>deSort(a.p,b.p));
-};
-fixedCostCategories=function(){
+}
+
+function fixedCostCategories(){
   return S.cats.filter(cat=>['E','F','K','S'].includes(cat.t)).slice().sort((a,b)=>deSort(a.g,b.g)||deSort(a.p,b.p));
-};
-fixedCategories=function(){
+}
+
+function fixedCategories(){
   return [...new Set(fixedCostCategories().map(cat=>cat.g))].sort(deSort);
-};
+}
 
 function factoryVariableCategories(){
   return PREDEFINED_VARIABLE_CATEGORIES.map((name,i)=>({id:`v_factory_${i+1}`,g:'Variable Ausgaben',p:name,d:0,t:'V'}));
@@ -90,40 +95,11 @@ function applyFactoryState(){
   sortCategoriesInPlace();
 }
 
-const _loadDataManagement=load;
-load=function(){
-  let persisted=null;
-  try{
-    const raw=localStorage.getItem(LS_KEY);
-    if(raw)persisted=JSON.parse(raw);
-  }catch(e){}
-
-  _loadDataManagement();
-
-  if(!persisted){
-    applyFactoryState();
-    persist();
-  }else{
-    S.data=persisted.data&&typeof persisted.data==='object'?persisted.data:{};
-    if(Array.isArray(persisted.cats))S.cats=persisted.cats;
-    if(Array.isArray(persisted.kredite))S.kredite=persisted.kredite;
-    S.years=Array.isArray(persisted.years)&&persisted.years.length?persisted.years:defaultYears();
-    S.buchungen=Array.isArray(persisted.buchungen)?persisted.buchungen:[];
-    S.budgets=persisted.budgets&&typeof persisted.budgets==='object'?persisted.budgets:{};
-    S.recurringRules=Array.isArray(persisted.recurringRules)?persisted.recurringRules:[];
-    S.annualAdjustments=Array.isArray(persisted.annualAdjustments)?persisted.annualAdjustments:[];
-    S.percentageAdjustments=Array.isArray(persisted.percentageAdjustments)?persisted.percentageAdjustments:[];
-    normalizeVariableCategories();
-  }
-  if(!S.years.includes(S.year))S.year=S.years[0]||now.getFullYear();
-  sortCategoriesInPlace();
-};
-
 function destructiveConfirm(){
   return confirm('Beim Bestätigen werden alle Einträge gelöscht!');
 }
 
-resetBuchungen=function(){
+function resetBuchungen(){
   if(!destructiveConfirm())return;
   S.buchungen=[];
   S.budgets={};
@@ -131,7 +107,7 @@ resetBuchungen=function(){
   closeGenSheet();
   render();
   toast('Alle Buchungen gelöscht');
-};
+}
 
 function deleteAllEntries(){
   if(!destructiveConfirm())return;
@@ -150,16 +126,18 @@ function deleteAllEntries(){
   toast('Alle Einträge entfernt');
 }
 
-resetAll=function(){
+function resetAll(){
   if(!confirm('Werkseinstellungen wiederherstellen?\n\nBeim Bestätigen werden alle Einträge gelöscht!'))return;
   applyFactoryState();
+  if(typeof syncAllLoans==='function')syncAllLoans();
+  sortCategoriesInPlace();
   persist();
   closeGenSheet();
   render();
   toast('Werkseinstellungen wiederhergestellt');
-};
+}
 
-openFixedDataActions=function(){
+function openFixedDataActions(){
   openGenSheet(`<div class="sheet-title">Daten verwalten</div>
     <div class="field-hint" style="margin-bottom:14px">Diese Funktionen betreffen gespeicherte Positionen und Buchungen.</div>
     <div style="display:flex;flex-direction:column;gap:8px">
@@ -168,7 +146,7 @@ openFixedDataActions=function(){
       <div class="sheet-divider"></div>
       <button class="btn btn-ghost btn-full" onclick="resetAll()">App auf Werkseinstellungen zurücksetzen</button>
     </div>`);
-};
+}
 
 const _saveVariableCategorySorted=saveVariableCategory;
 saveVariableCategory=function(id){
