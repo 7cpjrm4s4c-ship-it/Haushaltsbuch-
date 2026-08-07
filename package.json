@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test:recurrence": "node tests/recurrence-engine.test.mjs",
-    "check": "npm run test:recurrence"
+    "test:integration": "node tests/app-integration.test.mjs",
+    "check": "npm run test:recurrence && npm run test:integration"
   },
   "engines": {
     "node": ">=18"
