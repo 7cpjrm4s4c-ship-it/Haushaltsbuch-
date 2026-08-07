@@ -29,7 +29,6 @@ function creditBalanceAt(k,year,month){
   const reference=creditMonthNumber(creditReferenceYear(k),creditReferenceMonth(k));
   const target=creditMonthNumber(year,month);
   const difference=target-reference;
-
   if(difference>0){
     for(let i=0;i<difference&&balance>0.005;i++){
       const interest=balance*monthlyRate;
@@ -144,7 +143,6 @@ function calculateSpecialRepayment(){
   const loan=S.kredite.find(item=>item.id===loanId);
   const result=document.getElementById('specialResult');
   if(!loan||!result)return;
-
   const currentPrincipal=creditBalanceAt(loan,S.year,S.month);
   const baseline=amortizeCredit(currentPrincipal,loan.z,loan.m);
   const reducedPrincipal=Math.max(0,currentPrincipal-amount);
@@ -153,19 +151,9 @@ function calculateSpecialRepayment(){
     result.innerHTML='<div class="loan-calc-error">Die Monatsrate reicht bei diesem Zinssatz nicht für eine vollständige Tilgung aus.</div>';
     return;
   }
-
   const savedMonths=Math.max(0,baseline.months-withPayment.months);
   const savedInterest=Math.max(0,baseline.interest-withPayment.interest);
-  result.innerHTML=`<div class="loan-calc-grid">
-    <div><span>Restschuld ${MF[S.month]} ${S.year}</span><strong>${fmt(currentPrincipal)}</strong></div>
-    <div><span>Neue Restschuld</span><strong>${fmt(reducedPrincipal)}</strong></div>
-    <div><span>Laufzeitverkürzung</span><strong>${savedMonths} Monate</strong></div>
-    <div><span>Zinsersparnis</span><strong>${fmt(savedInterest)}</strong></div>
-    <div><span>Neues Enddatum</span><strong>${specialRepaymentMonthLabel(withPayment.months)}</strong></div>
-  </div><div class="loan-calc-compare">
-    <div><span>Ohne Sondertilgung</span><b>${baseline.months} Monate · ${fmt(baseline.interest)} Zinsen</b></div>
-    <div><span>Mit Sondertilgung</span><b>${withPayment.months} Monate · ${fmt(withPayment.interest)} Zinsen</b></div>
-  </div>`;
+  result.innerHTML=`<div class="loan-calc-grid"><div><span>Restschuld ${MF[S.month]} ${S.year}</span><strong>${fmt(currentPrincipal)}</strong></div><div><span>Neue Restschuld</span><strong>${fmt(reducedPrincipal)}</strong></div><div><span>Laufzeitverkürzung</span><strong>${savedMonths} Monate</strong></div><div><span>Zinsersparnis</span><strong>${fmt(savedInterest)}</strong></div><div><span>Neues Enddatum</span><strong>${specialRepaymentMonthLabel(withPayment.months)}</strong></div></div><div class="loan-calc-compare"><div><span>Ohne Sondertilgung</span><b>${baseline.months} Monate · ${fmt(baseline.interest)} Zinsen</b></div><div><span>Mit Sondertilgung</span><b>${withPayment.months} Monate · ${fmt(withPayment.interest)} Zinsen</b></div></div>`;
 }
 
 function creditCalculatorMarkup(){
@@ -174,7 +162,7 @@ function creditCalculatorMarkup(){
   return `<section class="loan-calc-card"><div class="loan-calc-title">Sondertilgung berechnen</div><div class="loan-calc-sub">Basis: berechnete Restschuld für ${MF[S.month]} ${S.year}</div><div class="loan-calc-fields"><label>Kredit<select class="inp" id="specialLoan">${options}</select></label><label>Sondertilgung (€)<input class="inp" id="specialAmount" type="number" min="0" step="50" inputmode="decimal" value="500"></label></div><button class="btn btn-primary btn-full" onclick="calculateSpecialRepayment()">Berechnen</button><div id="specialResult"></div></section>`;
 }
 
-vKredite=function(){
+function vKredite(){
   const y=S.year,mo=S.month;
   const tR=S.kredite.reduce((sum,k)=>sum+creditBalanceAt(k,y,mo),0);
   const tM=S.kredite.reduce((sum,k)=>sum+Number(k.m||0),0);
@@ -190,18 +178,18 @@ vKredite=function(){
   }).join('');
   const main=`<div class="hero"><div class="hero-bg"></div><div class="hero-content"><div class="hero-lbl">Gesamtschulden · ${MF[mo]} ${y}</div><div class="hero-val neg">${fmtS(tR)}</div><div class="hero-sub"><div class="hsi"><div class="hsi-lbl">Monatl. Raten</div><div class="hsi-val">${fmtS(tM)}</div></div><div class="hsi"><div class="hsi-lbl">Getilgt</div><div class="hsi-val">${fmtS(tG)}</div></div><div class="hsi"><div class="hsi-lbl">Anzahl</div><div class="hsi-val">${S.kredite.length}</div></div></div></div></div>${cards}<button class="btn btn-primary btn-full mt8" onclick="addKredit()">+ Neuen Kredit hinzufügen</button>`;
   return `<div class="desktop-page-title">Kredite</div><div class="layout-grid loans-grid"><div class="grid-primary">${main}</div><div class="grid-secondary">${creditCalculatorMarkup()}</div></div>`;
-};
+}
 
-kreditForm=function(k={}){
+function kreditForm(k={}){
   const today=new Date();
   const start=creditStartAmount(k);
   const referenceYear=creditReferenceYear(k)||today.getFullYear();
   const referenceMonth=creditReferenceMonth(k);
   const yearOptions=Array.from(new Set([...(S.years||[]),referenceYear,today.getFullYear()])).sort((a,b)=>a-b).map(y=>`<option value="${y}"${y===referenceYear?' selected':''}>${y}</option>`).join('');
   return `<div class="field"><div class="lbl">Name</div><input class="inp" id="kn" value="${esc(k.n||'')}" placeholder="z. B. Deutsche Bank"/></div><div class="field"><div class="lbl">Startbetrag (€)</div><input class="inp" type="number" id="ks" value="${start||''}" min="0" step="0.01" inputmode="decimal" placeholder="0,00"/></div><div class="field"><div class="lbl">Eingegebene Restschuld (€)</div><input class="inp" type="number" id="kr" value="${k.r??''}" min="0" step="0.01" inputmode="decimal" placeholder="0,00"/></div><div class="form-grid two"><div class="field"><div class="lbl">Stand Monat</div><div class="sw"><select class="sel" id="krm">${MF.map((name,index)=>`<option value="${index}"${index===referenceMonth?' selected':''}>${name}</option>`).join('')}</select></div></div><div class="field"><div class="lbl">Stand Jahr</div><div class="sw"><select class="sel" id="kry">${yearOptions}</select></div></div></div><div class="field"><div class="lbl">Monatl. Rate (€)</div><input class="inp" type="number" id="km" value="${k.m??''}" min="0" step="0.01" inputmode="decimal" placeholder="0,00"/></div><div class="field"><div class="lbl">Zinssatz (%)</div><input class="inp" type="number" id="kz" value="${k.z??''}" min="0" step="0.001" inputmode="decimal" placeholder="0,00"/></div><div class="annual-note">Die eingegebene Restschuld gilt für den gewählten Stichtagsmonat. Für andere Monate wird sie automatisch mit Zinsen und Tilgung fortgeschrieben.</div>`;
-};
+}
 
-readKreditForm=function(existing={}){
+function readKreditForm(existing={}){
   const n=document.getElementById('kn')?.value.trim();
   const s=parseFloat(document.getElementById('ks')?.value);
   const r=parseFloat(document.getElementById('kr')?.value);
@@ -214,9 +202,9 @@ readKreditForm=function(existing={}){
   if(r>s){toast('Restschuld darf nicht höher als der Startbetrag sein','err');return null;}
   if(balanceMonth>11){toast('Stichtagsmonat prüfen','err');return null;}
   return {...existing,n,s,r,m,z,balanceMonth,balanceYear};
-};
+}
 
-saveNewKredit=function(){
+function saveNewKredit(){
   const values=readKreditForm();
   if(!values)return;
   const loan={id:uid(),...values};
@@ -227,9 +215,9 @@ saveNewKredit=function(){
   closeGenSheet();
   render();
   toast(`${esc(loan.n)} hinzugefügt`);
-};
+}
 
-saveEditKredit=function(kid){
+function saveEditKredit(kid){
   const loan=S.kredite.find(x=>x.id===kid);
   if(!loan)return;
   const values=readKreditForm(loan);
@@ -241,9 +229,9 @@ saveEditKredit=function(kid){
   closeGenSheet();
   render();
   toast(`${esc(loan.n)} gespeichert`);
-};
+}
 
-delKredit=function(kid){
+function delKredit(kid){
   const loan=S.kredite.find(x=>x.id===kid);
   if(!loan||!confirm(`"${loan.n}" wirklich löschen?`))return;
   S.kredite=S.kredite.filter(x=>x.id!==kid);
@@ -253,4 +241,4 @@ delKredit=function(kid){
   closeGenSheet();
   render();
   toast(`${esc(loan.n)} gelöscht`);
-};
+}
