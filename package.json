@@ -3,7 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "split:index": "node tools/split-index.mjs",
     "test:recurrence": "node tests/recurrence-engine.test.mjs",
     "check": "npm run test:recurrence"
   },
