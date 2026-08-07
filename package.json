@@ -8,7 +8,8 @@
     "test:state": "node tests/state-hardening.test.mjs",
     "test:architecture": "node tests/architecture-contract.test.mjs",
     "test:forecast": "node tests/forecast-engine.test.mjs",
-    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture && npm run test:forecast"
+    "test:planning": "node tests/planning-adjustments.test.mjs",
+    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture && npm run test:forecast && npm run test:planning"
   },
   "engines": {
     "node": ">=18"
