@@ -83,9 +83,17 @@ function savePositionDialog(catId) {
   const category = chosenCategory === '__new'
     ? document.getElementById('pos-group-new')?.value.trim()
     : chosenCategory;
+  const startMonth = Number(document.getElementById('pos-start-month')?.value || 0);
+  const startYear = Number(document.getElementById('pos-start-year')?.value || S.year);
+  const endEnabled = Boolean(document.getElementById('pos-end-enabled')?.checked);
+  const endMonth = endEnabled ? Number(document.getElementById('pos-end-month')?.value) : null;
+  const endYear = endEnabled ? Number(document.getElementById('pos-end-year')?.value) : null;
 
   if (!name || !category || !type || !Number.isFinite(amount) || amount < 0) {
     return toast('Bezeichnung, Kategorie und Betrag prüfen', 'err');
+  }
+  if (endEnabled && absoluteMonth(endYear, endMonth) < absoluteMonth(startYear, startMonth)) {
+    return toast('Endmonat darf nicht vor dem Startmonat liegen', 'err');
   }
 
   let cat = S.cats.find(item => item.id === catId);
@@ -107,10 +115,10 @@ function savePositionDialog(catId) {
     catId,
     amount,
     intervalMonths: Number(document.getElementById('pos-interval')?.value || 1),
-    startMonth: Number(document.getElementById('pos-start-month')?.value || 0),
-    startYear: Number(document.getElementById('pos-start-year')?.value || S.year),
-    endMonth: null,
-    endYear: null,
+    startMonth,
+    startYear,
+    endMonth,
+    endYear,
   });
 
   S.percentageAdjustments = (S.percentageAdjustments || []).filter(item => item.catId !== catId);
@@ -128,6 +136,7 @@ function savePositionDialog(catId) {
   }
 
   S.ui.pendingFixedCategory = '';
+  if (typeof sortCategoriesInPlace === 'function') sortCategoriesInPlace();
   persist();
   closeGenSheet();
   render();
