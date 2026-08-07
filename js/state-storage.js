@@ -10,7 +10,7 @@
     }
     const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
     return {
-      schemaVersion:1,
+      schemaVersion:2,
       data:source.data&&typeof source.data==='object'&&!Array.isArray(source.data)?source.data:{},
       cats:Array.isArray(source.cats)?source.cats:[],
       kredite:Array.isArray(source.kredite)?source.kredite:[],
@@ -20,6 +20,9 @@
       recurringRules:Array.isArray(source.recurringRules)?source.recurringRules:[],
       annualAdjustments:Array.isArray(source.annualAdjustments)?source.annualAdjustments:[],
       percentageAdjustments:Array.isArray(source.percentageAdjustments)?source.percentageAdjustments:[],
+      amountAdjustments:Array.isArray(source.amountAdjustments)?source.amountAdjustments:[],
+      oneTimeEntries:Array.isArray(source.oneTimeEntries)?source.oneTimeEntries:[],
+      forecastAssets:source.forecastAssets&&typeof source.forecastAssets==='object'&&!Array.isArray(source.forecastAssets)?source.forecastAssets:{},
     };
   }
 
@@ -34,6 +37,9 @@
       recurringRules:S.recurringRules,
       annualAdjustments:S.annualAdjustments,
       percentageAdjustments:S.percentageAdjustments,
+      amountAdjustments:S.amountAdjustments,
+      oneTimeEntries:S.oneTimeEntries,
+      forecastAssets:S.forecastAssets,
     });
   }
 
@@ -78,6 +84,9 @@
       S.recurringRules=saved.recurringRules;
       S.annualAdjustments=saved.annualAdjustments;
       S.percentageAdjustments=saved.percentageAdjustments;
+      S.amountAdjustments=saved.amountAdjustments;
+      S.oneTimeEntries=saved.oneTimeEntries;
+      S.forecastAssets=saved.forecastAssets;
       normalizeVariableCategories();
     }
 
