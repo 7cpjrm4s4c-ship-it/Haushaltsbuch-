@@ -142,26 +142,3 @@ function savePositionDialog(catId) {
   render();
   toast('Position gespeichert');
 }
-
-function orphanVariableBookings(year, month) {
-  const categoryIds = new Set(S.cats.filter(cat => cat.t === 'V').map(cat => cat.id));
-  return getBuchungenForMonth(year, month).filter(booking => !categoryIds.has(booking.catId));
-}
-
-const _variableBookingGroupsConsistent = variableBookingGroups;
-variableBookingGroups = function visibleVariableBookingGroups(year, month) {
-  const regular = _variableBookingGroupsConsistent(year, month);
-  const orphaned = orphanVariableBookings(year, month);
-  if (!orphaned.length) return regular;
-
-  const total = orphaned.reduce((sum, item) => sum + Number(item.betrag || 0), 0);
-  const rows = orphaned.map(item => `<details class="manager-entry">
-    <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung || 'Ausgabe')}</div><div class="manager-entry-sub">Kategorie nicht mehr vorhanden · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value" style="color:var(--red)">-${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary>
-    <div class="manager-entry-actions">${managerButton('Bearbeiten', `openBookingDialog('${esc(item.id)}')`)}${managerButton('Löschen', `deleteBooking('${esc(item.id)}')`, true)}</div>
-  </details>`).join('');
-
-  return regular + `<details class="manager-group" open>
-    <summary><div class="manager-group-title">Ohne Kategorie</div><div class="manager-group-meta">${orphaned.length} · <span class="manager-total">${fmt(total)}</span></div><span class="manager-chevron">▼</span></summary>
-    <div class="manager-group-body">${rows}</div>
-  </details>`;
-};
