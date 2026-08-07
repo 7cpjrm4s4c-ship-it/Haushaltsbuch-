@@ -147,24 +147,3 @@ function openFixedDataActions(){
       <button class="btn btn-ghost btn-full" onclick="resetAll()">App auf Werkseinstellungen zurücksetzen</button>
     </div>`);
 }
-
-const _saveVariableCategorySorted=saveVariableCategory;
-saveVariableCategory=function(id){
-  _saveVariableCategorySorted(id);
-  sortCategoriesInPlace();
-  persist();
-};
-
-const _saveFixedCategorySorted=saveFixedCategory;
-saveFixedCategory=function(oldName){
-  _saveFixedCategorySorted(oldName);
-  sortCategoriesInPlace();
-  persist();
-};
-
-const _savePositionSorted=savePositionDialog;
-savePositionDialog=function(catId){
-  _savePositionSorted(catId);
-  sortCategoriesInPlace();
-  persist();
-};
