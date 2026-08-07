@@ -78,18 +78,6 @@ function creditEndDateAt(k,year,month){
   return date.toLocaleDateString('de-DE',{month:'2-digit',year:'numeric'});
 }
 
-const _loadCredits=load;
-load=function(){
-  _loadCredits();
-  const today=new Date();
-  S.kredite=(S.kredite||[]).map(k=>({
-    ...k,
-    s:creditStartAmount(k),
-    balanceYear:creditReferenceYear(k)||today.getFullYear(),
-    balanceMonth:creditReferenceMonth(k),
-  }));
-};
-
 vKredite=function(){
   const y=S.year,mo=S.month;
   const tR=S.kredite.reduce((sum,k)=>sum+creditBalanceAt(k,y,mo),0);
