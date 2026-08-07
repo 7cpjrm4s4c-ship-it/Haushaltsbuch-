@@ -7,7 +7,8 @@
     "test:integration": "node tests/app-integration.test.mjs",
     "test:state": "node tests/state-hardening.test.mjs",
     "test:architecture": "node tests/architecture-contract.test.mjs",
-    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture"
+    "test:forecast": "node tests/forecast-engine.test.mjs",
+    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture && npm run test:forecast"
   },
   "engines": {
     "node": ">=18"
