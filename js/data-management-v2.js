@@ -18,7 +18,6 @@ function sortCategoriesInPlace(){
   });
 }
 
-// Erhält eigene Kategorien, stellt aber alle vordefinierten Kategorien bereit.
 normalizeVariableCategories=function(){
   const variables=S.cats.filter(c=>c.t==='V');
   const fixed=S.cats.filter(c=>c.t!=='V');
@@ -35,7 +34,6 @@ normalizeVariableCategories=function(){
     }
     canonical.push(cat);
   }
-  // Eigene Kategorien bleiben erhalten.
   const custom=[...byName.values()].map(cat=>({...cat,g:'Variable Ausgaben',d:0,t:'V'}));
   S.cats=[...fixed,...canonical,...custom];
   sortCategoriesInPlace();
@@ -92,7 +90,6 @@ function applyFactoryState(){
   sortCategoriesInPlace();
 }
 
-// Wichtig: explizit gespeicherte leere Arrays dürfen nicht durch alte Demo-Daten ersetzt werden.
 const _loadDataManagement=load;
 load=function(){
   let persisted=null;
@@ -107,11 +104,18 @@ load=function(){
     applyFactoryState();
     persist();
   }else{
+    S.data=persisted.data&&typeof persisted.data==='object'?persisted.data:{};
     if(Array.isArray(persisted.cats))S.cats=persisted.cats;
     if(Array.isArray(persisted.kredite))S.kredite=persisted.kredite;
-    if(Array.isArray(persisted.buchungen))S.buchungen=persisted.buchungen;
+    S.years=Array.isArray(persisted.years)&&persisted.years.length?persisted.years:defaultYears();
+    S.buchungen=Array.isArray(persisted.buchungen)?persisted.buchungen:[];
+    S.budgets=persisted.budgets&&typeof persisted.budgets==='object'?persisted.budgets:{};
+    S.recurringRules=Array.isArray(persisted.recurringRules)?persisted.recurringRules:[];
+    S.annualAdjustments=Array.isArray(persisted.annualAdjustments)?persisted.annualAdjustments:[];
+    S.percentageAdjustments=Array.isArray(persisted.percentageAdjustments)?persisted.percentageAdjustments:[];
     normalizeVariableCategories();
   }
+  if(!S.years.includes(S.year))S.year=S.years[0]||now.getFullYear();
   sortCategoriesInPlace();
 };
 
@@ -138,7 +142,6 @@ function deleteAllEntries(){
   S.recurringRules=[];
   S.annualAdjustments=[];
   S.percentageAdjustments=[];
-  // Vordefinierte Ausgabenkategorien bleiben als Auswahl erhalten; alle eigenen/festen Positionen werden entfernt.
   S.cats=factoryVariableCategories();
   sortCategoriesInPlace();
   persist();
@@ -167,7 +170,6 @@ openFixedDataActions=function(){
     </div>`);
 };
 
-// Nach Neuanlage/Umbenennung direkt wieder alphabetisch einsortieren.
 const _saveVariableCategorySorted=saveVariableCategory;
 saveVariableCategory=function(id){
   _saveVariableCategorySorted(id);
