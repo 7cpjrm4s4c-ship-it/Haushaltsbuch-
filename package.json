@@ -9,7 +9,8 @@
     "test:architecture": "node tests/architecture-contract.test.mjs",
     "test:forecast": "node tests/forecast-engine.test.mjs",
     "test:planning": "node tests/planning-adjustments.test.mjs",
-    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture && npm run test:forecast && npm run test:planning"
+    "test:phase-a": "node tests/phase-a-contract.test.mjs",
+    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture && npm run test:forecast && npm run test:planning && npm run test:phase-a"
   },
   "engines": {
     "node": ">=18"
