@@ -16,10 +16,31 @@ function forecastUi(){
   return S.ui.forecast;
 }
 
+function forecastAssets(){
+  S.forecastAssets=S.forecastAssets||{};
+  const defaults={cash:0,callMoney:0,fixedDeposit:0,etf:0,depot:0,other:0};
+  for(const [key,value] of Object.entries(defaults)){
+    const amount=Number(S.forecastAssets[key]);
+    S.forecastAssets[key]=Number.isFinite(amount)&&amount>=0?amount:value;
+  }
+  return S.forecastAssets;
+}
+
+function forecastAssetTotal(){
+  return Object.values(forecastAssets()).reduce((sum,value)=>sum+Number(value||0),0);
+}
+
 function setForecastOption(key,value){
   const ui=forecastUi();
   if(key==='lookbackMonths'||key==='endYear'||key==='annualInflation')value=Number(value);
   ui[key]=value;
+  render();
+}
+
+function setForecastAsset(key,value){
+  const assets=forecastAssets();
+  assets[key]=Math.max(0,Number(value)||0);
+  persist();
   render();
 }
 
@@ -33,6 +54,7 @@ function forecastData(){
     baseMonth:S.month,
     lookbackMonths:ui.lookbackMonths,
   });
+  const startAssets=forecastAssetTotal();
   const months=ForecastEngine.project({
     startYear:S.year,
     startMonth:S.month,
@@ -46,8 +68,9 @@ function forecastData(){
     variableBaseline:baseline,
     annualInflation:ui.annualInflation,
     scenarioKey:ui.scenarioKey,
+    startAssets,
   });
-  return {ui,baseline,months,years:ForecastEngine.aggregateYears(months)};
+  return {ui,baseline,startAssets,months,years:ForecastEngine.aggregateYears(months)};
 }
 
 function forecastScenarioOptions(selected){
@@ -67,80 +90,50 @@ function forecastTimeline(years){
   return `<div class="forecast-timeline">${years.map(row=>{
     const width=Math.max(3,Math.round(Math.abs(row.saldo)/max*100));
     const cls=row.saldo>=0?'positive':'negative';
-    return `<div class="forecast-timeline-row">
-      <div class="forecast-year">${row.year}</div>
-      <div class="forecast-bar-track"><div class="forecast-bar ${cls}" style="width:${width}%"></div></div>
-      <div class="forecast-bar-value ${cls}">${row.saldo>=0?'+':''}${fmtS(row.saldo)}</div>
-    </div>`;
+    return `<div class="forecast-timeline-row"><div class="forecast-year">${row.year}</div><div class="forecast-bar-track"><div class="forecast-bar ${cls}" style="width:${width}%"></div></div><div class="forecast-bar-value ${cls}">${row.saldo>=0?'+':''}${fmtS(row.saldo)}</div></div>`;
   }).join('')}</div>`;
 }
 
 function forecastYearDetails(years,months){
   return years.map(row=>{
-    const rows=months.filter(item=>item.year===row.year).map(item=>`<div class="forecast-month-row">
-      <span>${MF[item.month]}</span>
-      <span>${fmtS(item.income)}</span>
-      <span>${fmtS(item.expenses)}</span>
-      <strong class="${item.saldo>=0?'forecast-positive':'forecast-negative'}">${item.saldo>=0?'+':''}${fmtS(item.saldo)}</strong>
-    </div>`).join('');
-    return `<details class="forecast-year-card">
-      <summary>
-        <div><strong>${row.year}</strong><span>Jahressaldo</span></div>
-        <div class="${row.saldo>=0?'forecast-positive':'forecast-negative'}">${row.saldo>=0?'+':''}${fmt(row.saldo)}</div>
-      </summary>
-      <div class="forecast-year-metrics">
-        <div><span>Einnahmen</span><strong>${fmt(row.income)}</strong></div>
-        <div><span>Fixkosten</span><strong>${fmt(row.fixed)}</strong></div>
-        <div><span>Variable Kosten</span><strong>${fmt(row.variable)}</strong></div>
-        <div><span>Kreditraten</span><strong>${fmt(row.creditPayments)}</strong></div>
-        <div><span>Sparen</span><strong>${fmt(row.savings)}</strong></div>
-        <div><span>Restschuld Jahresende</span><strong>${fmt(row.endDebt)}</strong></div>
-      </div>
-      <div class="forecast-month-head"><span>Monat</span><span>Einnahmen</span><span>Ausgaben</span><span>Saldo</span></div>
-      ${rows}
-    </details>`;
+    const rows=months.filter(item=>item.year===row.year).map(item=>`<div class="forecast-month-row"><span>${MF[item.month]}</span><span>${fmtS(item.income)}</span><span>${fmtS(item.expenses)}</span><strong class="${item.saldo>=0?'forecast-positive':'forecast-negative'}">${item.saldo>=0?'+':''}${fmtS(item.saldo)}</strong></div>`).join('');
+    return `<details class="forecast-year-card"><summary><div><strong>${row.year}</strong><span>Nettovermögen Jahresende</span></div><div class="${row.endNetWorth>=0?'forecast-positive':'forecast-negative'}">${fmt(row.endNetWorth)}</div></summary>
+      <div class="forecast-year-metrics"><div><span>Einnahmen</span><strong>${fmt(row.income)}</strong></div><div><span>Fixkosten</span><strong>${fmt(row.fixed)}</strong></div><div><span>Variable Kosten</span><strong>${fmt(row.variable)}</strong></div><div><span>Kreditraten</span><strong>${fmt(row.creditPayments)}</strong></div><div><span>Sparen</span><strong>${fmt(row.savings)}</strong></div><div><span>Vermögen Jahresende</span><strong>${fmt(row.endAssets)}</strong></div><div><span>Restschuld Jahresende</span><strong>${fmt(row.endDebt)}</strong></div><div><span>Jahressaldo</span><strong class="${row.saldo>=0?'forecast-positive':'forecast-negative'}">${row.saldo>=0?'+':''}${fmt(row.saldo)}</strong></div></div>
+      <div class="forecast-month-head"><span>Monat</span><span>Einnahmen</span><span>Ausgaben</span><span>Saldo</span></div>${rows}</details>`;
   }).join('');
 }
 
+function forecastAssetInputs(){
+  const assets=forecastAssets();
+  const fields=[['cash','Kontostand / Liquidität'],['callMoney','Tagesgeld'],['fixedDeposit','Festgeld'],['etf','ETF'],['depot','Sonstiges Depot'],['other','Sonstiges Vermögen']];
+  return fields.map(([key,label])=>`<div class="field"><div class="lbl">${label}</div><input class="inp" type="number" min="0" step="0.01" inputmode="decimal" value="${assets[key]}" onchange="setForecastAsset('${key}',this.value)"/></div>`).join('');
+}
+
 function vPrognose(){
-  const {ui,baseline,months,years}=forecastData();
+  const {ui,baseline,startAssets,months,years}=forecastData();
   const first=months[0]||{debt:0};
-  const last=months[months.length-1]||{cumulative:0,debt:0};
+  const last=months[months.length-1]||{cumulative:0,debt:0,assets:startAssets,netWorth:startAssets};
   const totalSavings=months.reduce((sum,item)=>sum+item.savings,0);
   const debtReduction=Math.max(0,first.debt-last.debt);
   const scenario=ForecastEngine.SCENARIOS[ui.scenarioKey]||ForecastEngine.SCENARIOS.realistic;
+  const startDebt=S.kredite.reduce((sum,k)=>sum+creditBalanceAt(k,S.year,S.month),0);
+  const startNetWorth=startAssets-startDebt;
 
-  return `<div class="desktop-page-title">Finanzprognose</div>
-    <div class="forecast-layout">
-      <section class="card forecast-controls">
-        <div class="card-title">Prognose einstellen</div>
-        <div class="form-grid two">
-          <div class="field"><div class="lbl">Szenario</div><div class="sw"><select class="sel" onchange="setForecastOption('scenarioKey',this.value)">${forecastScenarioOptions(ui.scenarioKey)}</select></div></div>
-          <div class="field"><div class="lbl">Prognose bis</div><div class="sw"><select class="sel" onchange="setForecastOption('endYear',this.value)">${forecastYearOptions(ui.endYear)}</select></div></div>
-          <div class="field"><div class="lbl">Variable Kosten · Durchschnitt</div><div class="sw"><select class="sel" onchange="setForecastOption('lookbackMonths',this.value)">${[3,6,12].map(n=>`<option value="${n}"${n===ui.lookbackMonths?' selected':''}>letzte ${n} Monate</option>`).join('')}</select></div></div>
-          <div class="field"><div class="lbl">Inflation variable Kosten (% p.a.)</div><input class="inp" type="number" step="0.1" min="-10" max="20" value="${ui.annualInflation}" onchange="setForecastOption('annualInflation',this.value)"/></div>
-        </div>
-        <div class="forecast-note">${scenario.label}: variable Ausgaben werden mit ${Math.round(scenario.variableFactor*100)} % des historischen Durchschnitts angesetzt. Eingetragene Fixkosten, Enddaten und jährliche Erhöhungen werden unverändert aus der Finanzplanung übernommen.</div>
-      </section>
+  return `<div class="desktop-page-title">Finanzprognose</div><div class="forecast-layout">
+    <section class="card forecast-controls"><div class="card-title">Prognose einstellen</div><div class="form-grid two">
+      <div class="field"><div class="lbl">Szenario</div><div class="sw"><select class="sel" onchange="setForecastOption('scenarioKey',this.value)">${forecastScenarioOptions(ui.scenarioKey)}</select></div></div>
+      <div class="field"><div class="lbl">Prognose bis</div><div class="sw"><select class="sel" onchange="setForecastOption('endYear',this.value)">${forecastYearOptions(ui.endYear)}</select></div></div>
+      <div class="field"><div class="lbl">Variable Kosten · Durchschnitt</div><div class="sw"><select class="sel" onchange="setForecastOption('lookbackMonths',this.value)">${[3,6,12].map(n=>`<option value="${n}"${n===ui.lookbackMonths?' selected':''}>letzte ${n} Monate</option>`).join('')}</select></div></div>
+      <div class="field"><div class="lbl">Inflation variable Kosten (% p.a.)</div><input class="inp" type="number" step="0.1" min="-10" max="20" value="${ui.annualInflation}" onchange="setForecastOption('annualInflation',this.value)"/></div></div>
+      <div class="forecast-note">${scenario.label}: variable Ausgaben werden mit ${Math.round(scenario.variableFactor*100)} % des historischen Durchschnitts angesetzt. Fixkosten, Enddaten, feste und prozentuale Erhöhungen sowie Einmalzahlungen werden aus der Finanzplanung übernommen.</div></section>
 
-      <section class="forecast-kpis">
-        <div class="forecast-kpi"><span>Variable Basis</span><strong>${fmt(baseline)}</strong><small>pro Monat</small></div>
-        <div class="forecast-kpi"><span>Kumuliertes Plansaldo</span><strong class="${last.cumulative>=0?'forecast-positive':'forecast-negative'}">${last.cumulative>=0?'+':''}${fmt(last.cumulative)}</strong><small>ab ${MF[S.month]} ${S.year}</small></div>
-        <div class="forecast-kpi"><span>Schuldenabbau</span><strong>${fmt(debtReduction)}</strong><small>bis Ende ${ui.endYear}</small></div>
-        <div class="forecast-kpi"><span>Geplantes Sparen</span><strong>${fmt(totalSavings)}</strong><small>im Zeitraum</small></div>
-      </section>
+    <section class="card forecast-controls"><div class="card-title">Startvermögen</div><div class="forecast-note">Diese Werte werden ausschließlich für die Prognose verwendet und erscheinen nicht auf dem Dashboard.</div><div class="form-grid two">${forecastAssetInputs()}</div><div class="forecast-note">Erfasstes Startvermögen: <strong>${fmt(startAssets)}</strong> · aktuelle Restschulden: <strong>${fmt(startDebt)}</strong> · Nettovermögen zum Start: <strong>${fmt(startNetWorth)}</strong></div></section>
 
-      <section class="card">
-        <div class="card-title">Jährlicher Finanzierungsspielraum</div>
-        ${forecastTimeline(years)}
-      </section>
+    <section class="forecast-kpis"><div class="forecast-kpi"><span>Startvermögen</span><strong>${fmt(startAssets)}</strong><small>nur Prognose</small></div><div class="forecast-kpi"><span>Nettovermögen am Ende</span><strong class="${last.netWorth>=0?'forecast-positive':'forecast-negative'}">${fmt(last.netWorth)}</strong><small>Ende ${ui.endYear}</small></div><div class="forecast-kpi"><span>Schuldenabbau</span><strong>${fmt(debtReduction)}</strong><small>bis Ende ${ui.endYear}</small></div><div class="forecast-kpi"><span>Geplantes Sparen</span><strong>${fmt(totalSavings)}</strong><small>im Zeitraum</small></div></section>
 
-      <section class="card">
-        <div class="card-title">Jahres- und Monatsdetails</div>
-        <div class="forecast-year-list">${forecastYearDetails(years,months)}</div>
-      </section>
-    </div>`;
+    <section class="card"><div class="card-title">Jährlicher Finanzierungsspielraum</div>${forecastTimeline(years)}</section>
+    <section class="card"><div class="card-title">Jahres- und Monatsdetails</div><div class="forecast-year-list">${forecastYearDetails(years,months)}</div></section>
+  </div>`;
 }
 
-// Bestehender, derzeit ungenutzter Route-Key; sichtbarer Name ist ausschließlich „Prognose“.
 vEinstellungen=vPrognose;
