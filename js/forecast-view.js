@@ -1,7 +1,7 @@
 /* Prognoseansicht auf Basis der bestehenden Finanzlogik. */
 'use strict';
 
-VIEW_TITLES.prognose='Prognose';
+VIEW_TITLES.einstellungen='Prognose';
 
 function forecastUi(){
   S.ui=S.ui||{};
@@ -141,3 +141,6 @@ function vPrognose(){
       </section>
     </div>`;
 }
+
+// Bestehender, derzeit ungenutzter Route-Key; sichtbarer Name ist ausschließlich „Prognose“.
+vEinstellungen=vPrognose;
