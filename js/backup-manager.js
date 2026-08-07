@@ -19,7 +19,7 @@
 
   const snapshot = () => ({
     format: 'haushaltsbuch-backup',
-    version: 1,
+    version: 2,
     createdAt: new Date().toISOString(),
     appData: {
       data: S.data,
@@ -28,6 +28,9 @@
       years: S.years,
       buchungen: S.buchungen,
       budgets: S.budgets,
+      recurringRules: S.recurringRules || [],
+      annualAdjustments: S.annualAdjustments || [],
+      percentageAdjustments: S.percentageAdjustments || [],
     },
   });
 
@@ -73,6 +76,7 @@
         <div><span>Kredite</span><strong>${d.kredite?.length || 0}</strong></div>
         <div><span>Buchungen</span><strong>${d.buchungen?.length || 0}</strong></div>
         <div><span>Haushaltsjahre</span><strong>${d.years?.length || 0}</strong></div>
+        <div><span>Planungsregeln</span><strong>${(d.recurringRules?.length || 0) + (d.annualAdjustments?.length || 0) + (d.percentageAdjustments?.length || 0)}</strong></div>
       </div>
       <p class="backup-note">„Ersetzen“ überschreibt die lokalen Daten. „Zusammenführen“ ergänzt Datensätze anhand ihrer ID.</p>
       <div class="backup-actions">
@@ -124,13 +128,19 @@
       S.years = d.years || defaultYears();
       S.buchungen = d.buchungen || [];
       S.budgets = d.budgets || {};
+      S.recurringRules = d.recurringRules || [];
+      S.annualAdjustments = d.annualAdjustments || [];
+      S.percentageAdjustments = d.percentageAdjustments || [];
     } else {
       S.data = { ...(S.data || {}), ...(d.data || {}) };
       S.cats = mergeById(S.cats, d.cats);
       S.kredite = mergeById(S.kredite, d.kredite);
-      S.years = [...new Set([...(S.years || []), ...(d.years || [])])].sort();
+      S.years = [...new Set([...(S.years || []), ...(d.years || [])])].sort((a,b)=>a-b);
       S.buchungen = mergeById(S.buchungen, d.buchungen);
       S.budgets = { ...(S.budgets || {}), ...(d.budgets || {}) };
+      S.recurringRules = mergeById(S.recurringRules, d.recurringRules);
+      S.annualAdjustments = mergeById(S.annualAdjustments, d.annualAdjustments);
+      S.percentageAdjustments = mergeById(S.percentageAdjustments, d.percentageAdjustments);
     }
     persist();
     dirty = false;
