@@ -12,9 +12,9 @@ const forecastEngine=await text('js/forecast-engine.js');
 const forecastAdapter=await text('js/forecast-adapter.js');
 const forecastView=await text('js/forecast-view.js');
 const dataManagement=await text('js/data-management-v2.js');
-assert.match(schema,/CURRENT_VERSION\s*=\s*2/);
+assert.match(schema,/CURRENT_VERSION\s*=\s*3/);
 for(const field of ['amountAdjustments','oneTimeEntries','forecastAssets']){assert.ok(schema.includes(field));assert.ok(storage.includes(field));assert.ok(backup.includes(field));assert.ok(dataManagement.includes(field));}
-assert.match(backup,/version:3/);assert.match(backup,/normalizeBackupData/);
+assert.match(backup,/version:4/);assert.match(backup,/normalizeBackupData/);
 assert.match(planning,/fromLegacy/);assert.match(planning,/valueForMonth/);assert.match(planning,/percentageIncrease/);assert.match(planning,/fixedIncrease/);assert.match(planning,/oneTime/);
 assert.ok(dataConsistency.includes('PlanningEvents.valueForMonth'),'Monatsberechnung muss das einheitliche Planungsmodell verwenden');
 assert.ok(dataConsistency.includes('pos-fixed-inc-amount'));assert.ok(dataConsistency.includes('pos-once-amount'));assert.ok(refinements.includes('pos-fixed-inc-amount'));assert.ok(refinements.includes('pos-once-amount'));
