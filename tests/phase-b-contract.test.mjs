@@ -9,7 +9,23 @@ assert.match(schema,/CURRENT_VERSION\s*=\s*3/);
 assert.match(backup,/version:4/);
 assert.match(engine,/function\s+monthlyRate\s*\(/,'Monatliche Renditeberechnung gehört in die reine Engine');
 assert.ok(engine.includes('startAssetBreakdown'));assert.ok(engine.includes('annualReturns'));assert.ok(engine.includes('realNetWorth'));assert.ok(engine.includes('cumulativeReturns'));
-assert.ok(!engine.includes('S.'),'Engine darf keinen App-State lesen');assert.ok(!engine.includes('document.'),'Engine muss DOM-frei bleiben');
+
+// Nur echte Zugriffe auf den globalen App-State verbieten. Eine einfache Suche nach "S."
+// erzeugt bei Bezeichnern wie "SCENARIOS.realistic" einen Fehlalarm.
+assert.ok(!/(^|[^\w$])S\s*\./m.test(engine),'Engine darf keinen App-State lesen');
+assert.ok(!/\b(?:globalThis|window)\s*\.\s*S\b/.test(engine),'Engine darf keinen globalen App-State lesen');
+for(const forbidden of [
+  /\bdocument\s*\./,
+  /\blocalStorage\b/,
+  /\bsessionStorage\b/,
+  /\bpersist\s*\(/,
+  /\brender\s*\(/,
+  /\btoast\s*\(/,
+  /\bgv\s*\(/,
+  /\bcreditBalanceAt\s*\(/,
+  /\bcreditInterestAt\s*\(/
+]) assert.ok(!forbidden.test(engine),'ForecastEngine muss frei von App-, DOM- und Persistenz-Abhängigkeiten bleiben');
+
 assert.ok(adapter.includes('annualReturns'));assert.ok(adapter.includes('purchasingPowerInflation'));assert.ok(adapter.includes('savingsTarget'));
 assert.ok(view.includes('Rendite & Kaufkraft'));assert.ok(view.includes('Allgemeine Inflation / Kaufkraft'));assert.ok(view.includes('Neue Sparraten fließen in'));assert.ok(view.includes('forecastWealthChart'));
 
