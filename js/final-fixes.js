@@ -1,8 +1,5 @@
-/* Aktive Kompatibilitäts- und Kategorienfunktionen. */
+/* Kategorien bearbeiten und verwalten. */
 'use strict';
-
-function editBooking(id){ openBookingDialog(id); }
-function deleteFixedCost(id){ deleteFixedPosition(id); }
 
 function openVariableCategoryDialog(id=''){
   const cat=S.cats.find(c=>c.id===id&&c.t==='V');
@@ -17,6 +14,7 @@ function saveVariableCategory(id){
   const cat=S.cats.find(c=>c.id===id);
   if(cat)cat.p=name;
   else S.cats.push({id:uid(),g:'Variable Ausgaben',p:name,d:0,t:'V'});
+  if(typeof sortCategoriesInPlace==='function')sortCategoriesInPlace();
   persist();
   render();
   openVariableCategoryManager();
@@ -30,6 +28,7 @@ function deleteVariableCategory(id){
   if(count)return toast('Kategorie enthält Buchungen und kann nicht gelöscht werden','err');
   if(!confirm(`„${cat.p}“ wirklich löschen?`))return;
   S.cats=S.cats.filter(c=>c.id!==id);
+  if(typeof sortCategoriesInPlace==='function')sortCategoriesInPlace();
   persist();
   render();
   openVariableCategoryManager();
@@ -49,6 +48,7 @@ function saveFixedCategory(oldName){
   }else{
     S.ui.pendingFixedCategory=name;
   }
+  if(typeof sortCategoriesInPlace==='function')sortCategoriesInPlace();
   persist();
   render();
   openFixedCategoryManager();
@@ -60,33 +60,3 @@ function deleteFixedCategory(name){
   if(count)return toast('Kategorie enthält Positionen und kann nicht gelöscht werden','err');
   toast('Kategorie ist bereits leer');
 }
-
-const _openPositionDialogFinal=openPositionDialog;
-openPositionDialog=function(catId=''){
-  _openPositionDialogFinal(catId);
-  const groupLabel=document.getElementById('pos-group')?.closest('.field')?.querySelector('.lbl');
-  if(groupLabel)groupLabel.textContent='Kategorie';
-  const incLabel=document.getElementById('pos-inc-month')?.closest('.field')?.querySelector('.lbl');
-  if(incLabel)incLabel.textContent='Jährliche Erhöhung ab Monat';
-  const yearLabel=document.getElementById('pos-inc-year')?.closest('.field')?.querySelector('.lbl');
-  if(yearLabel)yearLabel.textContent='Startjahr der jährlichen Erhöhung';
-  const percentField=document.getElementById('pos-inc-percent')?.closest('.field');
-  if(percentField&&!document.getElementById('annual-repeat-note')){
-    percentField.insertAdjacentHTML('afterend','<div id="annual-repeat-note" class="annual-note">Der Prozentwert wird ab dem gewählten Monat in jedem folgenden Jahr erneut angewendet.</div>');
-  }
-  const select=document.getElementById('pos-group');
-  if(select&&S.ui.pendingFixedCategory&&!Array.from(select.options).some(o=>o.value===S.ui.pendingFixedCategory)){
-    select.insertAdjacentHTML('beforeend',`<option value="${esc(S.ui.pendingFixedCategory)}" selected>${esc(S.ui.pendingFixedCategory)}</option>`);
-  }
-};
-
-const _vAusgabenFinal=vAusgaben;
-vAusgaben=function(){
-  return _vAusgabenFinal().replace('<div class="dialog-actions">','<div class="category-tools"><button class="btn btn-ghost" type="button" onclick="openVariableCategoryManager()">Kategorien verwalten</button></div><div class="dialog-actions">');
-};
-
-const _vUebersichtFinal=vUebersicht;
-vUebersicht=function(){
-  return _vUebersichtFinal().replace('Position hinzufügen</button>','Position hinzufügen</button><div class="category-tools"><button class="btn btn-ghost" type="button" onclick="openFixedCategoryManager()">Kategorien verwalten</button></div>');
-};
-vEinstellungen=vUebersicht;
