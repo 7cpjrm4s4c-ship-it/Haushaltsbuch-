@@ -46,6 +46,9 @@
   }
 
   persist=function persistState(){
+    if(typeof globalThis.onStatePersistRequested==='function'){
+      try{globalThis.onStatePersistRequested();}catch(e){console.warn('persist hook failed',e);}
+    }
     clearTimeout(_pTimer);
     _pTimer=setTimeout(saveStateNow,300);
   };
