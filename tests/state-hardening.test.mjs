@@ -42,7 +42,7 @@ function makeContext(extra={}){const context={console,setTimeout,clearTimeout,Da
   await run('js/state-schema.js',context);await run('js/state-storage.js',context);context.load();
   const migrated=JSON.parse(localStorage.getItem('hp5'));
   assert.equal(migrated.schemaVersion,2);assert.deepEqual([...S.years],[2026,2027]);assert.equal(S.kredite.length,0);
-  assert.deepEqual(S.amountAdjustments,[]);assert.deepEqual(S.oneTimeEntries,[]);assert.equal(S.forecastAssets.cash,0);
+  assert.deepEqual([...S.amountAdjustments],[]);assert.deepEqual([...S.oneTimeEntries],[]);assert.equal(S.forecastAssets.cash,0);
 }
 
 console.log('Alle State-Härtungstests erfolgreich.');
