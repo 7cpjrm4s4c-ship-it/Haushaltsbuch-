@@ -27,6 +27,7 @@
 <link rel="stylesheet" href="css/loan-integration.css"/>
 <link rel="stylesheet" href="css/backup-manager.css"/>
 <link rel="stylesheet" href="css/category-manager.css"/>
+<link rel="stylesheet" href="css/forecast.css"/>
 </head>
 <body>
 <header class="header" id="appHeader"><div class="header-left"><div class="header-title" id="headerTitle">Haushaltsplan</div><div class="header-sub" id="headerSub">Lade…</div></div><button class="year-pill" id="yearPill" onclick="openYearSheet()">–</button></header>
@@ -36,6 +37,7 @@
 <button class="bnav-btn" data-v="ausgaben"><svg class="bnav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="bnav-label">Ausgaben</span></button>
 <button class="bnav-btn" data-v="uebersicht"><svg class="bnav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2"/></svg><span class="bnav-label">Fixkosten</span></button>
 <button class="bnav-btn" data-v="kredite"><svg class="bnav-icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg><span class="bnav-label">Kredite</span></button>
+<button class="bnav-btn" data-v="einstellungen"><svg class="bnav-icon" viewBox="0 0 24 24"><polyline points="4 17 9 12 13 15 20 7"/><polyline points="15 7 20 7 20 12"/></svg><span class="bnav-label">Prognose</span></button>
 <button class="bnav-btn" data-v="import"><svg class="bnav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="bnav-label">Import</span></button>
 </nav></div>
 <div class="overlay" id="yearOverlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Jahr auswählen</div><div id="yearSheetBody"></div><div class="sheet-divider"></div><div id="yearSheetFooter"></div></div></div>
@@ -48,7 +50,9 @@
 <script src="js/final-fixes.js"></script>
 <script src="js/category-manager-ui.js"></script>
 <script src="js/data-consistency.js"></script>
+<script src="js/forecast-engine.js"></script>
 <script src="js/credit-calculation.js"></script>
+<script src="js/forecast-view.js"></script>
 <script src="js/data-management-v2.js"></script>
 <script src="js/state-schema.js"></script>
 <script src="js/state-storage.js"></script>
