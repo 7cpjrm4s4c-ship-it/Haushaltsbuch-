@@ -66,12 +66,4 @@
     rule.endYear = enabled ? endYear : null;
     persist();
   };
-
-  const originalFixedManagerGroups = fixedManagerGroups;
-  fixedManagerGroups = function fixedManagerGroupsWithEndDate(categories){
-    const html = originalFixedManagerGroups(categories);
-    return html.replace(/(<div class="manager-entry-sub">)([^<]*)(<\/div>)/g, (match,open,text,close)=>{
-      return `${open}${text}${close}`;
-    });
-  };
 })();
