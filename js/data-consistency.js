@@ -5,74 +5,19 @@ function absoluteMonth(year, month) {
   return Number(year) * 12 + Number(month);
 }
 
-function ruleForCategory(catId) {
-  return (S.recurringRules || []).find(rule => rule.catId === catId) || null;
-}
-
-function ruleIsDue(rule, year, month) {
-  const current = absoluteMonth(year, month);
-  const start = absoluteMonth(rule.startYear, rule.startMonth);
-  if (current < start) return false;
-  if (rule.endYear !== null && rule.endYear !== undefined) {
-    const end = absoluteMonth(rule.endYear, rule.endMonth || 0);
-    if (current > end) return false;
-  }
-  const interval = Math.max(1, Number(rule.intervalMonths || 1));
-  return (current - start) % interval === 0;
-}
-
-function latestAbsoluteAdjustment(catId, year, month) {
-  const current = absoluteMonth(year, month);
-  return (S.annualAdjustments || [])
-    .filter(item => item.catId === catId && absoluteMonth(item.year, item.month) <= current)
-    .sort((a, b) => absoluteMonth(b.year, b.month) - absoluteMonth(a.year, a.month))[0] || null;
-}
-
-function applyAmountAdjustments(value, catId, year, month) {
-  const current = absoluteMonth(year, month);
-  const increase = (S.amountAdjustments || [])
-    .filter(item => item.catId === catId && absoluteMonth(item.year, item.month) <= current)
-    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  return Number(value || 0) + increase;
-}
-
-function applyPercentageAdjustments(value, catId, year, month) {
-  let result = Number(value || 0);
-  const current = absoluteMonth(year, month);
-  const adjustments = (S.percentageAdjustments || [])
-    .filter(item => item.catId === catId && absoluteMonth(item.year, item.month) <= current)
-    .sort((a, b) => absoluteMonth(a.year, a.month) - absoluteMonth(b.year, b.month));
-
-  for (const item of adjustments) {
-    const factor = 1 + Number(item.percent || 0) / 100;
-    if (item.repeatAnnual) {
-      const occurrences = Number(year) - Number(item.year) + (Number(month) >= Number(item.month) ? 1 : 0);
-      if (occurrences > 0) result *= Math.pow(factor, occurrences);
-    } else {
-      result *= factor;
-    }
-  }
-  return result;
-}
-
-function oneTimeValue(catId, year, month) {
-  return (S.oneTimeEntries || [])
-    .filter(item => item.catId === catId && Number(item.year) === Number(year) && Number(item.month) === Number(month))
-    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+function planningEventsSnapshot(){
+  return PlanningEvents.fromLegacy(S);
 }
 
 gv = function consistentValue(year, month, cat) {
-  const extra = oneTimeValue(cat.id, year, month);
-  const customKey = dkey(year, month, cat.id);
-  if (S.data[customKey] !== undefined) return Math.round((Number(S.data[customKey] || 0) + extra) * 100) / 100;
-
-  const rule = ruleForCategory(cat.id);
-  if (rule && !ruleIsDue(rule, year, month)) return Math.round(extra * 100) / 100;
-
-  const absolute = latestAbsoluteAdjustment(cat.id, year, month);
-  const base = absolute ? Number(absolute.amount || 0) : Number(rule ? rule.amount : cat.d || 0);
-  const adjusted = applyPercentageAdjustments(applyAmountAdjustments(base, cat.id, year, month), cat.id, year, month);
-  return Math.round((adjusted + extra) * 100) / 100;
+  const customKey=dkey(year,month,cat.id);
+  return PlanningEvents.valueForMonth({
+    events:planningEventsSnapshot(),
+    catId:cat.id,
+    year,month,
+    defaultValue:cat.d,
+    customValue:S.data[customKey],
+  });
 };
 
 calcMonth = function consistentMonthCalculation(year, month) {
