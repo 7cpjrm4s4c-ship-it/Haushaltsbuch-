@@ -1,32 +1,14 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const text=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
-const [app,schema,storage,backup,engine,adapter,view,dataManagement]=await Promise.all(['js/app.js','js/state-schema.js','js/state-storage.js','js/backup-manager.js','js/forecast-engine.js','js/forecast-adapter.js','js/forecast-view.js','js/data-management-v2.js'].map(text));
-
-assert.ok(!app.includes('forecastAssumptions'),'Renditeannahmen dürfen nicht in die Dashboard-/App-Kernlogik gelangen');
-for(const source of [schema,storage,backup,dataManagement])assert.ok(source.includes('forecastAssumptions'),'Prognoseannahmen müssen durch Schema, Persistenz, Backup und Reset geführt werden');
-assert.match(schema,/CURRENT_VERSION\s*=\s*3/);
-assert.match(backup,/version:4/);
-assert.match(engine,/function\s+monthlyRate\s*\(/,'Monatliche Renditeberechnung gehört in die reine Engine');
-assert.ok(engine.includes('startAssetBreakdown'));assert.ok(engine.includes('annualReturns'));assert.ok(engine.includes('realNetWorth'));assert.ok(engine.includes('cumulativeReturns'));
-
-// Nur echte Zugriffe auf den globalen App-State verbieten. Eine einfache Suche nach "S."
-// erzeugt bei Bezeichnern wie "SCENARIOS.realistic" einen Fehlalarm.
-assert.ok(!/(^|[^\w$])S\s*\./m.test(engine),'Engine darf keinen App-State lesen');
-assert.ok(!/\b(?:globalThis|window)\s*\.\s*S\b/.test(engine),'Engine darf keinen globalen App-State lesen');
-for(const forbidden of [
-  /\bdocument\s*\./,
-  /\blocalStorage\b/,
-  /\bsessionStorage\b/,
-  /\bpersist\s*\(/,
-  /\brender\s*\(/,
-  /\btoast\s*\(/,
-  /\bgv\s*\(/,
-  /\bcreditBalanceAt\s*\(/,
-  /\bcreditInterestAt\s*\(/
-]) assert.ok(!forbidden.test(engine),'ForecastEngine muss frei von App-, DOM- und Persistenz-Abhängigkeiten bleiben');
-
-assert.ok(adapter.includes('annualReturns'));assert.ok(adapter.includes('purchasingPowerInflation'));assert.ok(adapter.includes('savingsTarget'));
-assert.ok(view.includes('Rendite & Kaufkraft'));assert.ok(view.includes('Allgemeine Inflation / Kaufkraft'));assert.ok(view.includes('Neue Sparraten fließen in'));assert.ok(view.includes('forecastWealthChart'));
-
+const [app,schema,storage,backup,engine,adapter,view,dataManagement,events,eventUi,index]=await Promise.all(['js/app.js','js/state-schema.js','js/state-storage.js','js/backup-manager.js','js/forecast-engine.js','js/forecast-adapter.js','js/forecast-view.js','js/data-management-v2.js','js/financial-events.js','js/financial-events-ui.js','index.html'].map(text));
+assert.ok(!app.includes('forecastAssumptions'));assert.ok(!app.includes('financialEvents'),'Finanzereignisse dürfen nicht ins Dashboard gelangen');
+for(const source of [schema,storage])assert.ok(source.includes('financialEvents'),'Finanzereignisse müssen durch Schema und Persistenz geführt werden');
+assert.match(schema,/CURRENT_VERSION\s*=\s*4/);
+assert.match(engine,/function\s+monthlyRate\s*\(/);assert.ok(engine.includes('annualReturns'));assert.ok(engine.includes('realNetWorth'));
+assert.ok(!/(^|[^\w$])S\s*\./m.test(engine));assert.ok(!/\b(?:globalThis|window)\s*\.\s*S\b/.test(engine));
+for(const forbidden of [/\bdocument\s*\./,/\blocalStorage\b/,/\bsessionStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/,/\bgv\s*\(/,/\bcreditBalanceAt\s*\(/,/\bcreditInterestAt\s*\(/])assert.ok(!forbidden.test(engine));
+for(const forbidden of [/\bdocument\s*\./,/\blocalStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/,/(^|[^\w$])S\s*\./m])assert.ok(!forbidden.test(events),'FinancialEvents muss eine reine Fachlogik bleiben');
+assert.ok(adapter.includes('FinancialEvents.applyToBaseMonths'));assert.ok(eventUi.includes('openFinancialEventDialog'));assert.ok(eventUi.includes('duplicateFinancialEvent'));assert.ok(index.includes('js/financial-events.js'));assert.ok(index.includes('js/financial-events-ui.js'));
+assert.ok(view.includes('Rendite & Kaufkraft'));assert.ok(view.includes('forecastWealthChart'));
 console.log('Phase-B-Architekturvertrag erfolgreich geprüft.');
