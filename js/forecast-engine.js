@@ -44,14 +44,32 @@
     };
   }
 
+  function startAssetBuckets(input){
+    const hasBuckets=Number.isFinite(Number(input?.startLiquidity))||Number.isFinite(Number(input?.startInvestments));
+    if(hasBuckets){
+      return {
+        liquidity:Math.max(0,Number(input?.startLiquidity)||0),
+        investments:Math.max(0,Number(input?.startInvestments)||0),
+      };
+    }
+    return {liquidity:Math.max(0,Number(input?.startAssets)||0),investments:0};
+  }
+
   function project(input){
     const baseMonths=Array.isArray(input?.baseMonths)?input.baseMonths.map(normalizeBaseMonth):[];
-    if(!baseMonths.length)return {months:[],years:[],summary:{startAssets:round2(input?.startAssets),endAssets:round2(input?.startAssets),endDebt:0,endNetWorth:round2(input?.startAssets),cumulative:0}};
+    const start=startAssetBuckets(input);
+    const startAssets=round2(start.liquidity+start.investments);
+    if(!baseMonths.length)return {months:[],years:[],summary:{startAssets,startLiquidity:round2(start.liquidity),startInvestments:round2(start.investments),endAssets:startAssets,endLiquidity:round2(start.liquidity),endInvestments:round2(start.investments),endDebt:0,endNetWorth:startAssets,cumulative:0,minLiquidity:round2(start.liquidity),minLiquidityYear:null,minLiquidityMonth:null}};
     if(baseMonths.length>601)throw new RangeError('Prognosezeitraum ist zu groß');
 
-    const startAssets=Math.max(0,Number(input.startAssets)||0);
     const months=[];
     let cumulative=0,accumulatedSavings=0;
+    let liquidity=start.liquidity;
+    let investments=start.investments;
+    let minLiquidity=liquidity;
+    let minLiquidityYear=baseMonths[0].year;
+    let minLiquidityMonth=baseMonths[0].month;
+
     for(let i=0;i<baseMonths.length;i++){
       const base=baseMonths[i];
       const variable=variableValue(input.variableBaseline,i,input.annualInflation,input.scenarioKey);
@@ -59,22 +77,29 @@
       const saldo=base.income-expenses;
       cumulative+=saldo;
       accumulatedSavings+=base.savings;
-      const assets=startAssets+cumulative+accumulatedSavings;
+      liquidity+=saldo;
+      investments+=base.savings;
+      const assets=liquidity+investments;
       const netWorth=assets-base.debt;
-      months.push({...base,variable:round2(variable),expenses:round2(expenses),saldo:round2(saldo),cumulative:round2(cumulative),accumulatedSavings:round2(accumulatedSavings),assets:round2(assets),netWorth:round2(netWorth)});
+      if(liquidity<minLiquidity){
+        minLiquidity=liquidity;
+        minLiquidityYear=base.year;
+        minLiquidityMonth=base.month;
+      }
+      months.push({...base,variable:round2(variable),expenses:round2(expenses),saldo:round2(saldo),cumulative:round2(cumulative),accumulatedSavings:round2(accumulatedSavings),liquidity:round2(liquidity),investments:round2(investments),assets:round2(assets),netWorth:round2(netWorth)});
     }
     const years=aggregateYears(months);
     const last=months[months.length-1];
-    return {months,years,summary:{startAssets:round2(startAssets),endAssets:last.assets,endDebt:last.debt,endNetWorth:last.netWorth,cumulative:last.cumulative}};
+    return {months,years,summary:{startAssets,startLiquidity:round2(start.liquidity),startInvestments:round2(start.investments),endAssets:last.assets,endLiquidity:last.liquidity,endInvestments:last.investments,endDebt:last.debt,endNetWorth:last.netWorth,cumulative:last.cumulative,minLiquidity:round2(minLiquidity),minLiquidityYear,minLiquidityMonth}};
   }
 
   function aggregateYears(months){
     const map=new Map();
     for(const item of months||[]){
-      if(!map.has(item.year))map.set(item.year,{year:item.year,income:0,fixed:0,variable:0,creditPayments:0,savings:0,expenses:0,saldo:0,endDebt:0,endCumulative:0,endAssets:0,endNetWorth:0});
+      if(!map.has(item.year))map.set(item.year,{year:item.year,income:0,fixed:0,variable:0,creditPayments:0,savings:0,expenses:0,saldo:0,endDebt:0,endCumulative:0,endLiquidity:0,endInvestments:0,endAssets:0,endNetWorth:0});
       const row=map.get(item.year);
       row.income+=item.income;row.fixed+=item.fixed;row.variable+=item.variable;row.creditPayments+=item.creditPayments;row.savings+=item.savings;row.expenses+=item.expenses;row.saldo+=item.saldo;
-      row.endDebt=item.debt;row.endCumulative=item.cumulative;row.endAssets=item.assets;row.endNetWorth=item.netWorth;
+      row.endDebt=item.debt;row.endCumulative=item.cumulative;row.endLiquidity=item.liquidity;row.endInvestments=item.investments;row.endAssets=item.assets;row.endNetWorth=item.netWorth;
     }
     return [...map.values()].map(row=>Object.fromEntries(Object.entries(row).map(([key,value])=>[key,key==='year'?value:round2(value)])));
   }
