@@ -1,5 +1,5 @@
 :root{--space-1:6px;--space-2:10px;--space-3:14px;--space-4:18px;--space-5:24px}
-.main>.card,.main>.hero,.main>.tile-grid,.main>.month-grid,.main>.fixed-card-grid{margin-bottom:var(--space-3)}
+.main>.card,.main>.hero,.main>.tile-grid,.main>.month-grid{margin-bottom:var(--space-3)}
 .card{padding:var(--space-4);margin-bottom:var(--space-3)}
 .card-title{margin-bottom:var(--space-3);line-height:1.35}
 .field{margin-bottom:var(--space-3)}
@@ -10,14 +10,4 @@
 .list-head{padding-bottom:var(--space-2);margin-bottom:var(--space-2)}
 .list-body{display:flex;flex-direction:column;gap:var(--space-2)}
 .compact-row{padding:var(--space-3);border:1px solid var(--glass-border);border-radius:var(--r-sm);background:rgba(255,255,255,.035)}
-.fixed-card-grid{display:grid;grid-template-columns:1fr;gap:var(--space-3)}
-.fixed-position-card{margin:0;padding:var(--space-4)}
-.fixed-position-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-3)}
-.fixed-position-title{font-size:15px;font-weight:700;color:var(--t1);line-height:1.35}
-.fixed-position-meta{font-size:11px;color:var(--t3);margin-top:4px;line-height:1.4}
-.fixed-position-amount{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:var(--space-3)}
-.card-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)}
 .btn-danger-ghost{background:var(--red-dim);border:1px solid rgba(248,113,113,.3);color:var(--red)}
-.booking-actions{display:flex;gap:6px;flex-shrink:0}
-.booking-actions .row-edit-btn{width:32px;height:32px}
-@media(min-width:760px){.fixed-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
