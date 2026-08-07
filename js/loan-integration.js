@@ -18,7 +18,12 @@
       cat = { id: uid(), g: 'Kredite', p: loan.n, d: Number(loan.m) || 0, t: 'K', loanId: loan.id, source: LINK_SOURCE };
       S.cats.push(cat);
     } else {
-      cat.g = 'Kredite'; cat.p = loan.n; cat.d = Number(loan.m) || 0; cat.t = 'K'; cat.loanId = loan.id; cat.source = LINK_SOURCE;
+      cat.g = 'Kredite';
+      cat.p = loan.n;
+      cat.d = Number(loan.m) || 0;
+      cat.t = 'K';
+      cat.loanId = loan.id;
+      cat.source = LINK_SOURCE;
     }
     return cat;
   }
@@ -30,7 +35,9 @@
   }
   window.syncAllLoans = syncAllLoans;
 
-  function removeLoanCategory(loanId) { S.cats = S.cats.filter(cat => cat.loanId !== loanId); }
+  function removeLoanCategory(loanId) {
+    S.cats = S.cats.filter(cat => cat.loanId !== loanId);
+  }
 
   function amortize(principal, annualRate, monthlyPayment) {
     let balance = Math.max(0, Number(principal) || 0);
@@ -102,9 +109,6 @@
     </section>`;
   }
 
-  const originalLoad = load;
-  load = function integratedLoad() { originalLoad(); syncAllLoans(); persist(); };
-
   const originalView = vKredite;
   vKredite = function integratedLoanView() {
     const view = originalView();
@@ -118,7 +122,8 @@
     const before = new Set(S.kredite.map(loan => loan.id));
     originalSaveNew();
     S.kredite.filter(loan => !before.has(loan.id)).forEach(syncLoanCategory);
-    persist(); render();
+    persist();
+    render();
   };
 
   const originalSaveEdit = saveEditKredit;
@@ -126,7 +131,8 @@
     originalSaveEdit(loanId);
     const loan = S.kredite.find(item => item.id === loanId);
     if (loan) syncLoanCategory(loan);
-    persist(); render();
+    persist();
+    render();
   };
 
   const originalDelete = delKredit;
@@ -134,7 +140,9 @@
     const existed = S.kredite.some(item => item.id === loanId);
     originalDelete(loanId);
     if (existed && !S.kredite.some(item => item.id === loanId)) {
-      removeLoanCategory(loanId); persist(); render();
+      removeLoanCategory(loanId);
+      persist();
+      render();
     }
   };
 })();
