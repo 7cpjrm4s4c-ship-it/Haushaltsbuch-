@@ -1,4 +1,4 @@
-/* Kompakte Speicherung und Verwaltung nach dem Muster von TechCalc Pro. */
+/* Kompakte, nach Kategorien sortierte Eintragsverwaltung. */
 'use strict';
 
 function managerButton(label, action, danger=false){
@@ -6,8 +6,10 @@ function managerButton(label, action, danger=false){
 }
 
 function variableBookingGroups(year, month){
-  const order=new Map(VARIABLE_CATEGORY_NAMES.map((name,index)=>[name,index]));
-  const categories=S.cats.filter(cat=>cat.t==='V').slice().sort((a,b)=>(order.get(a.p)??99)-(order.get(b.p)??99));
+  const categories=S.cats
+    .filter(cat=>cat.t==='V')
+    .slice()
+    .sort((a,b)=>String(a.p||'').localeCompare(String(b.p||''),'de',{sensitivity:'base'}));
   const bookings=getBuchungenForMonth(year,month);
   return categories.map(cat=>{
     const items=bookings.filter(item=>item.catId===cat.id).slice().sort((a,b)=>Number(b.ts||0)-Number(a.ts||0));
