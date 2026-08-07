@@ -5,7 +5,8 @@
   "scripts": {
     "test:recurrence": "node tests/recurrence-engine.test.mjs",
     "test:integration": "node tests/app-integration.test.mjs",
-    "check": "npm run test:recurrence && npm run test:integration"
+    "test:state": "node tests/state-hardening.test.mjs",
+    "check": "npm run test:recurrence && npm run test:integration && npm run test:state"
   },
   "engines": {
     "node": ">=18"
