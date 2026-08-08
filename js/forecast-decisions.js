@@ -61,11 +61,11 @@
     if(goal.type!=='minLiquidity')return {possible:false,amount:null,reason:'not-applicable'};
     const baseline=project(input),baseEvaluation=evaluate(goal,baseline);
     if(!baseEvaluation.achieved)return {possible:false,amount:0,evaluation:baseEvaluation,result:baseline};
-    const availableCash=Math.max(0,Number(input?.startAssetBreakdown?.cash)||0);
-    if(availableCash<=0)return {possible:true,amount:0,evaluation:baseEvaluation,result:baseline};
-    const allCashEvaluation=evaluate(goal,project(applyImmediateExpense(input,availableCash)));
-    if(allCashEvaluation.achieved)return {possible:true,amount:round2(availableCash),evaluation:baseEvaluation,result:baseline};
-    let low=0,high=availableCash;
+    const availableCash=Math.max(0,Number(input?.startAssetBreakdown?.cash)||0),startLiquidity=Math.max(0,Number(baseline.summary?.startLiquidity)||0),immediateHeadroom=Math.max(0,startLiquidity-Math.max(0,Number(goal.targetAmount)||0)),maximumToday=Math.min(availableCash,immediateHeadroom);
+    if(maximumToday<=0)return {possible:true,amount:0,evaluation:baseEvaluation,result:baseline};
+    const maximumEvaluation=evaluate(goal,project(applyImmediateExpense(input,maximumToday)));
+    if(maximumEvaluation.achieved)return {possible:true,amount:round2(maximumToday),evaluation:baseEvaluation,result:baseline};
+    let low=0,high=maximumToday;
     for(let step=0;step<36;step++){
       const mid=(low+high)/2,evaluation=evaluate(goal,project(applyImmediateExpense(input,mid)));
       if(evaluation.achieved)low=mid;else high=mid;
