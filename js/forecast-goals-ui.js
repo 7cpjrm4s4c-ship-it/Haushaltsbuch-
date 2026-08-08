@@ -15,6 +15,7 @@ function openForecastGoalDialog(id=''){
 function saveForecastGoal(id=''){
   const title=document.getElementById('fg-title')?.value.trim(),type=document.getElementById('fg-type')?.value,amount=forecastGoalNeedsAmount(type)?Number(document.getElementById('fg-amount')?.value):0,targetYear=Number(document.getElementById('fg-year')?.value),targetMonth=Number(document.getElementById('fg-month')?.value);
   if(!title||!ForecastGoals.TYPE_KEYS.includes(type)||!Number.isFinite(amount)||amount<0)return toast('Bezeichnung, Zieltyp und Zielwert prüfen','err');
+  if(targetYear*12+targetMonth<S.year*12+S.month)return toast('Zieltermin liegt vor dem Prognosestart','err');
   const goal=ForecastGoals.normalizeGoal({id:id||uid(),title,type,targetAmount:amount,targetYear,targetMonth,enabled:Boolean(document.getElementById('fg-enabled')?.checked)},S.year);S.forecastGoals=storedForecastGoals().filter(item=>item.id!==id);S.forecastGoals.push(goal);persist();closeGenSheet();render();toast('Finanzziel gespeichert');
 }
 function toggleForecastGoal(id){const goal=storedForecastGoals().find(item=>item.id===id);if(!goal)return;goal.enabled=goal.enabled===false;persist();render();}
