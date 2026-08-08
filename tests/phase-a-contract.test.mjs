@@ -28,6 +28,10 @@ assert.ok(dataConsistency.includes('pos-fixed-inc-amount'));assert.ok(dataConsis
 assert.ok(!app.includes('forecastAssets'),'Startvermögen darf nicht in app.js bzw. Dashboard-Logik einfließen');
 assert.ok(forecastView.includes('forecastAssets'));assert.ok(forecastView.includes('ausschließlich für die Prognose'));
 assert.ok(!forecastEngine.includes('gv('));assert.ok(!forecastEngine.includes('creditBalanceAt'));assert.ok(!forecastEngine.includes('creditInterestAt'));assert.ok(!forecastEngine.includes('document.'));
-assert.ok(forecastAdapter.includes('gv('));assert.ok(forecastAdapter.includes('creditBalanceAt'));assert.ok(forecastAdapter.includes('creditInterestAt'));
+assert.ok(forecastAdapter.includes('gv('),'App-spezifische Monatswerte gehören in den Forecast-Adapter');
+assert.ok(forecastAdapter.includes('creditBalanceAt'),'Der Adapter darf den aktuellen Kreditstartwert aus der Kreditlogik übernehmen');
+assert.ok(forecastAdapter.includes('forecastCreditSchedule'),'Künftige Kredite müssen im Adapter deterministisch fortgeschrieben werden');
+assert.ok(forecastAdapter.includes('specialRepaymentForLoan'),'Geplante Sondertilgungen müssen in der Kreditfortschreibung berücksichtigt werden');
+assert.ok(!forecastAdapter.includes('creditInterestAt'),'Die Prognose darf nicht pro Zukunftsmonat erneut auf die operative Kredit-Zinsfunktion zurückgreifen');
 assert.match(forecastEngine,/baseMonths/);assert.match(forecastEngine,/summary/);assert.match(forecastEngine,/netWorth/);
 console.log('Phase-A-Vertrag erfolgreich geprüft.');
