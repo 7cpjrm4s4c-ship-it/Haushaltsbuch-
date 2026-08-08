@@ -8,10 +8,10 @@ context.S={year:2026,month:0,cats:[],buchungen:[],kredite:[{id:'loan-1',n:'Auto'
 context.gv=()=>0;context.creditBalanceAt=()=>1000;
 vm.runInContext(await read('js/forecast-adapter.js'),context,{filename:'js/forecast-adapter.js'});
 const schedule=context.forecastCreditSchedule(2026,0,2026,2);
-assert.equal(schedule.get('2026-0').debt,1000);assert.equal(schedule.get('2026-0').creditPayments,100);
-assert.equal(schedule.get('2026-1').debt,900);assert.equal(schedule.get('2026-1').specialRepayment,800,'Sondertilgung muss auf die Restschuld nach regulärer Rate begrenzt werden');
-assert.equal(schedule.get('2026-2').debt,0,'Folgemomat muss die reduzierte Restschuld verwenden');
+assert.equal(schedule.get('2026-0').openingDebt,1000);assert.equal(schedule.get('2026-0').debt,900,'Monatsrestschuld muss die reguläre Rate bereits berücksichtigen');assert.equal(schedule.get('2026-0').creditPayments,100);
+assert.equal(schedule.get('2026-1').openingDebt,900);assert.equal(schedule.get('2026-1').debt,0);assert.equal(schedule.get('2026-1').specialRepayment,800,'Sondertilgung muss auf die Restschuld nach regulärer Rate begrenzt werden');
+assert.equal(schedule.get('2026-2').debt,0,'Folgemonat muss die reduzierte Restschuld verwenden');
 const rows=context.forecastBaseMonths(2026,0,2026,2);assert.equal(rows[1].specialRepayment,800);assert.equal(rows[1].financialEvents[0].title,'Ablösung');
 const result=context.ForecastEngine.project({baseMonths:rows,variableBaseline:0,annualInflation:0,scenarioKey:'realistic',startAssetBreakdown:{cash:2000},annualReturns:{},purchasingPowerInflation:0,savingsTarget:'etf'});
-assert.equal(result.months[1].expenses,900,'Reguläre Rate und Sondertilgung müssen beide Liquidität belasten');assert.equal(result.summary.totalSpecialRepayments,800);assert.equal(result.months[2].debt,0);
+assert.equal(result.summary.startDebt,1000);assert.equal(result.months[0].debt,900);assert.equal(result.months[1].expenses,900,'Reguläre Rate und Sondertilgung müssen beide Liquidität belasten');assert.equal(result.months[1].debt,0,'Nettovermögen muss im Tilgungsmonat die Restschuld nach Sondertilgung verwenden');assert.equal(result.summary.totalSpecialRepayments,800);
 console.log('Phase-B-Sondertilgungstests erfolgreich.');
