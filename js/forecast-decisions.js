@@ -11,6 +11,7 @@
     return copy;
   }
   function applyVariableReduction(input,amount){const copy=cloneInput(input);copy.variableBaseline=Math.max(0,Number(copy.variableBaseline||0)-Math.max(0,Number(amount)||0));return copy;}
+  function applyImmediateExpense(input,amount){const copy=cloneInput(input),value=Math.max(0,Number(amount)||0);if(copy.baseMonths.length)copy.baseMonths[0]={...copy.baseMonths[0],fixed:Number(copy.baseMonths[0].fixed||0)+value};return copy;}
   function solveMinimum(goal,input,project,evaluate,apply,upperBound){
     const baseline=project(input),baseEvaluation=evaluate(goal,baseline);
     if(baseEvaluation.achieved)return {possible:true,amount:0,evaluation:baseEvaluation,result:baseline};
@@ -46,6 +47,20 @@
     }
     return {possible:true,amount:round2(high),evaluation:candidateEvaluation,result:candidateResult};
   }
+  function maximumImmediateExpense(goal,input,project,evaluate){
+    if(goal.type!=='minLiquidity')return {possible:false,amount:null,reason:'not-applicable'};
+    const baseline=project(input),baseEvaluation=evaluate(goal,baseline);
+    if(!baseEvaluation.achieved)return {possible:false,amount:0,evaluation:baseEvaluation,result:baseline};
+    let low=0,high=Math.max(1000,Number(baseline.summary?.startLiquidity||0)+Number(baseline.summary?.cumulative||0)+Number(goal.targetAmount||0));
+    let highEvaluation=evaluate(goal,project(applyImmediateExpense(input,high)));
+    for(let attempt=0;attempt<16&&highEvaluation.achieved;attempt++){low=high;high*=2;highEvaluation=evaluate(goal,project(applyImmediateExpense(input,high)));}
+    if(highEvaluation.achieved)return {possible:false,amount:null,evaluation:baseEvaluation,result:baseline};
+    for(let step=0;step<36;step++){
+      const mid=(low+high)/2,evaluation=evaluate(goal,project(applyImmediateExpense(input,mid)));
+      if(evaluation.achieved)low=mid;else high=mid;
+    }
+    return {possible:true,amount:round2(low),evaluation:baseEvaluation,result:baseline};
+  }
   function debtPayoff(goal,forecast,evaluate){
     const evaluation=evaluate(goal,forecast);
     if(goal.type!=='debtFree')return {possible:false,amount:null,reason:'not-applicable',evaluation};
@@ -54,7 +69,7 @@
   }
   function analyze(goal,input,project,evaluate){
     const forecast=project(input),evaluation=evaluate(goal,forecast);
-    return {evaluation,monthlySurplus:monthlySurplus(goal,input,project,evaluate),variableReduction:variableReduction(goal,input,project,evaluate),debtPayoff:debtPayoff(goal,forecast,evaluate)};
+    return {evaluation,monthlySurplus:monthlySurplus(goal,input,project,evaluate),variableReduction:variableReduction(goal,input,project,evaluate),maximumImmediateExpense:maximumImmediateExpense(goal,input,project,evaluate),debtPayoff:debtPayoff(goal,forecast,evaluate)};
   }
-  root.ForecastDecisions=Object.freeze({cloneInput,applyMonthlySurplus,applyVariableReduction,monthlySurplus,variableReduction,debtPayoff,analyze});
+  root.ForecastDecisions=Object.freeze({cloneInput,applyMonthlySurplus,applyVariableReduction,applyImmediateExpense,monthlySurplus,variableReduction,maximumImmediateExpense,debtPayoff,analyze});
 })(typeof globalThis!=='undefined'?globalThis:window);
