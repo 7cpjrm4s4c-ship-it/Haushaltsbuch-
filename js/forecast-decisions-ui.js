@@ -6,7 +6,8 @@ function forecastDecisionAnalysis(goal,input){return ForecastDecisions.analyze(g
 function forecastDecisionAmount(value){return value===null||value===undefined?'–':fmt(value);}
 function forecastDecisionAdvice(goal,analysis){
   const items=[];
-  if(analysis.evaluation.achieved)items.push(['Status','Ziel wird bereits erreicht']);
+  if(analysis.evaluation.status==='disabled')items.push(['Status','Ziel ist deaktiviert']);
+  else if(analysis.evaluation.achieved)items.push(['Status','Ziel wird bereits erreicht']);
   else if(analysis.evaluation.status==='outside')items.push(['Status','Prognosezeitraum endet vor dem Zieltermin']);
   else if(goal.type==='debtFree')items.push(['Zusätzlicher Tilgungsbedarf zum Zieltermin',forecastDecisionAmount(analysis.debtPayoff.amount)]);
   else{
@@ -18,6 +19,7 @@ function forecastDecisionAdvice(goal,analysis){
   return `<div class="forecast-decision-grid">${items.map(([label,value])=>`<div><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('')}</div>`;
 }
 function forecastDecisionScenarioRows(goal){
+  if(goal.enabled===false)return '';
   const scenarios=typeof storedForecastScenarios==='function'?storedForecastScenarios():[];
   if(!scenarios.length)return '';
   const rows=scenarios.map(raw=>{
