@@ -44,7 +44,7 @@
     return {
       year:Number(item?.year),month:Number(item?.month),income:Math.max(0,Number(item?.income)||0),fixed:Math.max(0,Number(item?.fixed)||0),
       savings:Math.max(0,Number(item?.savings)||0),creditPayments:Math.max(0,Number(item?.creditPayments)||0),
-      specialRepayment:Math.max(0,Number(item?.specialRepayment)||0),debt:Math.max(0,Number(item?.debt)||0),
+      specialRepayment:Math.max(0,Number(item?.specialRepayment)||0),openingDebt:Math.max(0,Number(item?.openingDebt)||0),debt:Math.max(0,Number(item?.debt)||0),
       financialEvents:Array.isArray(item?.financialEvents)?item.financialEvents.map(event=>({...event})):[],
     };
   }
@@ -69,7 +69,7 @@
     const startTotals=assetTotals(assets),startAssets=round2(startTotals.total);
     const savingsTarget=ASSET_FIELDS.includes(input?.savingsTarget)?input.savingsTarget:'etf';
     const realInflation=clamp(input?.purchasingPowerInflation,-20,50,2)/100;
-    if(!baseMonths.length)return {months:[],years:[],summary:{startAssets,startLiquidity:round2(startTotals.liquidity),startInvestments:round2(startTotals.investments),endAssets:startAssets,endLiquidity:round2(startTotals.liquidity),endInvestments:round2(startTotals.investments),endDebt:0,endNetWorth:startAssets,endRealNetWorth:startAssets,cumulative:0,cumulativeReturns:0,totalSpecialRepayments:0,minLiquidity:round2(startTotals.liquidity),minLiquidityYear:null,minLiquidityMonth:null}};
+    if(!baseMonths.length)return {months:[],years:[],summary:{startAssets,startLiquidity:round2(startTotals.liquidity),startInvestments:round2(startTotals.investments),startDebt:0,endAssets:startAssets,endLiquidity:round2(startTotals.liquidity),endInvestments:round2(startTotals.investments),endDebt:0,endNetWorth:startAssets,endRealNetWorth:startAssets,cumulative:0,cumulativeReturns:0,totalSpecialRepayments:0,minLiquidity:round2(startTotals.liquidity),minLiquidityYear:null,minLiquidityMonth:null}};
     if(baseMonths.length>601)throw new RangeError('Prognosezeitraum ist zu groß');
 
     const months=[];let cumulative=0,accumulatedSavings=0,cumulativeReturns=0,totalSpecialRepayments=0;
@@ -86,7 +86,7 @@
       months.push({...base,variable:round2(variable),expenses:round2(expenses),saldo:round2(saldo),cumulative:round2(cumulative),accumulatedSavings:round2(accumulatedSavings),investmentReturn:round2(investmentReturn),cumulativeReturns:round2(cumulativeReturns),assetBreakdown:Object.fromEntries(ASSET_FIELDS.map(field=>[field,round2(assets[field])])),liquidity:round2(totals.liquidity),investments:round2(totals.investments),assets:round2(totals.total),netWorth:round2(netWorth),realNetWorth:round2(realNetWorth)});
     }
     const years=aggregateYears(months),last=months[months.length-1];
-    return {months,years,summary:{startAssets,startLiquidity:round2(startTotals.liquidity),startInvestments:round2(startTotals.investments),endAssets:last.assets,endLiquidity:last.liquidity,endInvestments:last.investments,endDebt:last.debt,endNetWorth:last.netWorth,endRealNetWorth:last.realNetWorth,cumulative:last.cumulative,cumulativeReturns:last.cumulativeReturns,totalSpecialRepayments:round2(totalSpecialRepayments),minLiquidity:round2(minLiquidity),minLiquidityYear,minLiquidityMonth}};
+    return {months,years,summary:{startAssets,startLiquidity:round2(startTotals.liquidity),startInvestments:round2(startTotals.investments),startDebt:round2(baseMonths[0].openingDebt),endAssets:last.assets,endLiquidity:last.liquidity,endInvestments:last.investments,endDebt:last.debt,endNetWorth:last.netWorth,endRealNetWorth:last.realNetWorth,cumulative:last.cumulative,cumulativeReturns:last.cumulativeReturns,totalSpecialRepayments:round2(totalSpecialRepayments),minLiquidity:round2(minLiquidity),minLiquidityYear,minLiquidityMonth}};
   }
 
   function aggregateYears(months){
