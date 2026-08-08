@@ -16,7 +16,8 @@
     "test:phase-b:contract": "node tests/phase-b-contract.test.mjs",
     "test:phase-b:events": "node tests/phase-b-financial-events.test.mjs",
     "test:phase-b:special": "node tests/phase-b-special-repayment.test.mjs",
-    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture && npm run test:forecast && npm run test:forecast:edge && npm run test:planning && npm run test:phase-a && npm run test:phase-b:liquidity && npm run test:phase-b:returns && npm run test:phase-b:contract && npm run test:phase-b:events && npm run test:phase-b:special"
+    "test:phase-c:scenarios": "node tests/phase-c-scenarios.test.mjs",
+    "check": "npm run test:recurrence && npm run test:integration && npm run test:state && npm run test:architecture && npm run test:forecast && npm run test:forecast:edge && npm run test:planning && npm run test:phase-a && npm run test:phase-b:liquidity && npm run test:phase-b:returns && npm run test:phase-b:contract && npm run test:phase-b:events && npm run test:phase-b:special && npm run test:phase-c:scenarios"
   },
   "engines": {"node": ">=18"}
 }
