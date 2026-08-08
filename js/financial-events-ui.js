@@ -50,3 +50,11 @@ function financialEventsPanel(){
   const rows=events.length?events.map(raw=>{const event=FinancialEvents.normalizeEvent(raw),loan=event.type==='specialRepayment'?(S.kredite||[]).find(item=>item.id===event.metadata?.loanId):null;return `<div class="forecast-event-row ${event.enabled?'':'is-disabled'}"><div class="forecast-event-main"><strong>${esc(event.title)}</strong><span>${esc(FinancialEvents.TYPES[event.type])} · ${financialEventPeriod(event)} · ${fmt(event.amount)}${loan?` · ${esc(loan.n)}`:''}</span></div><div class="forecast-event-actions"><button class="btn btn-ghost" onclick="toggleFinancialEvent('${esc(event.id)}')">${event.enabled?'Deaktivieren':'Aktivieren'}</button><button class="btn btn-ghost" onclick="openFinancialEventDialog('${esc(event.id)}')">Bearbeiten</button><button class="btn btn-ghost" onclick="duplicateFinancialEvent('${esc(event.id)}')">Duplizieren</button><button class="btn btn-red" onclick="deleteFinancialEvent('${esc(event.id)}')">Löschen</button></div></div>`;}).join(''):`<div class="forecast-note">Noch keine Finanzereignisse hinterlegt.</div>`;
   return `<section class="card"><div class="compact-toolbar"><div><div class="card-title">Finanzereignisse</div><div class="field-hint">Einmalige und zeitlich begrenzte Änderungen sowie Sondertilgungen werden ausschließlich in der Prognose berücksichtigt.</div></div><button class="btn btn-primary" onclick="openFinancialEventDialog()">+ Ereignis</button></div><div class="forecast-event-list">${rows}</div></section>`;
 }
+
+if(typeof removeLoanCategory==='function'){
+  const removeLoanCategoryBase=removeLoanCategory;
+  removeLoanCategory=function(loanId){
+    removeLoanCategoryBase(loanId);
+    S.financialEvents=(S.financialEvents||[]).filter(event=>!(event.type==='specialRepayment'&&String(event.metadata?.loanId||'')===String(loanId||'')));
+  };
+}
