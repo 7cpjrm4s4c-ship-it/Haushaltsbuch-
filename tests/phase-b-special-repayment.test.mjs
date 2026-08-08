@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFile} from 'node:fs/promises';
+const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
+const context={console,Math,Number,Object,Array,Set,Map,String,Date,RangeError,TypeError};context.globalThis=context;vm.createContext(context);
+for(const path of ['js/forecast-engine.js','js/financial-events.js'])vm.runInContext(await read(path),context,{filename:path});
+context.S={year:2026,month:0,cats:[],buchungen:[],kredite:[{id:'loan-1',n:'Auto',r:1000,m:100,z:0,balanceYear:2026,balanceMonth:0}],financialEvents:[{id:'sp1',type:'specialRepayment',title:'Ablösung',startYear:2026,startMonth:1,amount:1000,enabled:true,metadata:{loanId:'loan-1'}}]};
+context.gv=()=>0;context.creditBalanceAt=()=>1000;
+vm.runInContext(await read('js/forecast-adapter.js'),context,{filename:'js/forecast-adapter.js'});
+const schedule=context.forecastCreditSchedule(2026,0,2026,2);
+assert.equal(schedule.get('2026-0').debt,1000);assert.equal(schedule.get('2026-0').creditPayments,100);
+assert.equal(schedule.get('2026-1').debt,900);assert.equal(schedule.get('2026-1').specialRepayment,800,'Sondertilgung muss auf die Restschuld nach regulärer Rate begrenzt werden');
+assert.equal(schedule.get('2026-2').debt,0,'Folgemomat muss die reduzierte Restschuld verwenden');
+const rows=context.forecastBaseMonths(2026,0,2026,2);assert.equal(rows[1].specialRepayment,800);assert.equal(rows[1].financialEvents[0].title,'Ablösung');
+const result=context.ForecastEngine.project({baseMonths:rows,variableBaseline:0,annualInflation:0,scenarioKey:'realistic',startAssetBreakdown:{cash:2000},annualReturns:{},purchasingPowerInflation:0,savingsTarget:'etf'});
+assert.equal(result.months[1].expenses,900,'Reguläre Rate und Sondertilgung müssen beide Liquidität belasten');assert.equal(result.summary.totalSpecialRepayments,800);assert.equal(result.months[2].debt,0);
+console.log('Phase-B-Sondertilgungstests erfolgreich.');
