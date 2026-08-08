@@ -42,3 +42,9 @@ function forecastScenariosPanel(){
   const cards=scenarios.map(raw=>{const scenario=normalizedStoredScenario(raw);return `<div class="forecast-event-row"><div class="forecast-event-main"><strong>${esc(scenario.title)}</strong><span>${esc(ForecastEngine.SCENARIOS[scenario.ui.scenarioKey]?.label||scenario.ui.scenarioKey)} · bis ${scenario.ui.endYear} · ${scenario.financialEvents.length} Ereignisse · ${forecastScenarioDate(scenario.updatedAt||scenario.createdAt)}</span></div><div class="forecast-event-actions"><button class="btn btn-ghost" onclick="loadForecastScenario('${esc(scenario.id)}')">Laden</button><button class="btn btn-ghost" onclick="openForecastScenarioDialog('${esc(scenario.id)}')">Aktualisieren</button><button class="btn btn-ghost" onclick="duplicateForecastScenario('${esc(scenario.id)}')">Duplizieren</button><button class="btn btn-red" onclick="deleteForecastScenario('${esc(scenario.id)}')">Löschen</button></div></div>`;}).join('');
   return `<section class="card"><div class="compact-toolbar"><div><div class="card-title">Szenarien</div><div class="field-hint">Varianten mit identischem Startvermögen speichern und direkt vergleichen.</div></div><button class="btn btn-primary" onclick="openForecastScenarioDialog()">+ Szenario speichern</button></div><div class="forecast-event-list">${cards||'<div class="forecast-note">Noch keine Szenarien gespeichert.</div>'}</div>${scenarios.length?`<div class="sheet-divider"></div><div class="card-title">Szenariovergleich</div>${forecastScenarioComparison(scenarios)}`:''}</section>`;
 }
+
+if(typeof vPrognose==='function'){
+  const forecastViewWithoutScenarioPanel=vPrognose;
+  vPrognose=function(){const html=forecastViewWithoutScenarioPanel(),anchor='<section class="forecast-kpis">';return html.includes(anchor)?html.replace(anchor,forecastScenariosPanel()+anchor):html+forecastScenariosPanel();};
+  vEinstellungen=vPrognose;
+}
