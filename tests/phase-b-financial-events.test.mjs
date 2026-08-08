@@ -15,5 +15,20 @@ impact=engine.monthImpact(events,2027,8);assert.equal(impact.expense,20);
 impact=engine.monthImpact(events,2028,0);assert.equal(impact.expense,20,'dauerhafte Änderung muss fortgelten');
 const rows=engine.applyToBaseMonths([{year:2026,month:11,income:3000,fixed:1000},{year:2027,month:8,income:3000,fixed:1000}],events);
 assert.equal(rows[0].income,4600);assert.equal(rows[0].fixed,1000);assert.equal(rows[1].fixed,1020);assert.equal(rows[0].financialEvents[0].title,'Bonus');
-const src=source;for(const forbidden of ['document.','localStorage','sessionStorage','persist(','render(','toast(','S.'])assert.ok(!src.includes(forbidden),`financial-events.js enthält verbotene Abhängigkeit: ${forbidden}`);
+
+// Präziser Architekturvertrag: Nur echte Zugriffe auf App-State, DOM oder Persistenz verbieten.
+assert.ok(!/(^|[^\w$])S\s*\./m.test(source),'financial-events.js darf keinen App-State über S.* lesen');
+assert.ok(!/\b(?:globalThis|window)\s*\.\s*S\b/.test(source),'financial-events.js darf keinen globalen App-State lesen');
+for(const forbidden of [
+  /\bdocument\s*\./,
+  /\blocalStorage\b/,
+  /\bsessionStorage\b/,
+  /\bpersist\s*\(/,
+  /\brender\s*\(/,
+  /\btoast\s*\(/,
+  /\bgv\s*\(/,
+  /\bcreditBalanceAt\s*\(/,
+  /\bcreditInterestAt\s*\(/
+]) assert.ok(!forbidden.test(source),'financial-events.js muss frei von App-, DOM- und Persistenz-Abhängigkeiten bleiben');
+
 console.log('Phase-B-Finanzereignistests erfolgreich.');
