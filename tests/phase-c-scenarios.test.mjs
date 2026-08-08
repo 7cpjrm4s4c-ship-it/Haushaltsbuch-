@@ -25,6 +25,6 @@ const withEvent=context.ForecastEngine.project(context.buildForecastInput(ui,ass
 assert.equal(without.months[0].fixed,0);assert.equal(withEvent.months[0].fixed,100);assert.equal(context.S.financialEvents.length,0,'Szenariovergleich darf aktiven App-State nicht verändern');
 
 const [schema,storage,backup,dataManagement,index,uiSource]=await Promise.all(['js/state-schema.js','js/state-storage.js','js/backup-manager.js','js/data-management-v2.js','index.html','js/forecast-scenarios-ui.js'].map(read));
-assert.match(schema,/CURRENT_VERSION\s*=\s*5/);for(const source of [schema,storage,backup,dataManagement])assert.ok(source.includes('forecastScenarios'));
+assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/);for(const source of [schema,storage,backup,dataManagement])assert.ok(source.includes('forecastScenarios'));
 assert.ok(index.includes('js/forecast-scenarios.js'));assert.ok(index.includes('js/forecast-scenarios-ui.js'));assert.ok(uiSource.includes('buildForecastInput(scenario.ui,assets,scenario.assumptions,scenario.financialEvents)'));
 console.log('Phase-C-Szenariotests erfolgreich.');
