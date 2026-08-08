@@ -2,9 +2,12 @@
 'use strict';
 
 (function(root){
-  const CURRENT_VERSION = 4;
+  const CURRENT_VERSION = 6;
   const ASSET_FIELDS=['cash','callMoney','fixedDeposit','etf','depot','other'];
   const SAVINGS_TARGETS=new Set(ASSET_FIELDS);
+  const SCENARIO_KEYS=new Set(['optimistic','realistic','cautious']);
+  const LOOKBACKS=new Set([3,6,12]);
+  const GOAL_TYPES=new Set(['minLiquidity','netWorth','investments','debtFree','wealthGrowth']);
 
   function isRecord(value){return value!==null&&typeof value==='object'&&!Array.isArray(value);}
   function objectOrEmpty(value){return isRecord(value)?value:{};}
@@ -43,16 +46,37 @@
     }));
   }
 
+  function normalizeForecastScenarios(value,baseYear){
+    const currentYear=Number.isFinite(Number(baseYear))?Number(baseYear):new Date().getFullYear();
+    return arrayOrEmpty(value).filter(isRecord).map(item=>{
+      const ui=objectOrEmpty(item.ui);
+      return {
+        id:String(item.id||''),title:String(item.title||'Szenario'),
+        ui:{scenarioKey:SCENARIO_KEYS.has(ui.scenarioKey)?ui.scenarioKey:'realistic',lookbackMonths:LOOKBACKS.has(Number(ui.lookbackMonths))?Number(ui.lookbackMonths):3,annualInflation:clamp(ui.annualInflation,-10,20,0),endYear:Math.max(currentYear+1,Math.min(currentYear+40,finite(ui.endYear,currentYear+5)))},
+        assumptions:normalizeForecastAssumptions(item.assumptions),financialEvents:normalizeFinancialEvents(item.financialEvents),
+        createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||''),
+      };
+    });
+  }
+
+  function normalizeForecastGoals(value,baseYear){
+    const currentYear=Number.isFinite(Number(baseYear))?Number(baseYear):new Date().getFullYear();
+    return arrayOrEmpty(value).filter(isRecord).map(item=>{
+      const type=GOAL_TYPES.has(item.type)?item.type:'netWorth';
+      return {id:String(item.id||''),title:String(item.title||'Finanzziel'),type,targetAmount:type==='debtFree'?0:Math.max(0,finite(item.targetAmount,0)),targetYear:Math.max(currentYear,Math.min(currentYear+40,Math.floor(finite(item.targetYear,currentYear+5)))),targetMonth:Math.floor(clamp(item.targetMonth,0,11,11)),enabled:item.enabled!==false};
+    });
+  }
+
   function normalize(raw,options={}){
-    const source=isRecord(raw)?raw:{};
+    const source=isRecord(raw)?raw:{},fallbackYears=typeof options.defaultYears==='function'?options.defaultYears():options.defaultYears,currentYear=Array.isArray(source.years)&&source.years.length?Math.min(...source.years.map(Number).filter(Number.isFinite)):Array.isArray(fallbackYears)&&fallbackYears.length?Math.min(...fallbackYears.map(Number).filter(Number.isFinite)):new Date().getFullYear();
     return {
       schemaVersion:CURRENT_VERSION,data:objectOrEmpty(source.data),cats:arrayOrEmpty(source.cats),kredite:arrayOrEmpty(source.kredite),
       years:normalizeYears(source.years,options.defaultYears),buchungen:arrayOrEmpty(source.buchungen),budgets:objectOrEmpty(source.budgets),
       recurringRules:arrayOrEmpty(source.recurringRules),annualAdjustments:arrayOrEmpty(source.annualAdjustments),percentageAdjustments:arrayOrEmpty(source.percentageAdjustments),
       amountAdjustments:arrayOrEmpty(source.amountAdjustments),oneTimeEntries:arrayOrEmpty(source.oneTimeEntries),forecastAssets:normalizeForecastAssets(source.forecastAssets),
-      forecastAssumptions:normalizeForecastAssumptions(source.forecastAssumptions),financialEvents:normalizeFinancialEvents(source.financialEvents),
+      forecastAssumptions:normalizeForecastAssumptions(source.forecastAssumptions),financialEvents:normalizeFinancialEvents(source.financialEvents),forecastScenarios:normalizeForecastScenarios(source.forecastScenarios,currentYear),forecastGoals:normalizeForecastGoals(source.forecastGoals,currentYear),
     };
   }
 
-  root.StateSchema=Object.freeze({CURRENT_VERSION,ASSET_FIELDS:Object.freeze([...ASSET_FIELDS]),normalize,isRecord,normalizeForecastAssumptions,normalizeFinancialEvents});
+  root.StateSchema=Object.freeze({CURRENT_VERSION,ASSET_FIELDS:Object.freeze([...ASSET_FIELDS]),normalize,isRecord,normalizeForecastAssumptions,normalizeFinancialEvents,normalizeForecastScenarios,normalizeForecastGoals});
 })(typeof globalThis!=='undefined'?globalThis:window);
