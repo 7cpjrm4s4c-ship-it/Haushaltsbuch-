@@ -6,8 +6,8 @@
   function cloneInput(input){return {...input,baseMonths:(input?.baseMonths||[]).map(row=>({...row,financialEvents:Array.isArray(row.financialEvents)?row.financialEvents.map(item=>({...item})):[]})),startAssetBreakdown:{...(input?.startAssetBreakdown||{})},annualReturns:{...(input?.annualReturns||{})}};}
   function targetIndex(goal){return monthIndex(goal.targetYear,goal.targetMonth);}
   function applyMonthlySurplus(input,goal,amount){
-    const copy=cloneInput(input),limit=targetIndex(goal),value=Math.max(0,Number(amount)||0);
-    copy.baseMonths=copy.baseMonths.map(row=>monthIndex(row.year,row.month)<=limit?{...row,income:Number(row.income||0)+value,savings:Number(row.savings||0)+value}:row);
+    const copy=cloneInput(input),limit=targetIndex(goal),value=Math.max(0,Number(amount)||0),invest=goal.type!=='minLiquidity';
+    copy.baseMonths=copy.baseMonths.map(row=>monthIndex(row.year,row.month)<=limit?{...row,income:Number(row.income||0)+value,savings:Number(row.savings||0)+(invest?value:0)}:row);
     return copy;
   }
   function applyVariableReduction(input,amount){const copy=cloneInput(input);copy.variableBaseline=Math.max(0,Number(copy.variableBaseline||0)-Math.max(0,Number(amount)||0));return copy;}
