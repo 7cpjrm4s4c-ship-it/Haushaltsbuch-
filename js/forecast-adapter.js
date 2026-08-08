@@ -1,17 +1,48 @@
 /* Adapter zwischen App-Zustand und reiner ForecastEngine. */
 'use strict';
 
+function forecastCreditSchedule(startYear,startMonth,endYear,endMonth=11){
+  const events=S.financialEvents||[];
+  const balances=new Map((S.kredite||[]).map(credit=>[credit.id,Math.max(0,Number(creditBalanceAt(credit,startYear,startMonth))||0)]));
+  const rows=new Map();
+  const start=ForecastEngine.monthIndex(startYear,startMonth),end=ForecastEngine.monthIndex(endYear,endMonth);
+  for(let index=start;index<=end;index++){
+    const {year,month}=ForecastEngine.fromMonthIndex(index);
+    let creditPayments=0,debt=0,specialRepayment=0;
+    for(const credit of S.kredite||[]){
+      let balance=Math.max(0,Number(balances.get(credit.id))||0);
+      debt+=balance;
+      if(balance<=0.005){balances.set(credit.id,0);continue;}
+      const monthlyRate=Math.max(0,Number(credit.z||0))/1200;
+      const interest=balance*monthlyRate;
+      const regularPayment=Math.min(Math.max(0,Number(credit.m)||0),balance+interest);
+      const requested=typeof FinancialEvents!=='undefined'?FinancialEvents.specialRepaymentForLoan(events,credit.id,year,month):0;
+      const afterRegular=Math.max(0,balance+interest-regularPayment);
+      const appliedSpecial=Math.min(afterRegular,Math.max(0,Number(requested)||0));
+      creditPayments+=regularPayment;specialRepayment+=appliedSpecial;
+      balance=Math.max(0,afterRegular-appliedSpecial);
+      balances.set(credit.id,balance);
+    }
+    rows.set(`${year}-${month}`,{creditPayments,debt,specialRepayment});
+  }
+  return rows;
+}
+
 function forecastBaseMonths(startYear,startMonth,endYear,endMonth=11){
   const rows=[];
   const start=ForecastEngine.monthIndex(startYear,startMonth),end=ForecastEngine.monthIndex(endYear,endMonth);
   if(end<start)throw new RangeError('Prognoseende liegt vor dem Startmonat');
   if(end-start>600)throw new RangeError('Prognosezeitraum ist zu groß');
+  const creditSchedule=forecastCreditSchedule(startYear,startMonth,endYear,endMonth);
   for(let index=start;index<=end;index++){
     const {year,month}=ForecastEngine.fromMonthIndex(index);let income=0,fixed=0,savings=0;
-    for(const cat of S.cats){if(cat.t==='V'||cat.t==='K')continue;const value=Math.max(0,Number(gv(year,month,cat))||0);if(cat.t==='E')income+=value;else if(cat.t==='F')fixed+=value;else if(cat.t==='S')savings+=value;}
-    let creditPayments=0,debt=0;
-    for(const credit of S.kredite){const balance=Math.max(0,Number(creditBalanceAt(credit,year,month))||0);debt+=balance;if(balance>0.005){const interest=Math.max(0,Number(creditInterestAt(credit,year,month))||0);creditPayments+=Math.min(Math.max(0,Number(credit.m)||0),balance+interest);}}
-    rows.push({year,month,income,fixed,savings,creditPayments,debt});
+    for(const cat of S.cats){
+      if(cat.t==='V'||cat.t==='K')continue;
+      const value=Math.max(0,Number(gv(year,month,cat))||0);
+      if(cat.t==='E')income+=value;else if(cat.t==='F')fixed+=value;else if(cat.t==='S')savings+=value;
+    }
+    const credit=creditSchedule.get(`${year}-${month}`)||{creditPayments:0,debt:0,specialRepayment:0};
+    rows.push({year,month,income,fixed,savings,creditPayments:credit.creditPayments,debt:credit.debt,specialRepayment:credit.specialRepayment});
   }
   return typeof FinancialEvents!=='undefined'?FinancialEvents.applyToBaseMonths(rows,S.financialEvents||[]):rows;
 }
