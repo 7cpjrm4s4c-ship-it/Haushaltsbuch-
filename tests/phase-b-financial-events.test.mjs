@@ -14,6 +14,7 @@ let impact=engine.monthImpact(events,2026,11);assert.equal(impact.income,1600);a
 impact=engine.monthImpact(events,2027,8);assert.equal(impact.expense,20);
 impact=engine.monthImpact(events,2028,5);assert.equal(impact.expense,20);
 impact=engine.monthImpact(events,2028,6);assert.equal(impact.expense,0,'dauerhafte Änderung muss nach Endmonat enden');
+const defaultEnd=engine.normalizeEvent({type:'incomeDelta',startYear:2027,startMonth:0,endYear:2028,amount:10});assert.equal(defaultEnd.endMonth,11,'fehlender Endmonat muss einheitlich Dezember bedeuten');
 assert.equal(engine.specialRepaymentForLoan(events,'loan-1',2027,2),500);assert.equal(engine.specialRepaymentForLoan(events,'loan-2',2027,2),0);
 const rows=engine.applyToBaseMonths([{year:2026,month:11,income:3000,fixed:1000},{year:2027,month:2,income:3000,fixed:1000}],events);
 assert.equal(rows[0].income,4600);assert.equal(rows[1].specialRepayment,500);assert.equal(rows[1].financialEvents[0].loanId,'loan-1');
