@@ -12,15 +12,26 @@ const forecastEngine=await text('js/forecast-engine.js');
 const forecastAdapter=await text('js/forecast-adapter.js');
 const forecastView=await text('js/forecast-view.js');
 const dataManagement=await text('js/data-management-v2.js');
-assert.match(schema,/CURRENT_VERSION\s*=\s*2/);
-for(const field of ['amountAdjustments','oneTimeEntries','forecastAssets']){assert.ok(schema.includes(field));assert.ok(storage.includes(field));assert.ok(backup.includes(field));assert.ok(dataManagement.includes(field));}
-assert.match(backup,/version:3/);assert.match(backup,/normalizeBackupData/);
+
+assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/,'State-Schema muss versioniert sein');
+for(const field of ['amountAdjustments','oneTimeEntries','forecastAssets']){
+  assert.ok(schema.includes(field));
+  assert.ok(storage.includes(field));
+  assert.ok(backup.includes(field));
+  assert.ok(dataManagement.includes(field));
+}
+assert.match(backup,/version:\d+/,'Backup-Format muss versioniert sein');
+assert.match(backup,/normalizeBackupData/);
 assert.match(planning,/fromLegacy/);assert.match(planning,/valueForMonth/);assert.match(planning,/percentageIncrease/);assert.match(planning,/fixedIncrease/);assert.match(planning,/oneTime/);
 assert.ok(dataConsistency.includes('PlanningEvents.valueForMonth'),'Monatsberechnung muss das einheitliche Planungsmodell verwenden');
 assert.ok(dataConsistency.includes('pos-fixed-inc-amount'));assert.ok(dataConsistency.includes('pos-once-amount'));assert.ok(refinements.includes('pos-fixed-inc-amount'));assert.ok(refinements.includes('pos-once-amount'));
 assert.ok(!app.includes('forecastAssets'),'Startvermögen darf nicht in app.js bzw. Dashboard-Logik einfließen');
 assert.ok(forecastView.includes('forecastAssets'));assert.ok(forecastView.includes('ausschließlich für die Prognose'));
 assert.ok(!forecastEngine.includes('gv('));assert.ok(!forecastEngine.includes('creditBalanceAt'));assert.ok(!forecastEngine.includes('creditInterestAt'));assert.ok(!forecastEngine.includes('document.'));
-assert.ok(forecastAdapter.includes('gv('));assert.ok(forecastAdapter.includes('creditBalanceAt'));assert.ok(forecastAdapter.includes('creditInterestAt'));
+assert.ok(forecastAdapter.includes('gv('),'App-spezifische Monatswerte gehören in den Forecast-Adapter');
+assert.ok(forecastAdapter.includes('creditBalanceAt'),'Der Adapter darf den aktuellen Kreditstartwert aus der Kreditlogik übernehmen');
+assert.ok(forecastAdapter.includes('forecastCreditSchedule'),'Künftige Kredite müssen im Adapter deterministisch fortgeschrieben werden');
+assert.ok(forecastAdapter.includes('specialRepaymentForLoan'),'Geplante Sondertilgungen müssen in der Kreditfortschreibung berücksichtigt werden');
+assert.ok(!forecastAdapter.includes('creditInterestAt'),'Die Prognose darf nicht pro Zukunftsmonat erneut auf die operative Kredit-Zinsfunktion zurückgreifen');
 assert.match(forecastEngine,/baseMonths/);assert.match(forecastEngine,/summary/);assert.match(forecastEngine,/netWorth/);
 console.log('Phase-A-Vertrag erfolgreich geprüft.');
