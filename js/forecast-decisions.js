@@ -10,8 +10,16 @@
     copy.baseMonths=copy.baseMonths.map(row=>monthIndex(row.year,row.month)<=limit?{...row,income:Number(row.income||0)+value,savings:Number(row.savings||0)+(invest?value:0)}:row);
     return copy;
   }
-  function applyVariableReduction(input,amount){const copy=cloneInput(input);copy.variableBaseline=Math.max(0,Number(copy.variableBaseline||0)-Math.max(0,Number(amount)||0));return copy;}
-  function applyImmediateExpense(input,amount){const copy=cloneInput(input),value=Math.max(0,Number(amount)||0);if(copy.baseMonths.length)copy.baseMonths[0]={...copy.baseMonths[0],fixed:Number(copy.baseMonths[0].fixed||0)+value};return copy;}
+  function applyVariableReduction(input,goal,amount){
+    const copy=cloneInput(input),limit=targetIndex(goal),value=Math.max(0,Number(amount)||0);
+    copy.baseMonths=copy.baseMonths.map(row=>monthIndex(row.year,row.month)<=limit?{...row,variableReduction:Number(row.variableReduction||0)+value}:row);
+    return copy;
+  }
+  function applyImmediateExpense(input,amount){
+    const copy=cloneInput(input),value=Math.max(0,Number(amount)||0),cash=Math.max(0,Number(copy.startAssetBreakdown?.cash)||0);
+    copy.startAssetBreakdown.cash=Math.max(0,cash-value);
+    return copy;
+  }
   function solveMinimum(goal,input,project,evaluate,apply,upperBound){
     const baseline=project(input),baseEvaluation=evaluate(goal,baseline);
     if(baseEvaluation.achieved)return {possible:true,amount:0,evaluation:baseEvaluation,result:baseline};
@@ -35,14 +43,16 @@
   }
   function variableReduction(goal,input,project,evaluate){
     if(goal.type==='debtFree'||goal.type==='investments')return {possible:false,amount:null,reason:'not-applicable'};
-    const baseline=Math.max(0,Number(input?.variableBaseline)||0),baseResult=project(input),baseEvaluation=evaluate(goal,baseResult);
-    if(baseEvaluation.achieved)return {possible:true,amount:0,evaluation:baseEvaluation,result:baseResult};
-    if(baseEvaluation.status==='disabled'||baseEvaluation.status==='outside'||baseline<=0)return {possible:false,amount:null,evaluation:baseEvaluation,result:baseResult};
-    const fullResult=project(applyVariableReduction(input,baseline)),fullEvaluation=evaluate(goal,fullResult);
-    if(!fullEvaluation.achieved)return {possible:false,amount:null,evaluation:baseEvaluation,result:baseResult};
-    let low=0,high=baseline,candidateResult=fullResult,candidateEvaluation=fullEvaluation;
+    const baselineResult=project(input),baseEvaluation=evaluate(goal,baselineResult);
+    if(baseEvaluation.achieved)return {possible:true,amount:0,evaluation:baseEvaluation,result:baselineResult};
+    if(baseEvaluation.status==='disabled'||baseEvaluation.status==='outside')return {possible:false,amount:null,evaluation:baseEvaluation,result:baselineResult};
+    const relevant=baselineResult.months.filter(row=>monthIndex(row.year,row.month)<=targetIndex(goal)),maximum=relevant.reduce((max,row)=>Math.max(max,Number(row.variable||0)),0);
+    if(maximum<=0)return {possible:false,amount:null,evaluation:baseEvaluation,result:baselineResult};
+    const fullResult=project(applyVariableReduction(input,goal,maximum)),fullEvaluation=evaluate(goal,fullResult);
+    if(!fullEvaluation.achieved)return {possible:false,amount:null,evaluation:baseEvaluation,result:baselineResult};
+    let low=0,high=maximum,candidateResult=fullResult,candidateEvaluation=fullEvaluation;
     for(let step=0;step<36;step++){
-      const mid=(low+high)/2,result=project(applyVariableReduction(input,mid)),evaluation=evaluate(goal,result);
+      const mid=(low+high)/2,result=project(applyVariableReduction(input,goal,mid)),evaluation=evaluate(goal,result);
       if(evaluation.achieved){high=mid;candidateResult=result;candidateEvaluation=evaluation;}else low=mid;
     }
     return {possible:true,amount:round2(high),evaluation:candidateEvaluation,result:candidateResult};
@@ -51,10 +61,11 @@
     if(goal.type!=='minLiquidity')return {possible:false,amount:null,reason:'not-applicable'};
     const baseline=project(input),baseEvaluation=evaluate(goal,baseline);
     if(!baseEvaluation.achieved)return {possible:false,amount:0,evaluation:baseEvaluation,result:baseline};
-    let low=0,high=Math.max(1000,Number(baseline.summary?.startLiquidity||0)+Number(baseline.summary?.cumulative||0)+Number(goal.targetAmount||0));
-    let highEvaluation=evaluate(goal,project(applyImmediateExpense(input,high)));
-    for(let attempt=0;attempt<16&&highEvaluation.achieved;attempt++){low=high;high*=2;highEvaluation=evaluate(goal,project(applyImmediateExpense(input,high)));}
-    if(highEvaluation.achieved)return {possible:false,amount:null,evaluation:baseEvaluation,result:baseline};
+    const availableCash=Math.max(0,Number(input?.startAssetBreakdown?.cash)||0);
+    if(availableCash<=0)return {possible:true,amount:0,evaluation:baseEvaluation,result:baseline};
+    const allCashEvaluation=evaluate(goal,project(applyImmediateExpense(input,availableCash)));
+    if(allCashEvaluation.achieved)return {possible:true,amount:round2(availableCash),evaluation:baseEvaluation,result:baseline};
+    let low=0,high=availableCash;
     for(let step=0;step<36;step++){
       const mid=(low+high)/2,evaluation=evaluate(goal,project(applyImmediateExpense(input,mid)));
       if(evaluation.achieved)low=mid;else high=mid;
