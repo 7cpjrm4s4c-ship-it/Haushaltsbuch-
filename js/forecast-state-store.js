@@ -29,6 +29,7 @@
   function setAssumptions(value){S.forecastAssumptions=clone(value||{});return assumptions();}
 
   function assets(){return clone(S.forecastAssets||{});}
+  function setAssets(value){S.forecastAssets=clone(value||{});return assets();}
 
   function save(){
     if(typeof persist!=='function')throw new Error('Persistenzschnittstelle ist nicht verfügbar');
@@ -42,6 +43,6 @@
     goals,setGoals,
     forecastUi,setForecastUi,
     assumptions,setAssumptions,
-    assets,save,
+    assets,setAssets,save,
   });
 })(typeof globalThis!=='undefined'?globalThis:window);
