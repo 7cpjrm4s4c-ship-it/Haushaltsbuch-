@@ -51,6 +51,8 @@ function financialEventsPanel(){
   return `<section class="card"><div class="compact-toolbar"><div><div class="card-title">Finanzereignisse</div><div class="field-hint">Einmalige und zeitlich begrenzte Änderungen sowie Sondertilgungen werden ausschließlich in der Prognose berücksichtigt.</div></div><button class="btn btn-primary" onclick="openFinancialEventDialog()">+ Ereignis</button></div><div class="forecast-event-list">${rows}</div></section>`;
 }
 
+ForecastPanelRegistry.register('beforeKpis','financial-events',financialEventsPanel,100);
+
 if(typeof removeLoanCategory==='function'){
   const removeLoanCategoryBase=removeLoanCategory;
   removeLoanCategory=function(loanId){
