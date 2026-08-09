@@ -45,7 +45,7 @@
       year:Number(item?.year),month:Number(item?.month),income:Math.max(0,Number(item?.income)||0),fixed:Math.max(0,Number(item?.fixed)||0),
       savings:Math.max(0,Number(item?.savings)||0),creditPayments:Math.max(0,Number(item?.creditPayments)||0),
       specialRepayment:Math.max(0,Number(item?.specialRepayment)||0),openingDebt:Math.max(0,Number(item?.openingDebt)||0),debt:Math.max(0,Number(item?.debt)||0),
-      financialEvents:Array.isArray(item?.financialEvents)?item.financialEvents.map(event=>({...event})):[],
+      variableReduction:Math.max(0,Number(item?.variableReduction)||0),financialEvents:Array.isArray(item?.financialEvents)?item.financialEvents.map(event=>({...event})):[],
     };
   }
 
@@ -76,7 +76,7 @@
     let minLiquidity=startTotals.liquidity,minLiquidityYear=baseMonths[0].year,minLiquidityMonth=baseMonths[0].month;
     for(let i=0;i<baseMonths.length;i++){
       const base=baseMonths[i],investmentReturn=applyMonthlyReturns(assets,annualReturns);cumulativeReturns+=investmentReturn;
-      const variable=variableValue(input.variableBaseline,i,input.annualInflation,input.scenarioKey);
+      const variable=Math.max(0,variableValue(input.variableBaseline,i,input.annualInflation,input.scenarioKey)-base.variableReduction);
       const expenses=base.fixed+variable+base.creditPayments+base.specialRepayment+base.savings;
       const saldo=base.income-expenses;
       cumulative+=saldo;accumulatedSavings+=base.savings;totalSpecialRepayments+=base.specialRepayment;

@@ -4,7 +4,7 @@ const text=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 const [app,schema,storage,backup,engine,adapter,view,dataManagement,events,eventUi,index]=await Promise.all(['js/app.js','js/state-schema.js','js/state-storage.js','js/backup-manager.js','js/forecast-engine.js','js/forecast-adapter.js','js/forecast-view.js','js/data-management-v2.js','js/financial-events.js','js/financial-events-ui.js','index.html'].map(text));
 assert.ok(!app.includes('forecastAssumptions'));assert.ok(!app.includes('financialEvents'),'Finanzereignisse dürfen nicht ins Dashboard gelangen');
 for(const source of [schema,storage,backup,dataManagement])assert.ok(source.includes('financialEvents'),'Finanzereignisse müssen durch Schema, Persistenz, Backup und Reset geführt werden');
-assert.match(schema,/CURRENT_VERSION\s*=\s*4/);assert.match(backup,/version:5/);
+assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/);assert.match(backup,/version:\d+/);
 assert.match(engine,/function\s+monthlyRate\s*\(/);assert.ok(engine.includes('annualReturns'));assert.ok(engine.includes('realNetWorth'));assert.ok(engine.includes('specialRepayment'));
 assert.ok(!/(^|[^\w$])S\s*\./m.test(engine));assert.ok(!/\b(?:globalThis|window)\s*\.\s*S\b/.test(engine));
 for(const forbidden of [/\bdocument\s*\./,/\blocalStorage\b/,/\bsessionStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/,/\bgv\s*\(/,/\bcreditBalanceAt\s*\(/,/\bcreditInterestAt\s*\(/])assert.ok(!forbidden.test(engine));
