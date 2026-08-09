@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const text=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
-const [app,schema,storage,backup,engine,adapter,view,dataManagement,events,eventUi,index]=await Promise.all(['js/app.js','js/state-schema.js','js/state-storage.js','js/backup-manager.js','js/forecast-engine.js','js/forecast-adapter.js','js/forecast-view.js','js/data-management-v2.js','js/financial-events.js','js/financial-events-ui.js','index.html'].map(text));
+const [app,schema,storage,backup,engine,adapter,view,renderers,dataManagement,events,eventUi,index]=await Promise.all(['js/app.js','js/state-schema.js','js/state-storage.js','js/backup-manager.js','js/forecast-engine.js','js/forecast-adapter.js','js/forecast-view.js','js/forecast-view-renderers.js','js/data-management-v2.js','js/financial-events.js','js/financial-events-ui.js','index.html'].map(text));
 assert.ok(!app.includes('forecastAssumptions'));assert.ok(!app.includes('financialEvents'),'Finanzereignisse dürfen nicht ins Dashboard gelangen');
 for(const source of [schema,storage,backup,dataManagement])assert.ok(source.includes('financialEvents'),'Finanzereignisse müssen durch Schema, Persistenz, Backup und Reset geführt werden');
 assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/);assert.match(backup,/version:\d+/);
@@ -10,8 +10,8 @@ assert.ok(!/(^|[^\w$])S\s*\./m.test(engine));assert.ok(!/\b(?:globalThis|window)
 for(const forbidden of [/\bdocument\s*\./,/\blocalStorage\b/,/\bsessionStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/,/\bgv\s*\(/,/\bcreditBalanceAt\s*\(/,/\bcreditInterestAt\s*\(/])assert.ok(!forbidden.test(engine));
 for(const forbidden of [/\bdocument\s*\./,/\blocalStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/,/(^|[^\w$])S\s*\./m])assert.ok(!forbidden.test(events),'FinancialEvents muss eine reine Fachlogik bleiben');
 assert.ok(adapter.includes('FinancialEvents.applyToBaseMonths'));assert.ok(adapter.includes('specialRepaymentForLoan'));assert.ok(adapter.includes('forecastCreditSchedule'));
-assert.ok(eventUi.includes('openFinancialEventDialog'));assert.ok(eventUi.includes('duplicateFinancialEvent'));assert.ok(eventUi.includes('fe-end-year'));assert.ok(eventUi.includes('fe-loan'));
-assert.ok(view.includes('financialEventsPanel'));assert.ok(view.includes('forecastEventBadges'));assert.ok(view.includes('Sondertilgungen'));
+assert.ok(eventUi.includes('openFinancialEventDialog'));assert.ok(eventUi.includes('duplicateFinancialEvent'));assert.ok(eventUi.includes('fe-end-year'));assert.ok(eventUi.includes('fe-loan'));assert.ok(eventUi.includes('financialEventsPanel'));
+assert.ok(renderers.includes('forecastEventBadges'));assert.ok(view.includes('Sondertilgungen'));
 assert.ok(dataManagement.includes('S.financialEvents=[]'));assert.ok(backup.includes('S.financialEvents'));
 assert.ok(index.includes('js/financial-events.js'));assert.ok(index.includes('js/financial-events-ui.js'));
 assert.ok(index.indexOf('js/financial-events.js')<index.indexOf('js/forecast-adapter.js'),'Ereignislogik muss vor dem Adapter geladen werden');
