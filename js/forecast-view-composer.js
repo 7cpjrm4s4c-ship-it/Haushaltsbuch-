@@ -8,7 +8,7 @@
   function composeForecastView(){
     const html=baseView();
     const anchor='<section class="forecast-kpis">';
-    const extensions=ForecastPanelRegistry.render('beforeKpis',undefined,{exclude:['financial-events']});
+    const extensions=ForecastPanelRegistry.render('beforeKpis');
     if(!extensions)return html;
     return html.includes(anchor)?html.replace(anchor,extensions+anchor):html+extensions;
   }
