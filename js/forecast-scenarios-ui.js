@@ -24,11 +24,6 @@ function loadForecastScenario(id){
 function deleteForecastScenario(id){const scenarios=storedForecastScenarios(),scenario=scenarios.find(item=>item.id===id);if(!scenario||!confirm(`Szenario „${scenario.title}“ wirklich löschen?`))return;ForecastStateStore.setScenarios(scenarios.filter(item=>item.id!==id));ForecastStateStore.save();render();toast('Szenario gelöscht');}
 function duplicateForecastScenario(id){const scenarios=storedForecastScenarios(),scenario=scenarios.find(item=>item.id===id);if(!scenario)return;const normalized=normalizedStoredScenario(scenario),copy=ForecastScenarios.snapshot({id:uid(),title:`${normalized.title} Kopie`,ui:normalized.ui,assumptions:normalized.assumptions,financialEvents:normalized.financialEvents,baseYear:ForecastStateStore.year()});scenarios.push(copy);ForecastStateStore.setScenarios(scenarios);ForecastStateStore.save();render();}
 
-function forecastScenarioResult(raw){
-  const scenario=normalizedStoredScenario(raw),assets=forecastAssets();
-  const input=buildForecastInput(scenario.ui,assets,scenario.assumptions,scenario.financialEvents);
-  return {scenario,result:ForecastEngine.project(input)};
-}
 function forecastScenarioDate(value){if(!value)return '–';const date=new Date(value);return Number.isNaN(date.getTime())?'–':date.toLocaleDateString('de-DE');}
 
 function forecastScenarioComparison(scenarios){
