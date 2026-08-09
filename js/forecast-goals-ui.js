@@ -31,8 +31,4 @@ function forecastGoalsPanel(){
   return `<section class="card"><div class="compact-toolbar"><div><div class="card-title">Finanzziele</div><div class="field-hint">${active?`${achieved} von ${active} aktiven Zielen werden im aktuellen Prognoseverlauf erreicht.`:'Konkrete Zielwerte definieren und gegen alle Szenarien prüfen.'}</div></div><button class="btn btn-primary" onclick="openForecastGoalDialog()">+ Finanzziel</button></div><div class="forecast-goal-list">${rows||'<div class="forecast-note">Noch keine Finanzziele definiert.</div>'}</div></section>`;
 }
 
-if(typeof vPrognose==='function'){
-  const forecastViewWithoutGoals=vPrognose;
-  vPrognose=function(){const html=forecastViewWithoutGoals(),anchor='<section class="forecast-kpis">';return html.includes(anchor)?html.replace(anchor,forecastGoalsPanel()+anchor):html+forecastGoalsPanel();};
-  vEinstellungen=vPrognose;
-}
+ForecastPanelRegistry.register('beforeKpis','forecast-goals',forecastGoalsPanel,300);
