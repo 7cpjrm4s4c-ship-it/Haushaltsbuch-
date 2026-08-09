@@ -52,11 +52,3 @@ function financialEventsPanel(){
 }
 
 ForecastPanelRegistry.register('beforeKpis','financial-events',financialEventsPanel,100);
-
-if(typeof removeLoanCategory==='function'){
-  const removeLoanCategoryBase=removeLoanCategory;
-  removeLoanCategory=function(loanId){
-    removeLoanCategoryBase(loanId);
-    S.financialEvents=(S.financialEvents||[]).filter(event=>!(event.type==='specialRepayment'&&String(event.metadata?.loanId||'')===String(loanId||'')));
-  };
-}
