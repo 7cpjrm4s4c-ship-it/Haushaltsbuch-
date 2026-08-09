@@ -7,8 +7,16 @@ const [registry,scenariosUi,goalsUi,financialEventsUi,composer,index]=await Prom
   'js/forecast-panel-registry.js','js/forecast-scenarios-ui.js','js/forecast-goals-ui.js','js/financial-events-ui.js','js/forecast-view-composer.js','index.html'
 ].map(read));
 
-// Registry bleibt neutrale Infrastruktur ohne App-State oder DOM.
-for(const forbidden of [/(^|[^\w$])S\s*\./m,/\bdocument\s*\./,/\blocalStorage\b/,/\bsessionStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/]){
+// Registry bleibt neutrale Infrastruktur ohne App-State, DOM, Persistenz oder globale UI-Aufrufe.
+for(const forbidden of [
+  /(^|[^\w$])S\s*\./m,
+  /\bdocument\s*\./,
+  /\blocalStorage\b/,
+  /\bsessionStorage\b/,
+  /\bpersist\s*\(/,
+  /\b(?:window|globalThis|root)\s*\.\s*render\s*\(/,
+  /\b(?:window|globalThis|root)\s*\.\s*toast\s*\(/
+]){
   assert.ok(!forbidden.test(registry),'ForecastPanelRegistry darf keine App- oder DOM-Abhängigkeit enthalten');
 }
 
