@@ -2,11 +2,17 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 
+const registrySource=await readFile(new URL('../js/app-extension-registry.js',import.meta.url),'utf8');
 const planningSource=await readFile(new URL('../js/planning-events.js',import.meta.url),'utf8');
 const dataSource=await readFile(new URL('../js/data-consistency.js',import.meta.url),'utf8');
+const bindingsSource=await readFile(new URL('../js/app-extension-bindings.js',import.meta.url),'utf8');
 const S={data:{},cats:[],recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],buchungen:[],budgets:{},ui:{},year:2027,month:0};
 const context={console,Math,Number,Object,Array,Set,Map,JSON,S,gv:()=>0,calcMonth:()=>({}),dkey:(y,m,id)=>`${y}_${m}_${id}`,getBuchungenForMonth:(y,m)=>S.buchungen.filter(b=>b.year===y&&b.month===m),persist:()=>{},closeGenSheet:()=>{},render:()=>{},toast:()=>{},uid:()=>`id-${Math.random()}`,document:{getElementById:()=>null}};
-context.globalThis=context;vm.createContext(context);vm.runInContext(planningSource,context);vm.runInContext(dataSource,context);
+context.globalThis=context;vm.createContext(context);
+vm.runInContext(registrySource,context,{filename:'js/app-extension-registry.js'});
+vm.runInContext(planningSource,context,{filename:'js/planning-events.js'});
+vm.runInContext(dataSource,context,{filename:'js/data-consistency.js'});
+vm.runInContext(bindingsSource,context,{filename:'js/app-extension-bindings.js'});
 
 const kindergarten={id:'kg',g:'Kinder',p:'Kindergarten',d:200,t:'F'};
 S.cats=[kindergarten];S.recurringRules=[{id:'r1',catId:'kg',amount:200,intervalMonths:1,startYear:2027,startMonth:0,endYear:2028,endMonth:5}];S.amountAdjustments=[{id:'a1',catId:'kg',year:2027,month:8,amount:20}];
