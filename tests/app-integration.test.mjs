@@ -9,7 +9,7 @@ function makeContext(extra={}){const context={console,setTimeout,clearTimeout,Da
 {
   const S={data:{},cats:[],recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],buchungen:[],budgets:{},ui:{},year:2026,month:0};
   const context=makeContext({S,gv:()=>0,calcMonth:()=>({}),dkey:(y,m,id)=>`${y}_${m}_${id}`,getBuchungenForMonth:(y,m)=>S.buchungen.filter(b=>b.year===y&&b.month===m),persist:()=>{},closeGenSheet:()=>{},render:()=>{},toast:()=>{},uid:()=> 'test-id',document:{getElementById:()=>null}});
-  await run('js/planning-events.js',context);await run('js/data-consistency.js',context);
+  await run('js/app-extension-registry.js',context);await run('js/planning-events.js',context);await run('js/data-consistency.js',context);await run('js/app-extension-bindings.js',context);
   const quarterly={id:'strom',g:'Wohnen',p:'Strom',d:0,t:'F'};S.cats=[quarterly];S.recurringRules=[{id:'r1',catId:'strom',amount:120,intervalMonths:3,startYear:2026,startMonth:2,endYear:2026,endMonth:8}];
   assert.equal(context.gv(2026,1,quarterly),0);assert.equal(context.gv(2026,2,quarterly),120);assert.equal(context.gv(2026,5,quarterly),120);assert.equal(context.gv(2026,11,quarterly),0);
   const salary={id:'gehalt',g:'Einnahmen',p:'Gehalt',d:3000,t:'E'},rent={id:'miete',g:'Wohnen',p:'Miete',d:1000,t:'F'},loan={id:'rate',g:'Kredite',p:'Rate',d:200,t:'K'},savings={id:'etf',g:'Sparen',p:'ETF',d:100,t:'S'},variable={id:'food',g:'Variable Ausgaben',p:'Lebensmittel',d:0,t:'V'};
