@@ -236,6 +236,7 @@ function delKredit(kid){
   if(!loan||!confirm(`"${loan.n}" wirklich löschen?`))return;
   S.kredite=S.kredite.filter(x=>x.id!==kid);
   removeLoanCategory(kid);
+  LoanLifecycle.emitDeleted({loanId:kid,loan});
   if(typeof sortCategoriesInPlace==='function')sortCategoriesInPlace();
   persist();
   closeGenSheet();
