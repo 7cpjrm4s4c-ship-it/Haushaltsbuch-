@@ -3,12 +3,13 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
-const [registry,stateStore,scenariosUi,goalsUi,financialEventsUi,composer,viewModel,renderers,view,index]=await Promise.all([
-  'js/forecast-panel-registry.js','js/forecast-state-store.js','js/forecast-scenarios-ui.js','js/forecast-goals-ui.js','js/financial-events-ui.js','js/forecast-view-composer.js','js/forecast-view-model.js','js/forecast-view-renderers.js','js/forecast-view.js','index.html'
+const [registry,stateStore,appRegistry,bindings,compactManager,dataConsistency,scenariosUi,goalsUi,financialEventsUi,composer,viewModel,renderers,view,index]=await Promise.all([
+  'js/forecast-panel-registry.js','js/forecast-state-store.js','js/app-extension-registry.js','js/app-extension-bindings.js','js/compact-manager.js','js/data-consistency.js','js/forecast-scenarios-ui.js','js/forecast-goals-ui.js','js/financial-events-ui.js','js/forecast-view-composer.js','js/forecast-view-model.js','js/forecast-view-renderers.js','js/forecast-view.js','index.html'
 ].map(read));
 
 for(const forbidden of [/(^|[^\w$])S\s*\./m,/\bdocument\s*\./,/\blocalStorage\b/,/\bsessionStorage\b/,/\bpersist\s*\(/,/\b(?:window|globalThis|root)\s*\.\s*render\s*\(/,/\b(?:window|globalThis|root)\s*\.\s*toast\s*\(/]){
   assert.ok(!forbidden.test(registry),'ForecastPanelRegistry darf keine App- oder DOM-Abhängigkeit enthalten');
+  assert.ok(!forbidden.test(appRegistry),'AppExtensionRegistry darf keine App- oder DOM-Abhängigkeit enthalten');
 }
 
 // State-Store ist die einzige Forecast-Feature-Grenze zum App-State und kennt keine UI.
@@ -32,8 +33,23 @@ for(const [name,source] of [['Szenarien',scenariosUi],['Finanzziele',goalsUi]]){
 }
 assert.ok(financialEventsUi.includes("ForecastPanelRegistry.register('beforeKpis','financial-events'"));
 assert.ok(composer.includes('ForecastPanelRegistry.render'));
-assert.ok(/root\.vPrognose\s*=\s*composeForecastView/.test(composer));
-assert.ok(/root\.vEinstellungen\s*=\s*composeForecastView/.test(composer));
+assert.ok(composer.includes("AppExtensionRegistry.registerView('einstellungen',composeForecastView,200)"));
+assert.ok(!/root\.vPrognose\s*=/.test(composer),'Forecast-Composer darf vPrognose nicht überschreiben');
+assert.ok(!/root\.vEinstellungen\s*=/.test(composer),'Forecast-Composer darf vEinstellungen nicht überschreiben');
+
+// Weitere Legacy-Overrides müssen über die explizite Registry laufen.
+assert.ok(compactManager.includes("AppExtensionRegistry.registerView('ausgaben',compactExpensesView"));
+assert.ok(compactManager.includes("AppExtensionRegistry.registerView('uebersicht',compactFixedCostsView"));
+assert.ok(!/\bvAusgaben\s*=/.test(compactManager),'CompactManager darf vAusgaben nicht überschreiben');
+assert.ok(!/\bvUebersicht\s*=/.test(compactManager),'CompactManager darf vUebersicht nicht überschreiben');
+assert.ok(!/\bvEinstellungen\s*=/.test(compactManager),'CompactManager darf vEinstellungen nicht überschreiben');
+assert.ok(dataConsistency.includes("AppExtensionRegistry.registerCalculation('gv',consistentValue"));
+assert.ok(dataConsistency.includes("AppExtensionRegistry.registerCalculation('calcMonth',consistentMonthCalculation"));
+assert.ok(!/\bgv\s*=\s*function/.test(dataConsistency),'DataConsistency darf gv nicht überschreiben');
+assert.ok(!/\bcalcMonth\s*=\s*function/.test(dataConsistency),'DataConsistency darf calcMonth nicht überschreiben');
+assert.ok(bindings.includes("const calculations={gv:'gv',calcMonth:'calcMonth'}"));
+assert.ok(bindings.includes("const views={ausgaben:'vAusgaben',uebersicht:'vUebersicht',einstellungen:'vEinstellungen'}"));
+for(const source of [compactManager,dataConsistency,composer])assert.ok(!/root\s*\[[^\]]+\]\s*=/.test(source),'Nur der Composition Root darf Legacy-Globals verdrahten');
 
 // D.1: State-/Datenlogik und Detailrenderer dürfen nicht mehr in der Basis-View liegen.
 assert.ok(viewModel.includes('function forecastData('));
@@ -44,6 +60,7 @@ assert.ok(!view.includes('function forecastData('),'Basis-View darf keine Foreca
 assert.ok(!view.includes('function forecastWealthChart('),'Basis-View darf keine Chart-Implementierung enthalten');
 assert.ok(!view.includes('function forecastYearDetails('),'Basis-View darf keine Detailrenderer enthalten');
 
+const appRegistryPos=index.indexOf('js/app-extension-registry.js');
 const registryPos=index.indexOf('js/forecast-panel-registry.js');
 const storePos=index.indexOf('js/forecast-state-store.js');
 const modelPos=index.indexOf('js/forecast-view-model.js');
@@ -53,15 +70,21 @@ const eventsPos=index.indexOf('js/financial-events-ui.js');
 const scenarioPos=index.indexOf('js/forecast-scenarios-ui.js');
 const goalsPos=index.indexOf('js/forecast-goals-ui.js');
 const composerPos=index.indexOf('js/forecast-view-composer.js');
+const compactPos=index.indexOf('js/compact-manager.js');
+const consistencyPos=index.indexOf('js/data-consistency.js');
+const bindingsPos=index.indexOf('js/app-extension-bindings.js');
+const bootstrapPos=index.indexOf('js/bootstrap.js');
+assert.ok(appRegistryPos>=0&&appRegistryPos<compactPos&&appRegistryPos<consistencyPos&&appRegistryPos<composerPos,'AppExtensionRegistry muss vor allen registrierenden Modulen geladen werden');
 assert.ok(registryPos>=0&&registryPos<eventsPos,'Registry muss vor Finanzereignis-UI geladen werden');
 assert.ok(storePos>registryPos&&storePos<eventsPos&&storePos<scenarioPos&&storePos<goalsPos,'ForecastStateStore muss vor allen Forecast-Feature-UIs geladen werden');
 assert.ok(registryPos<scenarioPos&&registryPos<goalsPos,'Registry muss vor allen Panel-Modulen geladen werden');
 assert.ok(modelPos>=0&&renderersPos>modelPos&&viewPos>renderersPos,'Forecast-View-Module müssen Modell → Renderer → View laden');
 assert.ok(composerPos>scenarioPos&&composerPos>goalsPos,'Composer muss nach den registrierenden Modulen geladen werden');
+assert.ok(bindingsPos>composerPos&&bindingsPos<bootstrapPos,'Composition Root muss nach allen Registrierungen und vor Bootstrap geladen werden');
 
-const context={Object,Map,Set,String,Number,Array,TypeError};context.globalThis=context;vm.createContext(context);
-vm.runInContext(registry,context,{filename:'js/forecast-panel-registry.js'});
-const panels=context.ForecastPanelRegistry;
+const registryContext={Object,Map,Set,String,Number,Array,TypeError};registryContext.globalThis=registryContext;vm.createContext(registryContext);
+vm.runInContext(registry,registryContext,{filename:'js/forecast-panel-registry.js'});
+const panels=registryContext.ForecastPanelRegistry;
 panels.register('slot','late',()=>'<late>',200);
 panels.register('slot','early',()=>'<early>',100);
 assert.equal(panels.render('slot'),'<early><late>');
@@ -70,6 +93,14 @@ assert.equal(panels.render('slot'),'<early-new><late>');
 assert.equal(panels.render('slot',undefined,{exclude:['early']}),'<late>');
 assert.equal(panels.render('slot',undefined,{include:['early']}),'<early-new>');
 assert.deepEqual(JSON.parse(JSON.stringify(panels.list('slot'))),[{id:'early',priority:50},{id:'late',priority:200}]);
+
+const appRegistryContext={Object,Map,String,Number,TypeError};appRegistryContext.globalThis=appRegistryContext;vm.createContext(appRegistryContext);
+vm.runInContext(appRegistry,appRegistryContext,{filename:'js/app-extension-registry.js'});
+const extensions=appRegistryContext.AppExtensionRegistry;
+const low=()=>1,high=()=>2;
+extensions.registerView('test',low,100);extensions.registerView('test',high,200);extensions.registerView('test',low,50);
+assert.equal(extensions.resolveView('test'),high,'Höhere Priorität muss deterministisch gewinnen');
+extensions.registerCalculation('calc',low,100);assert.equal(extensions.resolveCalculation('calc'),low);
 
 const storeContext={Object,JSON,Array,Number,Error,S:{year:2026,month:7,kredite:[{id:'l1'}],financialEvents:[{id:'e1'}],forecastScenarios:[],forecastGoals:[],ui:{forecast:{endYear:2030}},forecastAssumptions:{purchasingPowerInflation:2},forecastAssets:{cash:100}},persistCalls:0};
 storeContext.persist=()=>{storeContext.persistCalls++;};storeContext.globalThis=storeContext;vm.createContext(storeContext);vm.runInContext(stateStore,storeContext,{filename:'js/forecast-state-store.js'});
