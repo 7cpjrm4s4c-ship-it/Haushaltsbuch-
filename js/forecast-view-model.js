@@ -1,13 +1,51 @@
-/* Zustands- und Datenmodell der Prognoseansicht. */
+/* Reines Datenmodell der Prognoseansicht. State-Zugriff ausschließlich über ForecastStateStore. */
 'use strict';
 
 const FORECAST_ASSET_LABELS={cash:'Kontostand / Liquidität',callMoney:'Tagesgeld',fixedDeposit:'Festgeld',etf:'ETF',depot:'Sonstiges Depot',other:'Sonstiges Vermögen'};
-function forecastUi(){S.ui=S.ui||{};const current=S.ui.forecast||{},minEnd=S.year+1;S.ui.forecast={scenarioKey:current.scenarioKey||'realistic',lookbackMonths:[3,6,12].includes(Number(current.lookbackMonths))?Number(current.lookbackMonths):3,annualInflation:Number.isFinite(Number(current.annualInflation))?Number(current.annualInflation):0,endYear:Math.max(minEnd,Number(current.endYear)||S.year+5)};return S.ui.forecast;}
-function forecastAssets(){S.forecastAssets=S.forecastAssets||{};for(const key of Object.keys(FORECAST_ASSET_LABELS)){const amount=Number(S.forecastAssets[key]);S.forecastAssets[key]=Number.isFinite(amount)&&amount>=0?amount:0;}return S.forecastAssets;}
-function forecastAssumptions(){const raw=S.forecastAssumptions||{};if(typeof StateSchema!=='undefined'&&typeof StateSchema.normalizeForecastAssumptions==='function')S.forecastAssumptions=StateSchema.normalizeForecastAssumptions(raw);else{const annualReturns={};for(const key of Object.keys(FORECAST_ASSET_LABELS)){const n=Number(raw.annualReturns?.[key]);annualReturns[key]=Number.isFinite(n)?Math.max(-99,Math.min(100,n)):0;}S.forecastAssumptions={annualReturns,purchasingPowerInflation:Number.isFinite(Number(raw.purchasingPowerInflation))?Number(raw.purchasingPowerInflation):2,savingsTarget:Object.keys(FORECAST_ASSET_LABELS).includes(raw.savingsTarget)?raw.savingsTarget:'etf'};}return S.forecastAssumptions;}
-function forecastAssetBuckets(){const assets=forecastAssets();const liquidity=Number(assets.cash||0)+Number(assets.callMoney||0)+Number(assets.fixedDeposit||0),investments=Number(assets.etf||0)+Number(assets.depot||0)+Number(assets.other||0);return {liquidity,investments,total:liquidity+investments};}
-function setForecastOption(key,value){const ui=forecastUi();if(key==='lookbackMonths'||key==='endYear'||key==='annualInflation')value=Number(value);ui[key]=value;render();}
-function setForecastAsset(key,value){forecastAssets()[key]=Math.max(0,Number(value)||0);persist();render();}
-function setForecastReturn(key,value){forecastAssumptions().annualReturns[key]=Math.max(-99,Math.min(100,Number(value)||0));persist();render();}
-function setForecastAssumption(key,value){const assumptions=forecastAssumptions();if(key==='purchasingPowerInflation')assumptions[key]=Math.max(-20,Math.min(50,Number(value)||0));else assumptions[key]=value;persist();render();}
-function forecastData(){const ui=forecastUi(),assets=forecastAssets(),assumptions=forecastAssumptions(),buckets=forecastAssetBuckets();const input=buildForecastInput(ui,assets,assumptions),result=ForecastEngine.project(input);return {ui,assets,assumptions,startAssets:buckets.total,buckets,baseline:input.variableBaseline,...result};}
+
+function forecastUi(){
+  const baseYear=ForecastStateStore.year(),current=ForecastStateStore.forecastUi(),minEnd=baseYear+1;
+  return {
+    scenarioKey:current.scenarioKey||'realistic',
+    lookbackMonths:[3,6,12].includes(Number(current.lookbackMonths))?Number(current.lookbackMonths):3,
+    annualInflation:Number.isFinite(Number(current.annualInflation))?Number(current.annualInflation):0,
+    endYear:Math.max(minEnd,Number(current.endYear)||baseYear+5),
+  };
+}
+
+function forecastAssets(){
+  const source=ForecastStateStore.assets(),result={};
+  for(const key of Object.keys(FORECAST_ASSET_LABELS)){
+    const amount=Number(source[key]);
+    result[key]=Number.isFinite(amount)&&amount>=0?amount:0;
+  }
+  return result;
+}
+
+function forecastAssumptions(){
+  const raw=ForecastStateStore.assumptions();
+  if(typeof StateSchema!=='undefined'&&typeof StateSchema.normalizeForecastAssumptions==='function')return StateSchema.normalizeForecastAssumptions(raw);
+  const annualReturns={};
+  for(const key of Object.keys(FORECAST_ASSET_LABELS)){
+    const value=Number(raw.annualReturns?.[key]);
+    annualReturns[key]=Number.isFinite(value)?Math.max(-99,Math.min(100,value)):0;
+  }
+  return {
+    annualReturns,
+    purchasingPowerInflation:Number.isFinite(Number(raw.purchasingPowerInflation))?Number(raw.purchasingPowerInflation):2,
+    savingsTarget:Object.keys(FORECAST_ASSET_LABELS).includes(raw.savingsTarget)?raw.savingsTarget:'etf',
+  };
+}
+
+function forecastAssetBuckets(){
+  const assets=forecastAssets();
+  const liquidity=Number(assets.cash||0)+Number(assets.callMoney||0)+Number(assets.fixedDeposit||0);
+  const investments=Number(assets.etf||0)+Number(assets.depot||0)+Number(assets.other||0);
+  return {liquidity,investments,total:liquidity+investments};
+}
+
+function forecastData(){
+  const baseYear=ForecastStateStore.year(),ui=forecastUi(),assets=forecastAssets(),assumptions=forecastAssumptions(),buckets=forecastAssetBuckets();
+  const input=buildForecastInput(ui,assets,assumptions),result=ForecastEngine.project(input);
+  return {baseYear,ui,assets,assumptions,startAssets:buckets.total,buckets,baseline:input.variableBaseline,...result};
+}
