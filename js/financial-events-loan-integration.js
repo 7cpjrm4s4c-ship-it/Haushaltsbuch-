@@ -3,7 +3,8 @@
 
 function removeSpecialRepaymentsForLoan(loanId){
   const id=String(loanId||'');
-  S.financialEvents=(S.financialEvents||[]).filter(event=>!(event.type==='specialRepayment'&&String(event.metadata?.loanId||'')===id));
+  const events=ForecastStateStore.financialEvents().filter(event=>!(event.type==='specialRepayment'&&String(event.metadata?.loanId||'')===id));
+  ForecastStateStore.setFinancialEvents(events);
 }
 
 LoanLifecycle.onDeleted(({loanId})=>removeSpecialRepaymentsForLoan(loanId));
