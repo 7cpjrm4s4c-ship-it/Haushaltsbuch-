@@ -24,7 +24,10 @@ const without=context.ForecastEngine.project(context.buildForecastInput(ui,asset
 const withEvent=context.ForecastEngine.project(context.buildForecastInput(ui,assets,assumptions,event));
 assert.equal(without.months[0].fixed,0);assert.equal(withEvent.months[0].fixed,100);assert.equal(context.S.financialEvents.length,0,'Szenariovergleich darf aktiven App-State nicht verändern');
 
-const [schema,storage,backup,dataManagement,index,uiSource]=await Promise.all(['js/state-schema.js','js/state-storage.js','js/backup-manager.js','js/data-management-v2.js','index.html','js/forecast-scenarios-ui.js'].map(read));
+const [schema,storage,backup,dataManagement,index,uiSource,runnerSource]=await Promise.all(['js/state-schema.js','js/state-storage.js','js/backup-manager.js','js/data-management-v2.js','index.html','js/forecast-scenarios-ui.js','js/forecast-scenario-runner.js'].map(read));
 assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/);for(const source of [schema,storage,backup,dataManagement])assert.ok(source.includes('forecastScenarios'));
-assert.ok(index.includes('js/forecast-scenarios.js'));assert.ok(index.includes('js/forecast-scenarios-ui.js'));assert.ok(uiSource.includes('buildForecastInput(scenario.ui,assets,scenario.assumptions,scenario.financialEvents)'));
+assert.ok(index.includes('js/forecast-scenarios.js'));assert.ok(index.includes('js/forecast-scenario-runner.js'));assert.ok(index.includes('js/forecast-scenarios-ui.js'));
+assert.ok(runnerSource.includes('buildForecastInput(scenario.ui,forecastAssets(),scenario.assumptions,scenario.financialEvents)'),'Szenarioberechnung gehört in den Runner');
+assert.ok(!uiSource.includes('function forecastScenarioResult('),'Szenario-UI darf die Projektionslogik nicht selbst enthalten');
+for(const forbidden of [/\bdocument\s*\./,/\bpersist\s*\(/,/\brender\s*\(/])assert.ok(!forbidden.test(runnerSource),'Szenario-Runner darf keine UI-/Persistenzabhängigkeiten enthalten');
 console.log('Phase-C-Szenariotests erfolgreich.');
