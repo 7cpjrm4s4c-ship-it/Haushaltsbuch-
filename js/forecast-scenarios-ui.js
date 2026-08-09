@@ -43,8 +43,4 @@ function forecastScenariosPanel(){
   return `<section class="card"><div class="compact-toolbar"><div><div class="card-title">Szenarien</div><div class="field-hint">Varianten mit identischem Startvermögen speichern und direkt vergleichen.</div></div><button class="btn btn-primary" onclick="openForecastScenarioDialog()">+ Szenario speichern</button></div><div class="forecast-event-list">${cards||'<div class="forecast-note">Noch keine Szenarien gespeichert.</div>'}</div>${scenarios.length?`<div class="sheet-divider"></div><div class="card-title">Szenariovergleich</div>${forecastScenarioComparison(scenarios)}`:''}</section>`;
 }
 
-if(typeof vPrognose==='function'){
-  const forecastViewWithoutScenarioPanel=vPrognose;
-  vPrognose=function(){const html=forecastViewWithoutScenarioPanel(),anchor='<section class="forecast-kpis">';return html.includes(anchor)?html.replace(anchor,forecastScenariosPanel()+anchor):html+forecastScenariosPanel();};
-  vEinstellungen=vPrognose;
-}
+ForecastPanelRegistry.register('beforeKpis','forecast-scenarios',forecastScenariosPanel,200);
