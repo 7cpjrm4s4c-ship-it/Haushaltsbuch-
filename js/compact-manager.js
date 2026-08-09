@@ -98,7 +98,7 @@ function fixedManagerGroups(categories){
   }).join('');
 }
 
-vAusgaben=function(){
+function compactExpensesView(){
   const y=S.year,mo=S.month;
   const groups=variableBookingGroups(y,mo);
   return `<div class="desktop-page-title">Ausgaben</div>
@@ -113,9 +113,9 @@ vAusgaben=function(){
     </div></div>
     <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title" style="margin:0">Gespeicherte Ausgaben</div><span class="muted">${MF[mo]} ${y}</span></div><div class="manager-groups">${groups||'<div class="manager-empty">Noch keine Ausgaben in diesem Monat.</div>'}</div></div></div>
     </div>`;
-};
+}
 
-vUebersicht=function(){
+function compactFixedCostsView(){
   const type=S.ui.fixedType||'all',group=S.ui.fixedGroup||'all',search=(S.ui.fixedSearch||'').trim().toLowerCase();
   const all=fixedCostCategories();
   const categories=all.filter(c=>(type==='all'||c.t===type)&&(group==='all'||c.g===group)&&(!search||c.p.toLowerCase().includes(search)||c.g.toLowerCase().includes(search)));
@@ -128,5 +128,8 @@ vUebersicht=function(){
     <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title" style="margin:0">Gespeicherte Positionen</div><span class="muted">${categories.length} Einträge</span></div><div class="manager-groups">${fixedManagerGroups(categories)||'<div class="manager-empty">Keine passenden Positionen.</div>'}</div></div>
     <div class="card"><div class="card-title">Verwaltung</div><div class="form-actions"><button class="btn btn-ghost" onclick="openAddYear()">Jahr hinzufügen</button><button class="btn btn-ghost" onclick="openFixedDataActions()">Daten verwalten</button></div></div></div>
     </div>`;
-};
-vEinstellungen=vUebersicht;
+}
+
+AppExtensionRegistry.registerView('ausgaben',compactExpensesView,100);
+AppExtensionRegistry.registerView('uebersicht',compactFixedCostsView,100);
+AppExtensionRegistry.registerView('einstellungen',compactFixedCostsView,100);
