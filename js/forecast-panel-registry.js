@@ -22,19 +22,21 @@
     return entries?entries.delete(String(id||'')):false;
   }
 
-  function render(slot,context){
+  function orderedEntries(slot){
     const entries=slots.get(String(slot||''));
-    if(!entries)return '';
-    return [...entries.values()]
-      .sort((a,b)=>a.priority-b.priority||a.id.localeCompare(b.id))
+    return entries?[...entries.values()].sort((a,b)=>a.priority-b.priority||a.id.localeCompare(b.id)):[];
+  }
+
+  function render(slot,context,options={}){
+    const include=Array.isArray(options.include)?new Set(options.include.map(String)):null;
+    const exclude=new Set(Array.isArray(options.exclude)?options.exclude.map(String):[]);
+    return orderedEntries(slot)
+      .filter(item=>(!include||include.has(item.id))&&!exclude.has(item.id))
       .map(item=>String(item.renderer(context)??''))
       .join('');
   }
 
-  function list(slot){
-    const entries=slots.get(String(slot||''));
-    return entries?[...entries.values()].sort((a,b)=>a.priority-b.priority||a.id.localeCompare(b.id)).map(({id,priority})=>({id,priority})):[];
-  }
+  function list(slot){return orderedEntries(slot).map(({id,priority})=>({id,priority}));}
 
   root.ForecastPanelRegistry=Object.freeze({register,unregister,render,list});
 })(typeof globalThis!=='undefined'?globalThis:window);
