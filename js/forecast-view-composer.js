@@ -13,6 +13,5 @@
     return html.includes(anchor)?html.replace(anchor,extensions+anchor):html+extensions;
   }
 
-  root.vPrognose=composeForecastView;
-  root.vEinstellungen=composeForecastView;
+  AppExtensionRegistry.registerView('einstellungen',composeForecastView,200);
 })(typeof globalThis!=='undefined'?globalThis:window);
