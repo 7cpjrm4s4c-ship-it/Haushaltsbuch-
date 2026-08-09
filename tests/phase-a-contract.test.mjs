@@ -10,6 +10,7 @@ const refinements=await text('js/refinements.js');
 const planning=await text('js/planning-events.js');
 const forecastEngine=await text('js/forecast-engine.js');
 const forecastAdapter=await text('js/forecast-adapter.js');
+const forecastViewModel=await text('js/forecast-view-model.js');
 const forecastView=await text('js/forecast-view.js');
 const dataManagement=await text('js/data-management-v2.js');
 
@@ -26,7 +27,8 @@ assert.match(planning,/fromLegacy/);assert.match(planning,/valueForMonth/);asser
 assert.ok(dataConsistency.includes('PlanningEvents.valueForMonth'),'Monatsberechnung muss das einheitliche Planungsmodell verwenden');
 assert.ok(dataConsistency.includes('pos-fixed-inc-amount'));assert.ok(dataConsistency.includes('pos-once-amount'));assert.ok(refinements.includes('pos-fixed-inc-amount'));assert.ok(refinements.includes('pos-once-amount'));
 assert.ok(!app.includes('forecastAssets'),'Startvermögen darf nicht in app.js bzw. Dashboard-Logik einfließen');
-assert.ok(forecastView.includes('forecastAssets'));assert.ok(forecastView.includes('ausschließlich für die Prognose'));
+assert.ok(forecastViewModel.includes('forecastAssets'),'Startvermögen muss im Prognose-Datenmodell verarbeitet werden');
+assert.ok(forecastView.includes('ausschließlich für die Prognose'),'Die Prognose-UI muss den isolierten Charakter des Startvermögens erklären');
 assert.ok(!forecastEngine.includes('gv('));assert.ok(!forecastEngine.includes('creditBalanceAt'));assert.ok(!forecastEngine.includes('creditInterestAt'));assert.ok(!forecastEngine.includes('document.'));
 assert.ok(forecastAdapter.includes('gv('),'App-spezifische Monatswerte gehören in den Forecast-Adapter');
 assert.ok(forecastAdapter.includes('creditBalanceAt'),'Der Adapter darf den aktuellen Kreditstartwert aus der Kreditlogik übernehmen');
