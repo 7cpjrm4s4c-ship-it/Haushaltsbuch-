@@ -21,8 +21,8 @@ result=goals.evaluateGoal({id:'oa',title:'Schon erreicht',type:'netWorth',target
 result=goals.evaluateGoal({id:'ml',title:'Reserve lang',type:'minLiquidity',targetAmount:10000,targetYear:2027,targetMonth:0,enabled:true},forecast);assert.equal(result.status,'outside','Mindestliquidität außerhalb des Horizonts kann nicht abschließend bewertet werden');
 const disabled=goals.evaluateGoal({id:'x',title:'Aus',type:'netWorth',targetAmount:1,targetYear:2026,targetMonth:0,enabled:false},forecast);assert.equal(disabled.status,'disabled');
 for(const forbidden of [/(^|[^\w$])S\s*\./m,/\bdocument\s*\./,/\blocalStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/])assert.ok(!forbidden.test(source),'ForecastGoals muss reine Fachlogik bleiben');
-const [schema,storage,backup,dataManagement,index,ui]=await Promise.all(['js/state-schema.js','js/state-storage.js','js/backup-manager.js','js/data-management-v2.js','index.html','js/forecast-goals-ui.js'].map(read));
-for(const file of [schema,storage,backup,dataManagement])assert.ok(file.includes('forecastGoals'),'Finanzziele müssen durch State, Backup und Reset geführt werden');
+const [schema,storage,backupStore,dataStore,index,ui]=await Promise.all(['js/state-schema.js','js/state-storage.js','js/backup-store.js','js/data-management-store.js','index.html','js/forecast-goals-ui.js'].map(read));
+for(const file of [schema,storage,backupStore,dataStore])assert.ok(file.includes('forecastGoals'),'Finanzziele müssen durch State, Backup und Reset geführt werden');
 assert.ok(index.includes('js/forecast-goals.js'));assert.ok(index.includes('js/forecast-goals-ui.js'));assert.ok(index.indexOf('js/forecast-goals.js')<index.indexOf('js/forecast-goals-ui.js'));
 assert.ok(ui.includes('forecastScenarioResult'));assert.ok(ui.includes('ForecastGoals.evaluateGoal'));
 console.log('Phase-C-Finanzzieltests erfolgreich.');
