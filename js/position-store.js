@@ -31,7 +31,7 @@
     s.oneTimeEntries=(s.oneTimeEntries||[]).filter(item=>item.catId!==catId);
     if(input.oneTime)s.oneTimeEntries.push({id:makeId(),catId,...input.oneTime});
     s.ui=s.ui||{};s.ui.pendingFixedCategory='';
-    if(typeof root.sortCategoriesInPlace==='function')root.sortCategoriesInPlace();
+    root.DataManagementStore?.sortCategoriesInPlace?.();
     save();return{ok:true,catId};
   }
   function removePosition(catId){
