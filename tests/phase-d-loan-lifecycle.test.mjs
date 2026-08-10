@@ -3,8 +3,8 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
-const [lifecycleSource,integrationSource,creditSource,eventUiSource,index]=await Promise.all([
-  'js/loan-lifecycle.js','js/financial-events-loan-integration.js','js/credit-calculation.js','js/financial-events-ui.js','index.html'
+const [lifecycleSource,integrationSource,loanStoreSource,eventUiSource,index]=await Promise.all([
+  'js/loan-lifecycle.js','js/financial-events-loan-integration.js','js/loan-store.js','js/financial-events-ui.js','index.html'
 ].map(read));
 
 // Lifecycle-Infrastruktur bleibt neutral.
@@ -20,7 +20,7 @@ assert.ok(!/(^|[^\w$])S\s*\./m.test(integrationSource),'Kredit-/Forecast-Integra
 // Finanzereignis-UI darf Kreditfunktionen nicht mehr überschreiben.
 assert.ok(!/removeLoanCategory\s*=/.test(eventUiSource),'Financial-Events-UI darf removeLoanCategory nicht überschreiben');
 assert.ok(!eventUiSource.includes('removeLoanCategoryBase'),'Monkey-Patch-Rest darf nicht bestehen bleiben');
-assert.ok(creditSource.includes('LoanLifecycle.emitDeleted({loanId:kid,loan})'),'Kreditmodul muss Löschung explizit melden');
+assert.ok(loanStoreSource.includes("LoanLifecycle.emitDeleted({loanId:id,loan:clone(loan)})"),'LoanStore muss Löschung explizit melden');
 assert.ok(integrationSource.includes('LoanLifecycle.onDeleted'),'Integration muss Lifecycle abonnieren');
 
 // Verhalten: nur Sondertilgungen des gelöschten Kredits werden entfernt.
@@ -52,10 +52,10 @@ assert.equal(calls,0);
 
 // Lade-Reihenfolge muss Lifecycle und State-Store vor der Integration laden.
 const lifecyclePos=index.indexOf('js/loan-lifecycle.js');
-const creditPos=index.indexOf('js/credit-calculation.js');
+const loanStorePos=index.indexOf('js/loan-store.js');
 const storePos=index.indexOf('js/forecast-state-store.js');
 const integrationPos=index.indexOf('js/financial-events-loan-integration.js');
-assert.ok(lifecyclePos>=0&&lifecyclePos<creditPos,'LoanLifecycle muss vor dem Kreditmodul geladen werden');
+assert.ok(lifecyclePos>=0&&lifecyclePos<loanStorePos,'LoanLifecycle muss vor dem LoanStore geladen werden');
 assert.ok(lifecyclePos<integrationPos,'LoanLifecycle muss vor der Integration geladen werden');
 assert.ok(storePos>=0&&storePos<integrationPos,'ForecastStateStore muss vor der Kredit-/Forecast-Integration geladen werden');
 
