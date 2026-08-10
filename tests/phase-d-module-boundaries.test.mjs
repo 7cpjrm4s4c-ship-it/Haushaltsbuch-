@@ -3,8 +3,8 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
-const [registry,stateStore,appRegistry,bindings,compactManager,dataConsistency,scenariosUi,goalsUi,financialEventsUi,decisionsUi,loanIntegration,composer,viewModel,controller,renderers,view,index]=await Promise.all([
-  'js/forecast-panel-registry.js','js/forecast-state-store.js','js/app-extension-registry.js','js/app-extension-bindings.js','js/compact-manager.js','js/data-consistency.js','js/forecast-scenarios-ui.js','js/forecast-goals-ui.js','js/financial-events-ui.js','js/forecast-decisions-ui.js','js/financial-events-loan-integration.js','js/forecast-view-composer.js','js/forecast-view-model.js','js/forecast-view-controller.js','js/forecast-view-renderers.js','js/forecast-view.js','index.html'
+const [registry,stateStore,appRegistry,bindings,compactManager,dataConsistency,scenariosUi,goalsUi,financialEventsUi,decisionsUi,loanIntegration,composer,viewModel,controller,renderers,view,importService,importStore,importUi,index]=await Promise.all([
+  'js/forecast-panel-registry.js','js/forecast-state-store.js','js/app-extension-registry.js','js/app-extension-bindings.js','js/compact-manager.js','js/data-consistency.js','js/forecast-scenarios-ui.js','js/forecast-goals-ui.js','js/financial-events-ui.js','js/forecast-decisions-ui.js','js/financial-events-loan-integration.js','js/forecast-view-composer.js','js/forecast-view-model.js','js/forecast-view-controller.js','js/forecast-view-renderers.js','js/forecast-view.js','js/import-service.js','js/import-state-store.js','js/import-ui.js','index.html'
 ].map(read));
 
 for(const forbidden of [/(^|[^\w$])S\s*\./m,/\bdocument\s*\./,/\blocalStorage\b/,/\bsessionStorage\b/,/\bpersist\s*\(/,/\b(?:window|globalThis|root)\s*\.\s*render\s*\(/,/\b(?:window|globalThis|root)\s*\.\s*toast\s*\(/]){
@@ -54,8 +54,16 @@ assert.ok(dataConsistency.includes("AppExtensionRegistry.registerCalculation('ca
 assert.ok(!/\bgv\s*=\s*function/.test(dataConsistency),'DataConsistency darf gv nicht überschreiben');
 assert.ok(!/\bcalcMonth\s*=\s*function/.test(dataConsistency),'DataConsistency darf calcMonth nicht überschreiben');
 assert.ok(bindings.includes("const calculations={gv:'gv',calcMonth:'calcMonth'}"));
-assert.ok(bindings.includes("const views={ausgaben:'vAusgaben',uebersicht:'vUebersicht',einstellungen:'vEinstellungen'}"));
+assert.ok(bindings.includes("const views={ausgaben:'vAusgaben',uebersicht:'vUebersicht',einstellungen:'vEinstellungen',import:'vImport'}"));
 for(const source of [compactManager,dataConsistency,composer])assert.ok(!/root\s*\[[^\]]+\]\s*=/.test(source),'Nur der Composition Root darf Legacy-Globals verdrahten');
+
+// Import ist vollständig in Service, State-Store und UI getrennt.
+for(const forbidden of [/(^|[^\w$])S\s*\./m,/\bdocument\s*\./,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/])assert.ok(!forbidden.test(importService),'ImportService muss rein bleiben');
+assert.match(importStore,/(^|[^\w$])S\s*\./m);
+for(const forbidden of [/\bdocument\s*\./,/\bFileReader\b/,/\bopenGenSheet\s*\(/,/\btoast\s*\(/])assert.ok(!forbidden.test(importStore),'ImportStateStore darf keine UI-Abhängigkeit enthalten');
+assert.ok(importUi.includes("AppExtensionRegistry.registerView('import',view,200)"),'Import-UI muss sich als View registrieren');
+assert.ok(!/(^|[^\w$])S\s*\./m.test(importUi),'Import-UI darf App-State nicht direkt lesen');
+assert.ok(!/\bpersist\s*\(/.test(importUi),'Import-UI darf Persistenz nicht direkt aufrufen');
 
 // View-Model ist reine Datenaufbereitung; Schreibvorgänge liegen im Controller.
 assert.ok(viewModel.includes('function forecastData('));
@@ -89,15 +97,19 @@ const goalsPos=index.indexOf('js/forecast-goals-ui.js');
 const composerPos=index.indexOf('js/forecast-view-composer.js');
 const compactPos=index.indexOf('js/compact-manager.js');
 const consistencyPos=index.indexOf('js/data-consistency.js');
+const importServicePos=index.indexOf('js/import-service.js');
+const importStorePos=index.indexOf('js/import-state-store.js');
+const importUiPos=index.indexOf('js/import-ui.js');
 const bindingsPos=index.indexOf('js/app-extension-bindings.js');
 const bootstrapPos=index.indexOf('js/bootstrap.js');
-assert.ok(appRegistryPos>=0&&appRegistryPos<compactPos&&appRegistryPos<consistencyPos&&appRegistryPos<composerPos,'AppExtensionRegistry muss vor allen registrierenden Modulen geladen werden');
+assert.ok(appRegistryPos>=0&&appRegistryPos<compactPos&&appRegistryPos<consistencyPos&&appRegistryPos<composerPos&&appRegistryPos<importUiPos,'AppExtensionRegistry muss vor allen registrierenden Modulen geladen werden');
 assert.ok(stateSchemaPos>=0&&stateSchemaPos<modelPos,'StateSchema muss vor dem Forecast-View-Model geladen werden');
 assert.ok(registryPos>=0&&registryPos<eventsPos,'Panel-Registry muss vor Finanzereignis-UI geladen werden');
 assert.ok(storePos>registryPos&&storePos<integrationPos&&storePos<eventsPos&&storePos<scenarioPos&&storePos<goalsPos,'ForecastStateStore muss vor allen Forecast-Feature-Integrationen/UIs geladen werden');
 assert.ok(registryPos<scenarioPos&&registryPos<goalsPos,'Panel-Registry muss vor allen Panel-Modulen geladen werden');
 assert.ok(modelPos>=0&&controllerPos>modelPos&&renderersPos>controllerPos&&viewPos>renderersPos,'Forecast-View-Module müssen Modell → Controller → Renderer → View laden');
 assert.ok(composerPos>scenarioPos&&composerPos>goalsPos,'Composer muss nach den registrierenden Modulen geladen werden');
+assert.ok(importServicePos>=0&&importStorePos>importServicePos&&importUiPos>importStorePos&&bindingsPos>importUiPos,'Import muss Service → Store → UI → Bindings laden');
 assert.ok(bindingsPos>composerPos&&bindingsPos<bootstrapPos,'Composition Root muss nach allen Registrierungen und vor Bootstrap geladen werden');
 
 const registryContext={Object,Map,Set,String,Number,Array,TypeError};registryContext.globalThis=registryContext;vm.createContext(registryContext);
