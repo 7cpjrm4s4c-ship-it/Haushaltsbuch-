@@ -2,7 +2,12 @@
 'use strict';
 
 (function(root){
-  function state(){if(typeof S==='undefined'||!S)throw new Error('App-State fehlt');return S;}
+  function state(){
+    if(typeof S==='undefined'||!S)throw new Error('App-State fehlt');
+    if(!Array.isArray(S.cats))S.cats=[];
+    if(!S.data||typeof S.data!=='object'||Array.isArray(S.data))S.data={};
+    return S;
+  }
   function clone(value){return value==null?value:JSON.parse(JSON.stringify(value));}
   function save(){if(typeof root.persist==='function')root.persist();}
   function years(){return Array.isArray(state().years)?[...state().years]:[];}
@@ -12,7 +17,6 @@
     if(!rows.length)return{ok:false,reason:'empty'};
     const csvNames=new Set(rows.map(row=>String(row.pos||'').toLowerCase().trim()));
     let newCategories=0,updatedValues=0;
-    state().cats=Array.isArray(state().cats)?state().cats:[];state().data=state().data&&typeof state().data==='object'?state().data:{};
     for(const row of rows){
       let category=state().cats.find(cat=>String(cat.p||'').toLowerCase().trim()===String(row.pos||'').toLowerCase().trim());
       if(!category){category={id:makeId(),g:row.gruppe||'Import',p:row.pos,d:0,t:row.typ};state().cats.push(category);newCategories++;}
@@ -27,7 +31,7 @@
   function removeCategories(ids){
     const selected=new Set(ids||[]);let deletedCategories=0,deletedValues=0;
     for(const id of selected){for(const key of Object.keys(state().data||{})){if(key.endsWith('_'+id)){delete state().data[key];deletedValues++;}}}
-    const before=(state().cats||[]).length;state().cats=(state().cats||[]).filter(cat=>!selected.has(cat.id));deletedCategories=before-state().cats.length;
+    const before=state().cats.length;state().cats=state().cats.filter(cat=>!selected.has(cat.id));deletedCategories=before-state().cats.length;
     save();return{deletedCategories,deletedValues};
   }
   root.ImportStateStore=Object.freeze({years,apply,dataCount,removeCategories});
