@@ -16,4 +16,10 @@
     const implementation=registry.resolveView(key);
     if(typeof implementation==='function')root[globalName]=implementation;
   }
+
+  const storage=root.StateStorage;
+  if(storage){
+    if(typeof storage.save==='function')root.persist=storage.save;
+    if(typeof storage.load==='function')root.load=storage.load;
+  }
 })(typeof globalThis!=='undefined'?globalThis:window);
