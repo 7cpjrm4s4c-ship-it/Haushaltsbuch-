@@ -22,4 +22,12 @@
     if(typeof storage.save==='function')root.persist=storage.save;
     if(typeof storage.load==='function')root.load=storage.load;
   }
+
+  const runtime=root.AppViewRuntime;
+  if(runtime){
+    root.render=runtime.render;
+    root.nav=runtime.nav;
+    root.selYear=runtime.selectYear;
+    root.selMonth=runtime.selectMonth;
+  }
 })(typeof globalThis!=='undefined'?globalThis:window);
