@@ -6,7 +6,7 @@
   if(!registry)throw new TypeError('AppExtensionRegistry fehlt');
 
   const calculations={gv:'gv',calcMonth:'calcMonth'};
-  const views={ausgaben:'vAusgaben',uebersicht:'vUebersicht',einstellungen:'vEinstellungen'};
+  const views={ausgaben:'vAusgaben',uebersicht:'vUebersicht',einstellungen:'vEinstellungen',import:'vImport'};
 
   for(const [key,globalName] of Object.entries(calculations)){
     const implementation=registry.resolveCalculation(key);
