@@ -5,7 +5,7 @@ const index=await text('index.html');
 const dashboard=await text('js/dashboard-view.js');
 const schema=await text('js/state-schema.js');
 const storage=await text('js/state-storage.js');
-const backup=await text('js/backup-manager.js');
+const backupStore=await text('js/backup-store.js');
 const dataConsistency=await text('js/data-consistency.js');
 const positionDialog=await text('js/position-dialog-ui.js');
 const planning=await text('js/planning-events.js');
@@ -17,9 +17,9 @@ const dataManagementStore=await text('js/data-management-store.js');
 
 assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/,'State-Schema muss versioniert sein');
 for(const field of ['amountAdjustments','oneTimeEntries','forecastAssets']){
-  assert.ok(schema.includes(field));assert.ok(storage.includes(field));assert.ok(backup.includes(field));assert.ok(dataManagementStore.includes(field));
+  assert.ok(schema.includes(field));assert.ok(storage.includes(field));assert.ok(backupStore.includes(field));assert.ok(dataManagementStore.includes(field));
 }
-assert.match(backup,/version:\d+/,'Backup-Format muss versioniert sein');assert.match(backup,/normalizeBackupData/);
+assert.match(backupStore,/version:\d+/,'Backup-Format muss versioniert sein');assert.match(backupStore,/function\s+normalize\s*\(/);
 assert.match(planning,/fromLegacy/);assert.match(planning,/valueForMonth/);assert.match(planning,/percentageIncrease/);assert.match(planning,/fixedIncrease/);assert.match(planning,/oneTime/);
 assert.ok(dataConsistency.includes('PlanningEvents.valueForMonth'),'Monatsberechnung muss das einheitliche Planungsmodell verwenden');
 assert.ok(positionDialog.includes('pos-fixed-inc-amount'));assert.ok(positionDialog.includes('pos-once-amount'));
