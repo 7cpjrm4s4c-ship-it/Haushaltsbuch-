@@ -3,7 +3,7 @@
 
 (function(root){
   const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  const VIEW_TITLES={dashboard:'Haushaltsplan',ausgaben:'Ausgaben',uebersicht:'Übersicht',kredite:'Kredite',einstellungen:'Einstellungen',import:'Import'};
+  const VIEW_TITLES={dashboard:'Haushaltsplan',ausgaben:'Ausgaben',uebersicht:'Fixkosten',kredite:'Kredite',einstellungen:'Prognose',import:'Import'};
   const VIEW_FUNCTIONS={dashboard:'vDashboard',ausgaben:'vAusgaben',uebersicht:'vUebersicht',kredite:'vKredite',einstellungen:'vEinstellungen',import:'vImport'};
 
   function uiState(){
@@ -11,6 +11,8 @@
     return root.AppUiState;
   }
   function resolveView(name){
+    const registered=root.AppExtensionRegistry?.resolveView?.(name);
+    if(typeof registered==='function')return registered;
     const fn=root[VIEW_FUNCTIONS[name]];
     if(typeof fn!=='function')throw new Error(`View ${name} ist nicht registriert`);
     return fn;
