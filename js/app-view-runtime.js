@@ -1,9 +1,9 @@
-/* Zentrale UI-Runtime fuer Rendering und Navigation. Datenzugriffe erfolgen nur ueber AppUiState. */
+/* Zentrale UI-Runtime für Rendering und Navigation. Datenzugriffe erfolgen nur über AppUiState. */
 'use strict';
 
 (function(root){
-  const MONTHS=['Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  const VIEW_TITLES={dashboard:'Haushaltsplan',ausgaben:'Ausgaben',uebersicht:'Uebersicht',kredite:'Kredite',einstellungen:'Einstellungen',import:'Import'};
+  const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const VIEW_TITLES={dashboard:'Haushaltsplan',ausgaben:'Ausgaben',uebersicht:'Übersicht',kredite:'Kredite',einstellungen:'Einstellungen',import:'Import'};
   const VIEW_FUNCTIONS={dashboard:'vDashboard',ausgaben:'vAusgaben',uebersicht:'vUebersicht',kredite:'vKredite',einstellungen:'vEinstellungen',import:'vImport'};
 
   function uiState(){
