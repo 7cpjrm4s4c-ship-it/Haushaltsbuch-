@@ -4,6 +4,7 @@
 (function(root){
   const PREDEFINED_VARIABLE_CATEGORIES=['Apotheke','Auto','Drogerie','Freizeit','Kinder','Kleidung','Lebensmittel','Online','Sonstiges','Urlaub'];
   function state(){if(typeof S==='undefined'||!S)throw new Error('App-State fehlt');return S;}
+  function save(){if(typeof root.persist==='function')root.persist();}
   function deSort(a,b){return String(a||'').localeCompare(String(b||''),'de',{sensitivity:'base'});}
   function makeId(){return typeof root.uid==='function'?root.uid():'x'+Math.random().toString(36).slice(2,9);}
   function years(){return typeof root.defaultYears==='function'?root.defaultYears():[];}
@@ -24,7 +25,8 @@
   function emptyForecastAssets(){return {cash:0,callMoney:0,fixedDeposit:0,etf:0,depot:0,other:0};}
   function defaultForecastAssumptions(){return {annualReturns:{cash:0,callMoney:0,fixedDeposit:0,etf:0,depot:0,other:0},purchasingPowerInflation:2,savingsTarget:'etf'};}
   function applyFactoryState(){const s=state(),date=currentDate();s.data={};s.cats=[...factoryFixedPositions(),...factoryVariableCategories()];s.kredite=factoryCredit();s.buchungen=factoryBookings();s.budgets={};s.recurringRules=[];s.annualAdjustments=[];s.percentageAdjustments=[];s.amountAdjustments=[];s.oneTimeEntries=[];s.forecastAssets=emptyForecastAssets();s.forecastAssumptions=defaultForecastAssumptions();s.financialEvents=[];s.forecastScenarios=[];s.forecastGoals=[];s.years=years();s.year=date.getFullYear();s.month=date.getMonth();sortCategoriesInPlace();}
-  function clearBookings(){const s=state();s.buchungen=[];s.budgets={};}
-  function deleteAllEntries(){const s=state();s.data={};s.buchungen=[];s.budgets={};s.kredite=[];s.recurringRules=[];s.annualAdjustments=[];s.percentageAdjustments=[];s.amountAdjustments=[];s.oneTimeEntries=[];s.financialEvents=[];s.forecastScenarios=[];s.forecastGoals=[];s.forecastAssets=emptyForecastAssets();s.forecastAssumptions=defaultForecastAssumptions();s.cats=factoryVariableCategories();sortCategoriesInPlace();}
-  root.DataManagementStore=Object.freeze({PREDEFINED_VARIABLE_CATEGORIES,deSort,sortCategoriesInPlace,normalizeVariableCategories,variableCategories,fixedCostCategories,fixedCategories,factoryVariableCategories,factoryFixedPositions,factoryBookings,factoryCredit,emptyForecastAssets,defaultForecastAssumptions,applyFactoryState,clearBookings,deleteAllEntries});
+  function clearBookings(){const s=state();s.buchungen=[];s.budgets={};save();}
+  function deleteAllEntries(){const s=state();s.data={};s.buchungen=[];s.budgets={};s.kredite=[];s.recurringRules=[];s.annualAdjustments=[];s.percentageAdjustments=[];s.amountAdjustments=[];s.oneTimeEntries=[];s.financialEvents=[];s.forecastScenarios=[];s.forecastGoals=[];s.forecastAssets=emptyForecastAssets();s.forecastAssumptions=defaultForecastAssumptions();s.cats=factoryVariableCategories();sortCategoriesInPlace();save();}
+  function resetToFactory(){applyFactoryState();root.LoanCategoryStore?.syncAll?.();save();}
+  root.DataManagementStore=Object.freeze({PREDEFINED_VARIABLE_CATEGORIES,deSort,sortCategoriesInPlace,normalizeVariableCategories,variableCategories,fixedCostCategories,fixedCategories,factoryVariableCategories,factoryFixedPositions,factoryBookings,factoryCredit,emptyForecastAssets,defaultForecastAssumptions,applyFactoryState,clearBookings,deleteAllEntries,resetToFactory});
 })(typeof globalThis!=='undefined'?globalThis:window);
