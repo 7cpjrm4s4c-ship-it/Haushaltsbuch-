@@ -31,6 +31,12 @@
     root.selMonth=runtime.selectMonth;
   }
 
+  const dialog=root.AppDialogRuntime;
+  if(dialog){
+    root.openGenSheet=dialog.open;
+    root.closeGenSheet=dialog.close;
+  }
+
   const loanActions=root.LoanActionsController;
   if(loanActions){
     root.saveNewKredit=loanActions.create;
