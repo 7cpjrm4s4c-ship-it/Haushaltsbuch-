@@ -3,13 +3,15 @@ import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 
 const registrySource=await readFile(new URL('../js/app-extension-registry.js',import.meta.url),'utf8');
+const bookingSource=await readFile(new URL('../js/booking-store.js',import.meta.url),'utf8');
 const planningSource=await readFile(new URL('../js/planning-events.js',import.meta.url),'utf8');
 const dataSource=await readFile(new URL('../js/data-consistency.js',import.meta.url),'utf8');
 const bindingsSource=await readFile(new URL('../js/app-extension-bindings.js',import.meta.url),'utf8');
 const S={data:{},cats:[],recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],buchungen:[],budgets:{},ui:{},year:2027,month:0};
-const context={console,Math,Number,Object,Array,Set,Map,JSON,S,gv:()=>0,calcMonth:()=>({}),dkey:(y,m,id)=>`${y}_${m}_${id}`,getBuchungenForMonth:(y,m)=>S.buchungen.filter(b=>b.year===y&&b.month===m),persist:()=>{},closeGenSheet:()=>{},render:()=>{},toast:()=>{},uid:()=>`id-${Math.random()}`,document:{getElementById:()=>null}};
+const context={console,Math,Number,Object,Array,Set,Map,JSON,S,gv:()=>0,calcMonth:()=>({}),dkey:(y,m,id)=>`${y}_${m}_${id}`,persist:()=>{},closeGenSheet:()=>{},render:()=>{},toast:()=>{},uid:()=>`id-${Math.random()}`,document:{getElementById:()=>null}};
 context.globalThis=context;vm.createContext(context);
 vm.runInContext(registrySource,context,{filename:'js/app-extension-registry.js'});
+vm.runInContext(bookingSource,context,{filename:'js/booking-store.js'});
 vm.runInContext(planningSource,context,{filename:'js/planning-events.js'});
 vm.runInContext(dataSource,context,{filename:'js/data-consistency.js'});
 vm.runInContext(bindingsSource,context,{filename:'js/app-extension-bindings.js'});
