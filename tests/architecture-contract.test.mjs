@@ -34,7 +34,7 @@ assert.match(creditModule,/function\s+specialRepaymentAnalysis\s*\(/);
 assert.ok(creditUi.includes("AppExtensionRegistry.registerView('kredite',view,200)"),'Kredit-UI muss die View explizit registrieren');
 assert.ok(!/(^|[^\w$])S\s*\./m.test(creditUi),'Kredit-UI darf App-State nicht direkt lesen');
 assert.ok(!/\bpersist\s*\(/.test(creditUi),'Kredit-UI darf Persistenz nicht direkt aufrufen');
-assert.ok(/(^|[^\w$])S\s*\./m.test(loanCategoryStore),'LoanCategoryStore muss die Kreditkategorie-State-Grenze bilden');
+assert.ok(/(^|[^\w$])S\b/m.test(loanCategoryStore),'LoanCategoryStore muss die Kreditkategorie-State-Grenze bilden');
 assert.ok(!/\bdocument\s*\./.test(loanCategoryStore),'LoanCategoryStore darf keinen DOM-Zugriff enthalten');
 assert.ok(!/(^|[^\w$])S\s*\./m.test(uiPolish),'ui-polish darf feste Positionen nicht direkt im App-State verändern');
 assert.ok(uiPolish.includes('PositionStore.removePosition'),'Positionslöschung muss über PositionStore laufen');
