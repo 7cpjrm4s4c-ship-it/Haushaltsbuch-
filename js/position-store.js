@@ -34,5 +34,18 @@
     if(typeof root.sortCategoriesInPlace==='function')root.sortCategoriesInPlace();
     save();return{ok:true,catId};
   }
-  root.PositionStore=Object.freeze({fixedCategories,findCategory,years,currentPeriod,pendingCategory,recurringRule,percentageAdjustment,amountAdjustment,oneTimeEntry,savePosition});
+  function removePosition(catId){
+    const s=state();
+    const cat=(s.cats||[]).find(item=>item.id===catId&&item.t!=='V');
+    if(!cat)return null;
+    s.cats=(s.cats||[]).filter(item=>item.id!==catId);
+    for(const listName of ['recurringRules','annualAdjustments','percentageAdjustments','amountAdjustments','oneTimeEntries']){
+      s[listName]=(s[listName]||[]).filter(item=>item.catId!==catId);
+    }
+    for(const key of Object.keys(s.data||{})){if(key.endsWith(`_${catId}`))delete s.data[key];}
+    if(s.budgets)delete s.budgets[catId];
+    save();
+    return clone(cat);
+  }
+  root.PositionStore=Object.freeze({fixedCategories,findCategory,years,currentPeriod,pendingCategory,recurringRule,percentageAdjustment,amountAdjustment,oneTimeEntry,savePosition,removePosition});
 })(typeof globalThis!=='undefined'?globalThis:window);
