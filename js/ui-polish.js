@@ -18,14 +18,7 @@ function deleteBooking(id){
   render();toast('Buchung gelöscht');
 }
 function deleteFixedPosition(catId){
-  const cat=S.cats.find(c=>c.id===catId);if(!cat||!confirm(`„${cat.p}“ wirklich löschen?`))return;
-  S.cats=S.cats.filter(c=>c.id!==catId);
-  S.recurringRules=(S.recurringRules||[]).filter(r=>r.catId!==catId);
-  S.annualAdjustments=(S.annualAdjustments||[]).filter(a=>a.catId!==catId);
-  S.percentageAdjustments=(S.percentageAdjustments||[]).filter(a=>a.catId!==catId);
-  S.amountAdjustments=(S.amountAdjustments||[]).filter(a=>a.catId!==catId);
-  S.oneTimeEntries=(S.oneTimeEntries||[]).filter(a=>a.catId!==catId);
-  for(const key of Object.keys(S.data||{})){if(key.endsWith(`_${catId}`))delete S.data[key];}
-  if(S.budgets)delete S.budgets[catId];
-  persist();render();toast('Position gelöscht');
+  const cat=PositionStore.findCategory(catId);if(!cat||!confirm(`„${cat.p}“ wirklich löschen?`))return;
+  if(!PositionStore.removePosition(catId))return;
+  render();toast('Position gelöscht');
 }
