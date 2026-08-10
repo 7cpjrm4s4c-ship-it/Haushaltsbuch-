@@ -23,7 +23,7 @@
       const monthSet=new Set(row.monate||[]);
       for(const year of row.jahre||[]){for(let month=0;month<12;month++){const key=`${year}_${month}_${category.id}`;state().data[key]=monthSet.has(month)?Number(row.betrag)||0:0;if(monthSet.has(month))updatedValues++;}}
     }
-    if(typeof root.sortCategoriesInPlace==='function')root.sortCategoriesInPlace();save();
+    root.DataManagementStore?.sortCategoriesInPlace?.();save();
     const orphans=state().cats.filter(cat=>!csvNames.has(String(cat.p||'').toLowerCase().trim())).map(clone);
     return{ok:true,importedCount:rows.length,newCategories,updatedValues,orphans};
   }
