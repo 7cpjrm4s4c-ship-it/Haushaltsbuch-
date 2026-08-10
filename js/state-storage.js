@@ -1,8 +1,9 @@
 /* Zentrale Lade- und Speicherlogik. */
 'use strict';
 
-(function(){
+(function(root){
   const CORRUPT_BACKUP_KEY=`${LS_KEY}_corrupt_backup`;
+  let persistTimer=null;
 
   function normalizeState(raw){
     if(typeof StateSchema!=='undefined')return StateSchema.normalize(raw,{defaultYears});
@@ -19,11 +20,15 @@
   }
 
   function statePayload(){return normalizeState({data:S.data,cats:S.cats,kredite:S.kredite,years:S.years,buchungen:S.buchungen,budgets:S.budgets,recurringRules:S.recurringRules,annualAdjustments:S.annualAdjustments,percentageAdjustments:S.percentageAdjustments,amountAdjustments:S.amountAdjustments,oneTimeEntries:S.oneTimeEntries,forecastAssets:S.forecastAssets,forecastAssumptions:S.forecastAssumptions,financialEvents:S.financialEvents,forecastScenarios:S.forecastScenarios,forecastGoals:S.forecastGoals});}
-  function saveStateNow(){try{localStorage.setItem(LS_KEY,JSON.stringify(statePayload()));}catch(e){console.warn('persist failed',e);}}
+  function saveNow(){try{localStorage.setItem(LS_KEY,JSON.stringify(statePayload()));}catch(e){console.warn('persist failed',e);}}
 
-  persist=function persistState(){if(typeof globalThis.onStatePersistRequested==='function'){try{globalThis.onStatePersistRequested();}catch(e){console.warn('persist hook failed',e);}}clearTimeout(_pTimer);_pTimer=setTimeout(saveStateNow,300);};
+  function save(){
+    if(typeof root.onStatePersistRequested==='function'){try{root.onStatePersistRequested();}catch(e){console.warn('persist hook failed',e);}}
+    clearTimeout(persistTimer);
+    persistTimer=setTimeout(saveNow,300);
+  }
 
-  load=function loadState(){
+  function load(){
     let saved=null;const raw=localStorage.getItem(LS_KEY);
     if(raw){try{saved=normalizeState(JSON.parse(raw));}catch(e){console.warn('load failed',e);try{localStorage.setItem(CORRUPT_BACKUP_KEY,raw);}catch(_){}}}
     if(!saved)applyFactoryState();
@@ -35,6 +40,8 @@
     S.kredite=(S.kredite||[]).map(k=>({...k,s:creditStartAmount(k),balanceYear:creditReferenceYear(k),balanceMonth:creditReferenceMonth(k)}));
     if(typeof syncAllLoans==='function')syncAllLoans();if(typeof sortCategoriesInPlace==='function')sortCategoriesInPlace();
     if(!Array.isArray(S.years)||!S.years.length)S.years=defaultYears();if(!S.years.includes(S.year))S.year=S.years[0]||now.getFullYear();
-    saveStateNow();
-  };
-})();
+    saveNow();
+  }
+
+  root.StateStorage=Object.freeze({normalizeState,statePayload,saveNow,save,load});
+})(typeof globalThis!=='undefined'?globalThis:window);
