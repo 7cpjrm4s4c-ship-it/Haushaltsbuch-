@@ -1,4 +1,4 @@
-/* Composition Root: verdrahtet registrierte Module einmalig mit den Legacy-Einstiegspunkten. */
+/* Composition Root: verdrahtet registrierte Module einmalig mit den verbleibenden Einstiegspunkten. */
 'use strict';
 
 (function(root){
@@ -35,12 +35,5 @@
   if(dialog){
     root.openGenSheet=dialog.open;
     root.closeGenSheet=dialog.close;
-  }
-
-  const loanActions=root.LoanActionsController;
-  if(loanActions){
-    root.saveNewKredit=loanActions.create;
-    root.saveEditKredit=loanActions.update;
-    root.delKredit=loanActions.remove;
   }
 })(typeof globalThis!=='undefined'?globalThis:window);
