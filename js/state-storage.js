@@ -31,14 +31,14 @@
   function load(){
     let saved=null;const raw=localStorage.getItem(LS_KEY);
     if(raw){try{saved=normalizeState(JSON.parse(raw));}catch(e){console.warn('load failed',e);try{localStorage.setItem(CORRUPT_BACKUP_KEY,raw);}catch(_){}}}
-    if(!saved)applyFactoryState();
+    if(!saved)root.DataManagementStore.applyFactoryState();
     else{
       S.data=saved.data;S.cats=saved.cats;S.kredite=saved.kredite;S.years=saved.years;S.buchungen=saved.buchungen;S.budgets=saved.budgets;
       S.recurringRules=saved.recurringRules;S.annualAdjustments=saved.annualAdjustments;S.percentageAdjustments=saved.percentageAdjustments;S.amountAdjustments=saved.amountAdjustments;S.oneTimeEntries=saved.oneTimeEntries;
-      S.forecastAssets=saved.forecastAssets;S.forecastAssumptions=saved.forecastAssumptions;S.financialEvents=saved.financialEvents;S.forecastScenarios=saved.forecastScenarios;S.forecastGoals=saved.forecastGoals;normalizeVariableCategories();
+      S.forecastAssets=saved.forecastAssets;S.forecastAssumptions=saved.forecastAssumptions;S.financialEvents=saved.financialEvents;S.forecastScenarios=saved.forecastScenarios;S.forecastGoals=saved.forecastGoals;root.DataManagementStore.normalizeVariableCategories();
     }
     S.kredite=(S.kredite||[]).map(k=>({...k,s:creditStartAmount(k),balanceYear:creditReferenceYear(k),balanceMonth:creditReferenceMonth(k)}));
-    if(typeof syncAllLoans==='function')syncAllLoans();if(typeof sortCategoriesInPlace==='function')sortCategoriesInPlace();
+    root.LoanCategoryStore?.syncAll?.();root.DataManagementStore.sortCategoriesInPlace();
     if(!Array.isArray(S.years)||!S.years.length)S.years=defaultYears();if(!S.years.includes(S.year))S.year=S.years[0]||now.getFullYear();
     saveNow();
   }
