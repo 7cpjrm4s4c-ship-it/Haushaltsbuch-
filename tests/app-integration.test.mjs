@@ -19,17 +19,19 @@ function makeContext(extra={}){const context={console,setTimeout,clearTimeout,Da
 
 // Kreditfortschreibung
 {
-  const context=makeContext({S:{kredite:[],cats:[],years:[2026,2027],year:2026,month:0},fmt:String,fmtS:String,esc:String,MF:Array(12).fill('Monat'),toast:()=>{},document:{getElementById:()=>null},uid:()=> 'id',persist:()=>{},closeGenSheet:()=>{},render:()=>{}});
-  await run('js/credit-calculation.js',context);
+  const context=makeContext();await run('js/credit-calculation.js',context);
   const credit={id:'k1',n:'Test',s:1200,r:1200,m:100,z:12,balanceYear:2026,balanceMonth:0};
   assert.equal(context.creditInterestAt(credit,2026,0),12);assert.equal(context.creditPrincipalAt(credit,2026,0),88);assert.equal(context.creditBalanceAt(credit,2026,1),1112);assert.equal(context.creditRemainingMonthsFrom({...credit,m:10},2026,0),null);
+  const special=context.specialRepaymentAnalysis({...credit,z:0},2026,0,200);assert.equal(special.reducedPrincipal,1000);assert.ok(special.baseline.months>special.withPayment.months);
 }
 
 // Persistenz-Roundtrip einschließlich Prognoseannahmen, Financial Events, Szenarien und Finanzziele
 {
   const store=new Map(),localStorage={getItem:k=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v))};
   const S={data:{},cats:[],kredite:[],years:[2026,2027],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],forecastAssets:{cash:1000},forecastAssumptions:{annualReturns:{etf:7,callMoney:2.5},purchasingPowerInflation:2.1,savingsTarget:'etf'},financialEvents:[],forecastScenarios:[],forecastGoals:[],year:2026,month:0};
-  const context=makeContext({S,localStorage,LS_KEY:'hp5',now:new Date(2026,0,1),defaultYears:()=>[2026,2027],applyFactoryState:()=>{},normalizeVariableCategories:()=>{},creditStartAmount:k=>Number(k.s??0),creditReferenceYear:k=>Number(k.balanceYear??2026),creditReferenceMonth:k=>Number(k.balanceMonth??0),syncAllLoans:()=>{},sortCategoriesInPlace:()=>{}});
+  const DataManagementStore={applyFactoryState:()=>{},normalizeVariableCategories:()=>{},sortCategoriesInPlace:()=>{}};
+  const LoanCategoryStore={syncAll:()=>{}};
+  const context=makeContext({S,localStorage,LS_KEY:'hp5',now:new Date(2026,0,1),defaultYears:()=>[2026,2027],DataManagementStore,LoanCategoryStore,creditStartAmount:k=>Number(k.s??0),creditReferenceYear:k=>Number(k.balanceYear??2026),creditReferenceMonth:k=>Number(k.balanceMonth??0)});
   await run('js/state-schema.js',context);await run('js/state-storage.js',context);
   S.amountAdjustments=[{id:'a1',catId:'f1',amount:20,year:2027,month:8}];
   S.oneTimeEntries=[{id:'o1',catId:'e1',amount:1600,year:2026,month:11}];
