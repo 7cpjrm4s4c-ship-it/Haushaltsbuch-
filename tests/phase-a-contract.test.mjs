@@ -13,11 +13,11 @@ const forecastEngine=await text('js/forecast-engine.js');
 const forecastAdapter=await text('js/forecast-adapter.js');
 const forecastViewModel=await text('js/forecast-view-model.js');
 const forecastView=await text('js/forecast-view.js');
-const dataManagement=await text('js/data-management-v2.js');
+const dataManagementStore=await text('js/data-management-store.js');
 
 assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/,'State-Schema muss versioniert sein');
 for(const field of ['amountAdjustments','oneTimeEntries','forecastAssets']){
-  assert.ok(schema.includes(field));assert.ok(storage.includes(field));assert.ok(backup.includes(field));assert.ok(dataManagement.includes(field));
+  assert.ok(schema.includes(field));assert.ok(storage.includes(field));assert.ok(backup.includes(field));assert.ok(dataManagementStore.includes(field));
 }
 assert.match(backup,/version:\d+/,'Backup-Format muss versioniert sein');assert.match(backup,/normalizeBackupData/);
 assert.match(planning,/fromLegacy/);assert.match(planning,/valueForMonth/);assert.match(planning,/percentageIncrease/);assert.match(planning,/fixedIncrease/);assert.match(planning,/oneTime/);
