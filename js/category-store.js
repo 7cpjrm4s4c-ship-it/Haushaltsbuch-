@@ -5,7 +5,7 @@
   function state(){if(typeof S==='undefined'||!S)throw new Error('App-State fehlt');return S;}
   function clone(value){return value==null?value:JSON.parse(JSON.stringify(value));}
   function save(){if(typeof root.persist==='function')root.persist();}
-  function sort(){if(typeof root.sortCategoriesInPlace==='function')root.sortCategoriesInPlace();}
+  function sort(){root.DataManagementStore?.sortCategoriesInPlace?.();}
   function all(){return clone(Array.isArray(state().cats)?state().cats:[]);}
   function find(id){return clone((state().cats||[]).find(cat=>cat.id===id)||null);}
   function variable(){return all().filter(cat=>cat.t==='V').sort((a,b)=>String(a.p||'').localeCompare(String(b.p||''),'de',{sensitivity:'base'}));}
