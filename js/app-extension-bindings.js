@@ -30,4 +30,11 @@
     root.selYear=runtime.selectYear;
     root.selMonth=runtime.selectMonth;
   }
+
+  const loanActions=root.LoanActionsController;
+  if(loanActions){
+    root.saveNewKredit=loanActions.create;
+    root.saveEditKredit=loanActions.update;
+    root.delKredit=loanActions.remove;
+  }
 })(typeof globalThis!=='undefined'?globalThis:window);
