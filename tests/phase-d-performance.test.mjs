@@ -3,8 +3,8 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
-const [engine,renderers,viewModel,view]=await Promise.all([
-  read('js/forecast-engine.js'),read('js/forecast-view-renderers.js'),read('js/forecast-view-model.js'),read('js/forecast-view.js')
+const [engine,renderers,viewModel,view,dataConsistency,bookingStore]=await Promise.all([
+  read('js/forecast-engine.js'),read('js/forecast-view-renderers.js'),read('js/forecast-view-model.js'),read('js/forecast-view.js'),read('js/data-consistency.js'),read('js/booking-store.js')
 ]);
 
 // Algorithmische Guardrails statt fragiler Millisekunden-Grenzwerte.
@@ -17,6 +17,9 @@ assert.match(renderers,/function forecastReturnInputs\(assumptions(?:=forecastAs
 assert.ok(view.includes('forecastAssetInputs(assets)'),'Forecast-View muss den vorhandenen Asset-Snapshot wiederverwenden');
 assert.ok(view.includes('forecastReturnInputs(assumptions)'),'Forecast-View muss den vorhandenen Annahmen-Snapshot wiederverwenden');
 assert.ok(viewModel.includes('forecastAssetBuckets(assets)'),'Forecast-ViewModel darf Assets für Buckets nicht erneut aus dem Store lesen');
+assert.ok(dataConsistency.includes('const events=planningEventsSnapshot()'),'Monatsberechnung muss Planungsereignisse einmalig vorbereiten');
+assert.ok(dataConsistency.includes('consistentValue(year,month,cat,events)'),'Monatsberechnung muss denselben Planungs-Snapshot pro Kategorie wiederverwenden');
+assert.ok(!bookingStore.includes('return all().filter'),'Monatsfilter darf nicht vorher die komplette Buchungsliste klonen');
 
 // Fachliche Äquivalenz des optimierten historischen Durchschnitts für große Eingaben.
 const context={console,Math,Number,Object,Array,Set,Map,String,RangeError};context.globalThis=context;vm.createContext(context);vm.runInContext(engine,context,{filename:'js/forecast-engine.js'});
