@@ -2,15 +2,16 @@
 'use strict';
 
 function planningEventsSnapshot(){return PlanningEvents.fromLegacy(S);}
-function consistentValue(year,month,cat){
+function consistentValue(year,month,cat,events=planningEventsSnapshot()){
   const customKey=dkey(year,month,cat.id);
-  return PlanningEvents.valueForMonth({events:planningEventsSnapshot(),catId:cat.id,year,month,defaultValue:cat.d,customValue:S.data[customKey]});
+  return PlanningEvents.valueForMonth({events,catId:cat.id,year,month,defaultValue:cat.d,customValue:S.data[customKey]});
 }
 function consistentMonthCalculation(year,month){
   let e=0,f=0,k=0,s=0;
+  const events=planningEventsSnapshot();
   for(const cat of S.cats){
     if(cat.t==='V')continue;
-    const value=consistentValue(year,month,cat);
+    const value=consistentValue(year,month,cat,events);
     if(cat.t==='E')e+=value;else if(cat.t==='F')f+=value;else if(cat.t==='K')k+=value;else if(cat.t==='S')s+=value;
   }
   const v=BookingStore.forMonth(year,month).reduce((sum,booking)=>sum+Number(booking.betrag||0),0);
