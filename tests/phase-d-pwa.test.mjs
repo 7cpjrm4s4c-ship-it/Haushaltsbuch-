@@ -16,7 +16,7 @@ for(const match of index.matchAll(/(?:src|href)="([^"]+)"/g)){
 }
 for(const asset of localAssets)assert.ok(sw.includes(`'${asset}'`)||sw.includes(`"${asset}"`),`Offline-App-Shell fehlt: ${asset}`);
 
-assert.ok(sw.includes("const CACHE_VERSION='hp-v8'"),'Service Worker braucht versionierten Cache');
+assert.match(sw,/const CACHE_VERSION=['"]hp-v\d+['"]/,'Service Worker braucht versionierten Cache');
 assert.ok(sw.includes("request.mode==='navigate'"),'Navigation muss separat behandelt werden');
 assert.ok(sw.includes("['script','style','image','font']"),'Statische Ressourcen brauchen eigene Strategie');
 assert.ok(sw.includes('const cached=await caches.match(request)'),'Statische Ressourcen müssen Cache-first/stale-while-revalidate nutzen');
