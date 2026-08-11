@@ -37,15 +37,14 @@ function forecastAssumptions(){
   };
 }
 
-function forecastAssetBuckets(){
-  const assets=forecastAssets();
+function forecastAssetBuckets(assets=forecastAssets()){
   const liquidity=Number(assets.cash||0)+Number(assets.callMoney||0)+Number(assets.fixedDeposit||0);
   const investments=Number(assets.etf||0)+Number(assets.depot||0)+Number(assets.other||0);
   return {liquidity,investments,total:liquidity+investments};
 }
 
 function forecastData(){
-  const baseYear=ForecastStateStore.year(),ui=forecastUi(),assets=forecastAssets(),assumptions=forecastAssumptions(),buckets=forecastAssetBuckets();
+  const baseYear=ForecastStateStore.year(),ui=forecastUi(),assets=forecastAssets(),assumptions=forecastAssumptions(),buckets=forecastAssetBuckets(assets);
   const input=buildForecastInput(ui,assets,assumptions),result=ForecastEngine.project(input);
   return {baseYear,ui,assets,assumptions,startAssets:buckets.total,buckets,baseline:input.variableBaseline,...result};
 }
