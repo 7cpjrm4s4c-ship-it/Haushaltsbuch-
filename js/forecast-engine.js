@@ -23,7 +23,17 @@
    * @param {Object} options Eingabedaten mit Buchungen, variablen Kategorien und Basiszeitpunkt.
    * @returns {number} Durchschnittlicher Monatsbetrag, auf Cent gerundet.
    */
-  function historicalVariableAverage(options){const bookings=Array.isArray(options.bookings)?options.bookings:[];const variableIds=new Set(options.variableCategoryIds||[]);const months=Math.max(1,Math.min(24,Number(options.lookbackMonths)||3));const end=monthIndex(options.baseYear,options.baseMonth)-1;let total=0;for(let offset=0;offset<months;offset++){const point=fromMonthIndex(end-offset);total+=bookings.filter(item=>Number(item.year)===point.year&&Number(item.month)===point.month&&variableIds.has(item.catId)).reduce((sum,item)=>sum+Number(item.betrag||0),0);}return round2(total/months);}
+  function historicalVariableAverage(options){
+    const bookings=Array.isArray(options.bookings)?options.bookings:[],variableIds=new Set(options.variableCategoryIds||[]),months=Math.max(1,Math.min(24,Number(options.lookbackMonths)||3));
+    const end=monthIndex(options.baseYear,options.baseMonth)-1,totals=new Map();
+    for(const item of bookings){
+      if(!variableIds.has(item.catId))continue;
+      const key=monthIndex(item.year,item.month);
+      totals.set(key,(totals.get(key)||0)+Number(item.betrag||0));
+    }
+    let total=0;for(let offset=0;offset<months;offset++)total+=totals.get(end-offset)||0;
+    return round2(total/months);
+  }
 
   function variableValue(baseAmount,monthsFromStart,annualInflation,scenarioKey){const scenario=SCENARIOS[scenarioKey]||SCENARIOS.realistic;const inflation=Math.max(-99,Number(annualInflation)||0)/100;return round2(Math.max(0,Number(baseAmount)||0)*scenario.variableFactor*Math.pow(1+inflation,Math.max(0,Number(monthsFromStart)||0)/12));}
   function monthlyRate(annualPercent){const annual=clamp(annualPercent,-99,100,0)/100;return Math.pow(1+annual,1/12)-1;}
