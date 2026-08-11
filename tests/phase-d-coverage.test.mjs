@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 const run=(source,context,name)=>{context.globalThis=context;context.window=context;vm.createContext(context);vm.runInContext(source,context,{filename:name});return context;};
+const plain=value=>JSON.parse(JSON.stringify(value));
 
 const [registrySource,loanStoreSource,forecastStoreSource,dataStoreSource,backupStoreSource]=await Promise.all([
   read('js/app-extension-registry.js'),read('js/loan-store.js'),read('js/forecast-state-store.js'),read('js/data-management-store.js'),read('js/backup-store.js')
@@ -16,7 +17,7 @@ const [registrySource,loanStoreSource,forecastStoreSource,dataStoreSource,backup
   assert.equal(c.AppExtensionRegistry.registerView('dashboard',low,10),'dashboard');
   c.AppExtensionRegistry.registerView('dashboard',high,20);
   assert.equal(c.AppExtensionRegistry.resolveView('dashboard'),high);
-  assert.deepEqual(c.AppExtensionRegistry.listViews().map(x=>({key:x.key,priority:x.priority})),[{key:'dashboard',priority:20}]);
+  assert.deepEqual(plain(c.AppExtensionRegistry.listViews()),[{key:'dashboard',priority:20}]);
   assert.throws(()=>c.AppExtensionRegistry.registerView('',low),/Registry-Schlüssel/);
   assert.throws(()=>c.AppExtensionRegistry.registerCalculation('x',123),/Funktion/);
 }
@@ -56,8 +57,8 @@ const [registrySource,loanStoreSource,forecastStoreSource,dataStoreSource,backup
   const c=run(dataStoreSource,{S,Object,Array,Set,Map,String,Math,Date,Number,uid:()=>`u${++id}`,persist:()=>persists++,defaultYears:()=>[2026,2027],now:new Date(2026,3,2),LoanCategoryStore:{syncAll:()=>syncAll++}},'js/data-management-store.js');
   c.DataManagementStore.normalizeVariableCategories();
   assert.equal(c.DataManagementStore.variableCategories().length>=10,true);assert.equal(c.DataManagementStore.variableCategories().find(x=>x.p==='Lebensmittel').id,'v1');
-  c.DataManagementStore.clearBookings();assert.deepEqual(S.buchungen,[]);assert.deepEqual(S.budgets,{});assert.equal(persists,1);
-  c.DataManagementStore.deleteAllEntries();assert.deepEqual(S.kredite,[]);assert.deepEqual(S.financialEvents,[]);assert.equal(S.forecastAssumptions.savingsTarget,'etf');assert.equal(persists,2);
+  c.DataManagementStore.clearBookings();assert.deepEqual(plain(S.buchungen),[]);assert.deepEqual(plain(S.budgets),{});assert.equal(persists,1);
+  c.DataManagementStore.deleteAllEntries();assert.deepEqual(plain(S.kredite),[]);assert.deepEqual(plain(S.financialEvents),[]);assert.equal(S.forecastAssumptions.savingsTarget,'etf');assert.equal(persists,2);
   c.DataManagementStore.resetToFactory();assert.equal(S.years[0],2026);assert.equal(S.kredite.length,1);assert.equal(syncAll,1);assert.equal(persists,3);
 }
 
@@ -71,9 +72,9 @@ const [registrySource,loanStoreSource,forecastStoreSource,dataStoreSource,backup
   c.BackupStore.markDirty();assert.equal(c.BackupStore.isDirty(),true);assert.equal(c.BackupStore.readMeta().changesSinceBackup,1);
   const snapshot=c.BackupStore.snapshot();assert.equal(snapshot.format,'haushaltsbuch-backup');assert.equal(snapshot.appData.forecastAssets.cash,10);assert.equal(c.BackupStore.valid(snapshot),true);assert.equal(c.BackupStore.valid({foo:1}),false);
   c.BackupStore.apply({appData:{data:{b:2},cats:[{id:'c2'}],kredite:[],years:[2027],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],forecastAssets:{cash:20},forecastAssumptions:{},financialEvents:[],forecastScenarios:[],forecastGoals:[]}},'replace');
-  assert.deepEqual(S.data,{b:2});assert.equal(S.forecastAssets.cash,20);assert.equal(persists,1);assert.equal(syncAll,1);assert.equal(sorts,1);assert.equal(c.BackupStore.isDirty(),false);
+  assert.deepEqual(plain(S.data),{b:2});assert.equal(S.forecastAssets.cash,20);assert.equal(persists,1);assert.equal(syncAll,1);assert.equal(sorts,1);assert.equal(c.BackupStore.isDirty(),false);
   c.BackupStore.apply({appData:{data:{c:3},cats:[{id:'c2',p:'Neu'},{id:'c3'}],kredite:[],years:[2028],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],forecastAssets:{etf:5},forecastAssumptions:{annualReturns:{etf:4}},financialEvents:[],forecastScenarios:[],forecastGoals:[]}},'merge');
-  assert.equal(S.data.c,3);assert.deepEqual(S.years,[2027,2028]);assert.equal(S.cats.length,2);assert.equal(S.forecastAssets.etf,5);assert.equal(persists,2);
+  assert.equal(S.data.c,3);assert.deepEqual(plain(S.years),[2027,2028]);assert.equal(S.cats.length,2);assert.equal(S.forecastAssets.etf,5);assert.equal(persists,2);
   c.BackupStore.markBackedUp('2026-08-11T00:00:00.000Z');assert.equal(c.BackupStore.readMeta().lastBackupAt,'2026-08-11T00:00:00.000Z');assert.equal(c.BackupStore.isDirty(),false);
 }
 
