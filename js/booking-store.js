@@ -7,7 +7,7 @@
   function save(){if(typeof root.persist==='function')root.persist();}
   function all(){return clone(Array.isArray(state().buchungen)?state().buchungen:[]);}
   function find(id){return clone((state().buchungen||[]).find(item=>item.id===id)||null);}
-  function forMonth(year,month){return all().filter(item=>Number(item.year)===Number(year)&&Number(item.month)===Number(month));}
+  function forMonth(year,month){return clone((state().buchungen||[]).filter(item=>Number(item.year)===Number(year)&&Number(item.month)===Number(month)));}
   function add(input){
     const item={...clone(input)};
     if(!item.id)throw new TypeError('Buchungs-ID fehlt');
