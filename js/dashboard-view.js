@@ -1,13 +1,13 @@
 /* Dashboard ohne Schreibzugriffe auf App-State. */
 'use strict';
 
-function dashboardYear(year){
+function dashboardYear(year,months=Array.from({length:12},(_,month)=>calcMonth(year,month))){
   const result={e:0,f:0,v:0,k:0,s:0,aus:0,saldo:0};
-  for(let month=0;month<12;month++){const value=calcMonth(year,month);for(const key of Object.keys(result))result[key]+=Number(value[key]||0);}
+  for(const value of months){for(const key of Object.keys(result))result[key]+=Number(value[key]||0);}
   return result;
 }
 function vDashboard(){
-  const y=AppUiState.year(),mo=AppUiState.month(),m=calcMonth(y,mo),yr=dashboardYear(y);
+  const y=AppUiState.year(),mo=AppUiState.month(),months=Array.from({length:12},(_,month)=>calcMonth(y,month)),m=months[mo],yr=dashboardYear(y,months);
   const spPct=m.e>0?((m.s/m.e)*100).toFixed(0):0,krPct=m.e>0?((m.k/m.e)*100).toFixed(0):0;
   const standalone=window.navigator.standalone===true,ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const chips=MS.map((name,index)=>`<div class="mchip${index===mo?' active':''}" data-mi="${index}">${name}</div>`).join('');
