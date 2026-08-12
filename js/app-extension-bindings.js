@@ -1,4 +1,4 @@
-/* Composition Root: verdrahtet registrierte Module mit den verbleibenden Einstiegspunkten. */
+/* Composition Root: verdrahtet registrierte Module einmalig mit den verbleibenden Einstiegspunkten. */
 'use strict';
 
 (function(root){
@@ -8,34 +8,14 @@
   const calculations={gv:'gv',calcMonth:'calcMonth'};
   const views={ausgaben:'vAusgaben',uebersicht:'vUebersicht',einstellungen:'vEinstellungen',import:'vImport'};
 
-  function bindCalculation(key){
-    const globalName=calculations[key];
-    if(!globalName)return;
+  for(const [key,globalName] of Object.entries(calculations)){
     const implementation=registry.resolveCalculation(key);
     if(typeof implementation==='function')root[globalName]=implementation;
   }
-  function bindView(key){
-    const globalName=views[key];
-    if(!globalName)return;
+  for(const [key,globalName] of Object.entries(views)){
     const implementation=registry.resolveView(key);
     if(typeof implementation==='function')root[globalName]=implementation;
   }
-
-  Object.keys(calculations).forEach(bindCalculation);
-  Object.keys(views).forEach(bindView);
-
-  const originalRegisterCalculation=registry.registerCalculation;
-  registry.registerCalculation=function(key,implementation,priority){
-    const result=originalRegisterCalculation.call(registry,key,implementation,priority);
-    bindCalculation(key);
-    return result;
-  };
-  const originalRegisterView=registry.registerView;
-  registry.registerView=function(key,implementation,priority){
-    const result=originalRegisterView.call(registry,key,implementation,priority);
-    bindView(key);
-    return result;
-  };
 
   const storage=root.StateStorage;
   if(storage){
