@@ -1,7 +1,7 @@
 /* Offline-PWA: vollständige App-Shell, sichere Updates und typgerechte Cache-Strategien. */
 'use strict';
 
-const CACHE_VERSION='hp-v9';
+const CACHE_VERSION='hp-v10';
 const APP_SHELL=[
   './','./index.html','./manifest.json','./favicon.ico','./icon-16.png','./icon-32.png','./apple-touch-icon.png','./icon-192.png','./icon-512.png',
   './css/app.css','./css/structured-forms.css','./css/refinements.css','./css/ui-polish.css','./css/compact-manager.css','./css/header-layout-fix.css','./css/loan-integration.css','./css/backup-manager.css','./css/category-manager.css','./css/forecast.css','./css/forecast-goals.css','./css/ui-contract.css',
@@ -10,7 +10,8 @@ const APP_SHELL=[
 
 function sameOrigin(request){return new URL(request.url).origin===self.location.origin;}
 function isNavigation(request){return request.mode==='navigate'||request.destination==='document';}
-function isStaticAsset(request){return ['script','style','image','font'].includes(request.destination);}
+function isCodeAsset(request){return ['script','style'].includes(request.destination);}
+function isCacheFriendlyAsset(request){return ['image','font'].includes(request.destination);}
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_VERSION).then(cache=>cache.addAll(APP_SHELL)));
@@ -27,7 +28,7 @@ self.addEventListener('activate',event=>{
 
 async function navigationResponse(request){
   try{
-    const response=await fetch(request);
+    const response=await fetch(request,{cache:'no-store'});
     if(response&&response.ok){const cache=await caches.open(CACHE_VERSION);cache.put('./index.html',response.clone());}
     return response;
   }catch(error){
@@ -35,7 +36,17 @@ async function navigationResponse(request){
   }
 }
 
-async function staticResponse(request){
+async function codeResponse(request){
+  try{
+    const response=await fetch(request,{cache:'no-store'});
+    if(response&&response.ok){const cache=await caches.open(CACHE_VERSION);await cache.put(request,response.clone());}
+    return response;
+  }catch(error){
+    return (await caches.match(request))||Response.error();
+  }
+}
+
+async function cacheFriendlyResponse(request){
   const cached=await caches.match(request);
   const refresh=fetch(request).then(async response=>{
     if(response&&response.ok&&sameOrigin(request)){const cache=await caches.open(CACHE_VERSION);await cache.put(request,response.clone());}
@@ -49,6 +60,7 @@ self.addEventListener('fetch',event=>{
   const request=event.request;
   if(request.method!=='GET'||!sameOrigin(request))return;
   if(isNavigation(request)){event.respondWith(navigationResponse(request));return;}
-  if(isStaticAsset(request)){event.respondWith(staticResponse(request));return;}
+  if(isCodeAsset(request)){event.respondWith(codeResponse(request));return;}
+  if(isCacheFriendlyAsset(request)){event.respondWith(cacheFriendlyResponse(request));return;}
   event.respondWith(fetch(request).catch(()=>caches.match(request).then(hit=>hit||Response.error())));
 });
