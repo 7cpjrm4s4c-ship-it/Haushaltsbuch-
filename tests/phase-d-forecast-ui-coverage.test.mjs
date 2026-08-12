@@ -30,7 +30,7 @@ const [controllerSource,renderersSource,composerSource]=await Promise.all([
   assert.equal(saves,7);assert.equal(renders,7);
 }
 
-// Reine Forecast-Renderer: Auswahl, Leerzustaende, positive/negative Werte und Escaping.
+// Reine Forecast-Renderer: Auswahl, Leerzustaende, Gruppierung, positive/negative Werte und Escaping.
 {
   const c=run(renderersSource,{
     Object,Array,Math,Number,String,
@@ -44,7 +44,10 @@ const [controllerSource,renderersSource,composerSource]=await Promise.all([
   const options=c.forecastScenarioOptions('optimistic');assert.match(options,/optimistic" selected/);assert.match(options,/Realistisch/);
   const years=c.forecastYearOptions(2028,2026);assert.match(years,/2028" selected/);assert.match(years,/2066/);
   assert.equal(c.forecastTimeline([]),'');
-  const timeline=c.forecastTimeline([{year:2026,saldo:100},{year:2027,saldo:-50}]);assert.match(timeline,/positive/);assert.match(timeline,/negative/);
+  const groupedYears=Array.from({length:6},(_,index)=>({year:2026+index,saldo:index===1?-50:100,endNetWorth:1000+index,eventCount:0,income:1000,fixed:200,variable:100,creditPayments:0,specialRepayment:0,savings:100,investmentReturn:20,endLiquidity:500,endInvestments:500,endDebt:0,endRealNetWorth:900}));
+  const groups=c.forecastYearGroups(groupedYears);assert.equal(groups.length,2);assert.equal(groups[0].length,5);assert.equal(groups[1].length,1);
+  const timeline=c.forecastTimeline(groupedYears);assert.match(timeline,/2026–2030/);assert.match(timeline,/2031–2031/);assert.equal((timeline.match(/forecast-period-card/g)||[]).length,2);assert.equal((timeline.match(/forecast-period-card" open/g)||[]).length,1);assert.match(timeline,/positive/);assert.match(timeline,/negative/);
+  const details=c.forecastYearDetails(groupedYears,[]);assert.equal((details.match(/forecast-period-card/g)||[]).length,2);assert.equal((details.match(/forecast-year-card/g)||[]).length,6);assert.match(details,/2026–2030/);
   assert.match(c.forecastWealthChart([]),/Noch keine Prognosedaten/);
   const chart=c.forecastWealthChart([{liquidity:10,investments:20,debt:5,netWorth:25,realNetWorth:24},{liquidity:15,investments:25,debt:0,netWorth:40,realNetWorth:38}]);assert.match(chart,/forecast-chart-line/);assert.match(chart,/Nettovermögen real/);
   const badges=c.forecastEventBadges({financialEvents:[{type:'bonus',title:'Bonus <2026>'}]});assert.match(badges,/title="Bonus"/);assert.match(badges,/Bonus &lt;2026>/);
