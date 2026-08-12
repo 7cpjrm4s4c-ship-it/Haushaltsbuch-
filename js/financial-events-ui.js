@@ -2,9 +2,9 @@
 'use strict';
 
 function financialEventTypeOptions(selected){return Object.entries(FinancialEvents.TYPES).map(([key,label])=>`<option value="${key}"${key===selected?' selected':''}>${label}</option>`).join('');}
-function financialEventYearOptions(selected,allowEmpty=false){const start=Math.min(S.year,Number(selected)||S.year),options=Array.from({length:41},(_,i)=>start+i).map(year=>`<option value="${year}"${year===Number(selected)?' selected':''}>${year}</option>`).join('');return allowEmpty?`<option value=""${selected===null||selected===undefined?' selected':''}>Unbegrenzt</option>${options}`:options;}
-function financialEventsSorted(){return (S.financialEvents||[]).slice().sort((a,b)=>(Number(a.startYear)*12+Number(a.startMonth))-(Number(b.startYear)*12+Number(b.startMonth))||String(a.title||'').localeCompare(String(b.title||''),'de'));}
-function financialEventLoanOptions(selected){return (S.kredite||[]).map(loan=>`<option value="${esc(loan.id)}"${loan.id===selected?' selected':''}>${esc(loan.n)}</option>`).join('');}
+function financialEventYearOptions(selected,allowEmpty=false){const baseYear=ForecastStateStore.year(),start=Math.min(baseYear,Number(selected)||baseYear),options=Array.from({length:41},(_,i)=>start+i).map(year=>`<option value="${year}"${year===Number(selected)?' selected':''}>${year}</option>`).join('');return allowEmpty?`<option value=""${selected===null||selected===undefined?' selected':''}>Unbegrenzt</option>${options}`:options;}
+function financialEventsSorted(){return ForecastStateStore.financialEvents().sort((a,b)=>(Number(a.startYear)*12+Number(a.startMonth))-(Number(b.startYear)*12+Number(b.startMonth))||String(a.title||'').localeCompare(String(b.title||''),'de'));}
+function financialEventLoanOptions(selected){return ForecastStateStore.loans().map(loan=>`<option value="${esc(loan.id)}"${loan.id===selected?' selected':''}>${esc(loan.n)}</option>`).join('');}
 function financialEventIsDuration(type){return ['incomeDelta','expenseDelta'].includes(type);}
 
 function updateFinancialEventDialogFields(){
@@ -14,8 +14,8 @@ function updateFinancialEventDialogFields(){
 }
 
 function openFinancialEventDialog(id=''){
-  const existing=(S.financialEvents||[]).find(item=>item.id===id);
-  const event=existing?FinancialEvents.normalizeEvent(existing):FinancialEvents.normalizeEvent({id:'',type:'oneTimeExpense',title:'',startYear:S.year,startMonth:S.month,amount:0,enabled:true});
+  const events=ForecastStateStore.financialEvents(),existing=events.find(item=>item.id===id),baseYear=ForecastStateStore.year(),baseMonth=ForecastStateStore.month();
+  const event=existing?FinancialEvents.normalizeEvent(existing):FinancialEvents.normalizeEvent({id:'',type:'oneTimeExpense',title:'',startYear:baseYear,startMonth:baseMonth,amount:0,enabled:true});
   openGenSheet(`<div class="sheet-title">${id?'Finanzereignis bearbeiten':'Finanzereignis hinzufügen'}</div>
     <div class="field"><div class="lbl">Bezeichnung</div><input class="inp" id="fe-title" value="${esc(event.title==='Einmalige Ausgabe'&&!id?'':event.title)}" placeholder="z. B. Autokauf"/></div>
     <div class="field"><div class="lbl">Typ</div><div class="sw"><select class="sel" id="fe-type" onchange="updateFinancialEventDialogFields()">${financialEventTypeOptions(event.type)}</select></div></div>
@@ -30,7 +30,7 @@ function openFinancialEventDialog(id=''){
 function saveFinancialEvent(id=''){
   const title=document.getElementById('fe-title')?.value.trim(),type=document.getElementById('fe-type')?.value,amount=Number(document.getElementById('fe-amount')?.value);
   if(!title||!FinancialEvents.TYPE_KEYS.includes(type)||!Number.isFinite(amount)||amount<0)return toast('Bezeichnung, Typ und Betrag prüfen','err');
-  const startYear=Number(document.getElementById('fe-year')?.value||S.year),startMonth=Number(document.getElementById('fe-month')?.value||0);
+  const startYear=Number(document.getElementById('fe-year')?.value||ForecastStateStore.year()),startMonth=Number(document.getElementById('fe-month')?.value||0);
   let endYear=null,endMonth=null;
   if(financialEventIsDuration(type)){
     const rawEnd=document.getElementById('fe-end-year')?.value;
@@ -38,23 +38,17 @@ function saveFinancialEvent(id=''){
   }
   const loanId=type==='specialRepayment'?String(document.getElementById('fe-loan')?.value||''):'';
   if(type==='specialRepayment'&&!loanId)return toast('Bitte einen Kredit auswählen','err');
-  const next=FinancialEvents.normalizeEvent({id:id||uid(),type,title,amount,startYear,startMonth,endYear,endMonth,enabled:Boolean(document.getElementById('fe-enabled')?.checked),metadata:loanId?{loanId}:{}});
-  S.financialEvents=(S.financialEvents||[]).filter(item=>item.id!==id);S.financialEvents.push(next);persist();closeGenSheet();render();toast('Finanzereignis gespeichert');
+  const next=FinancialEvents.normalizeEvent({id:id||uid(),type,title,amount,startYear,startMonth,endYear,endMonth,enabled:Boolean(document.getElementById('fe-enabled')?.checked),metadata:loanId?{loanId}:{}}),events=ForecastStateStore.financialEvents().filter(item=>item.id!==id);
+  events.push(next);ForecastStateStore.setFinancialEvents(events);ForecastStateStore.save();closeGenSheet();render();toast('Finanzereignis gespeichert');
 }
-function toggleFinancialEvent(id){const event=(S.financialEvents||[]).find(item=>item.id===id);if(!event)return;event.enabled=event.enabled===false;persist();render();}
-function deleteFinancialEvent(id){if(!confirm('Finanzereignis wirklich löschen?'))return;S.financialEvents=(S.financialEvents||[]).filter(item=>item.id!==id);persist();render();toast('Finanzereignis gelöscht');}
-function duplicateFinancialEvent(id){const event=(S.financialEvents||[]).find(item=>item.id===id);if(!event)return;S.financialEvents.push({...event,id:uid(),title:`${event.title} Kopie`,metadata:{...(event.metadata||{})}});persist();render();}
+function toggleFinancialEvent(id){const events=ForecastStateStore.financialEvents(),event=events.find(item=>item.id===id);if(!event)return;event.enabled=event.enabled===false;ForecastStateStore.setFinancialEvents(events);ForecastStateStore.save();render();}
+function deleteFinancialEvent(id){if(!confirm('Finanzereignis wirklich löschen?'))return;ForecastStateStore.setFinancialEvents(ForecastStateStore.financialEvents().filter(item=>item.id!==id));ForecastStateStore.save();render();toast('Finanzereignis gelöscht');}
+function duplicateFinancialEvent(id){const events=ForecastStateStore.financialEvents(),event=events.find(item=>item.id===id);if(!event)return;events.push({...event,id:uid(),title:`${event.title} Kopie`,metadata:{...(event.metadata||{})}});ForecastStateStore.setFinancialEvents(events);ForecastStateStore.save();render();}
 function financialEventPeriod(event){if(FinancialEvents.ONE_TIME_TYPES.has(event.type))return `${MF[event.startMonth]} ${event.startYear}`;const end=event.endYear===null?'unbegrenzt':`${MF[event.endMonth??11]} ${event.endYear}`;return `${MF[event.startMonth]} ${event.startYear} – ${end}`;}
 function financialEventsPanel(){
-  const events=financialEventsSorted();
-  const rows=events.length?events.map(raw=>{const event=FinancialEvents.normalizeEvent(raw),loan=event.type==='specialRepayment'?(S.kredite||[]).find(item=>item.id===event.metadata?.loanId):null;return `<div class="forecast-event-row ${event.enabled?'':'is-disabled'}"><div class="forecast-event-main"><strong>${esc(event.title)}</strong><span>${esc(FinancialEvents.TYPES[event.type])} · ${financialEventPeriod(event)} · ${fmt(event.amount)}${loan?` · ${esc(loan.n)}`:''}</span></div><div class="forecast-event-actions"><button class="btn btn-ghost" onclick="toggleFinancialEvent('${esc(event.id)}')">${event.enabled?'Deaktivieren':'Aktivieren'}</button><button class="btn btn-ghost" onclick="openFinancialEventDialog('${esc(event.id)}')">Bearbeiten</button><button class="btn btn-ghost" onclick="duplicateFinancialEvent('${esc(event.id)}')">Duplizieren</button><button class="btn btn-red" onclick="deleteFinancialEvent('${esc(event.id)}')">Löschen</button></div></div>`;}).join(''):`<div class="forecast-note">Noch keine Finanzereignisse hinterlegt.</div>`;
+  const events=financialEventsSorted(),loans=ForecastStateStore.loans();
+  const rows=events.length?events.map(raw=>{const event=FinancialEvents.normalizeEvent(raw),loan=event.type==='specialRepayment'?loans.find(item=>item.id===event.metadata?.loanId):null;return `<div class="forecast-event-row ${event.enabled?'':'is-disabled'}"><div class="forecast-event-main"><strong>${esc(event.title)}</strong><span>${esc(FinancialEvents.TYPES[event.type])} · ${financialEventPeriod(event)} · ${fmt(event.amount)}${loan?` · ${esc(loan.n)}`:''}</span></div><div class="forecast-event-actions"><button class="btn btn-ghost" onclick="toggleFinancialEvent('${esc(event.id)}')">${event.enabled?'Deaktivieren':'Aktivieren'}</button><button class="btn btn-ghost" onclick="openFinancialEventDialog('${esc(event.id)}')">Bearbeiten</button><button class="btn btn-ghost" onclick="duplicateFinancialEvent('${esc(event.id)}')">Duplizieren</button><button class="btn btn-red" onclick="deleteFinancialEvent('${esc(event.id)}')">Löschen</button></div></div>`;}).join(''):`<div class="forecast-note">Noch keine Finanzereignisse hinterlegt.</div>`;
   return `<section class="card"><div class="compact-toolbar"><div><div class="card-title">Finanzereignisse</div><div class="field-hint">Einmalige und zeitlich begrenzte Änderungen sowie Sondertilgungen werden ausschließlich in der Prognose berücksichtigt.</div></div><button class="btn btn-primary" onclick="openFinancialEventDialog()">+ Ereignis</button></div><div class="forecast-event-list">${rows}</div></section>`;
 }
 
-if(typeof removeLoanCategory==='function'){
-  const removeLoanCategoryBase=removeLoanCategory;
-  removeLoanCategory=function(loanId){
-    removeLoanCategoryBase(loanId);
-    S.financialEvents=(S.financialEvents||[]).filter(event=>!(event.type==='specialRepayment'&&String(event.metadata?.loanId||'')===String(loanId||'')));
-  };
-}
+ForecastPanelRegistry.register('beforeKpis','financial-events',financialEventsPanel,100);

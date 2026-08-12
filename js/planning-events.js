@@ -1,4 +1,7 @@
-/* Einheitliches internes Modell für Planungsereignisse. Keine DOM-Abhängigkeiten. */
+/**
+ * Einheitliches, DOM-freies Modell für Planungsereignisse.
+ * @module PlanningEvents
+ */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -12,6 +15,11 @@
   const monthIndex=(year,month)=>Number(year)*12+Number(month);
   const round2=value=>Math.round((Number(value)||0)*100)/100;
 
+  /**
+   * Überführt die persistierten Legacy-Listen in ein einheitliches Ereignismodell.
+   * @param {Object} [state={}] Persistierter App-Zustand oder ein kompatibler Ausschnitt.
+   * @returns {Array<Object>} Normalisierte Planungsereignisse.
+   */
   function fromLegacy(state={}){
     const events=[];
     for(const x of state.recurringRules||[])events.push({id:x.id,type:TYPES.RECURRING,catId:x.catId,amount:Number(x.amount)||0,intervalMonths:Math.max(1,Number(x.intervalMonths)||1),startYear:Number(x.startYear),startMonth:Number(x.startMonth)||0,endYear:x.endYear==null?null:Number(x.endYear),endMonth:x.endMonth==null?null:Number(x.endMonth)});
@@ -31,6 +39,17 @@
     return (current-start)%Math.max(1,Number(event.intervalMonths)||1)===0;
   }
 
+  /**
+   * Ermittelt den wirksamen Monatswert einer Kategorie unter Berücksichtigung aller Planungsregeln.
+   * @param {Object} options Berechnungsparameter.
+   * @param {Array<Object>} options.events Normalisierte Planungsereignisse.
+   * @param {string} options.catId Kategorie-ID.
+   * @param {number} options.year Jahr.
+   * @param {number} options.month Monat (0–11).
+   * @param {number} [options.defaultValue=0] Basiswert ohne Anpassungen.
+   * @param {number} [options.customValue] Expliziter Monatswert; überschreibt Basis-/Intervallwerte.
+   * @returns {number} Wirksamer Monatsbetrag, auf Cent gerundet.
+   */
   function valueForMonth({events,catId,year,month,defaultValue=0,customValue}){
     const relevant=forCategory(events,catId);
     const recurring=relevant.find(event=>event.type===TYPES.RECURRING)||null;

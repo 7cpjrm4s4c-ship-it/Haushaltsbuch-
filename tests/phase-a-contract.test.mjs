@@ -1,32 +1,32 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 async function text(path){return readFile(new URL(`../${path}`,import.meta.url),'utf8');}
-const app=await text('js/app.js');
+const index=await text('index.html');
+const dashboard=await text('js/dashboard-view.js');
 const schema=await text('js/state-schema.js');
 const storage=await text('js/state-storage.js');
-const backup=await text('js/backup-manager.js');
+const backupStore=await text('js/backup-store.js');
 const dataConsistency=await text('js/data-consistency.js');
-const refinements=await text('js/refinements.js');
+const positionDialog=await text('js/position-dialog-ui.js');
 const planning=await text('js/planning-events.js');
 const forecastEngine=await text('js/forecast-engine.js');
 const forecastAdapter=await text('js/forecast-adapter.js');
+const forecastViewModel=await text('js/forecast-view-model.js');
 const forecastView=await text('js/forecast-view.js');
-const dataManagement=await text('js/data-management-v2.js');
+const dataManagementStore=await text('js/data-management-store.js');
 
 assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/,'State-Schema muss versioniert sein');
 for(const field of ['amountAdjustments','oneTimeEntries','forecastAssets']){
-  assert.ok(schema.includes(field));
-  assert.ok(storage.includes(field));
-  assert.ok(backup.includes(field));
-  assert.ok(dataManagement.includes(field));
+  assert.ok(schema.includes(field));assert.ok(storage.includes(field));assert.ok(backupStore.includes(field));assert.ok(dataManagementStore.includes(field));
 }
-assert.match(backup,/version:\d+/,'Backup-Format muss versioniert sein');
-assert.match(backup,/normalizeBackupData/);
+assert.match(backupStore,/version:\d+/,'Backup-Format muss versioniert sein');assert.match(backupStore,/function\s+normalize\s*\(/);
 assert.match(planning,/fromLegacy/);assert.match(planning,/valueForMonth/);assert.match(planning,/percentageIncrease/);assert.match(planning,/fixedIncrease/);assert.match(planning,/oneTime/);
 assert.ok(dataConsistency.includes('PlanningEvents.valueForMonth'),'Monatsberechnung muss das einheitliche Planungsmodell verwenden');
-assert.ok(dataConsistency.includes('pos-fixed-inc-amount'));assert.ok(dataConsistency.includes('pos-once-amount'));assert.ok(refinements.includes('pos-fixed-inc-amount'));assert.ok(refinements.includes('pos-once-amount'));
-assert.ok(!app.includes('forecastAssets'),'Startvermögen darf nicht in app.js bzw. Dashboard-Logik einfließen');
-assert.ok(forecastView.includes('forecastAssets'));assert.ok(forecastView.includes('ausschließlich für die Prognose'));
+assert.ok(positionDialog.includes('pos-fixed-inc-amount'));assert.ok(positionDialog.includes('pos-once-amount'));
+assert.ok(!index.includes('js/app.js'),'Legacy app.js darf nicht mehr aktiv geladen werden');
+assert.ok(!dashboard.includes('forecastAssets'),'Startvermögen darf nicht in Dashboard-Logik einfließen');
+assert.ok(forecastViewModel.includes('forecastAssets'),'Startvermögen muss im Prognose-Datenmodell verarbeitet werden');
+assert.ok(forecastView.includes('ausschließlich für die Prognose'),'Die Prognose-UI muss den isolierten Charakter des Startvermögens erklären');
 assert.ok(!forecastEngine.includes('gv('));assert.ok(!forecastEngine.includes('creditBalanceAt'));assert.ok(!forecastEngine.includes('creditInterestAt'));assert.ok(!forecastEngine.includes('document.'));
 assert.ok(forecastAdapter.includes('gv('),'App-spezifische Monatswerte gehören in den Forecast-Adapter');
 assert.ok(forecastAdapter.includes('creditBalanceAt'),'Der Adapter darf den aktuellen Kreditstartwert aus der Kreditlogik übernehmen');

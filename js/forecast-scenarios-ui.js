@@ -1,9 +1,9 @@
 /* Verwaltung und Vergleich gespeicherter Prognoseszenarien. */
 'use strict';
 
-function storedForecastScenarios(){S.forecastScenarios=Array.isArray(S.forecastScenarios)?S.forecastScenarios:[];return S.forecastScenarios;}
+function storedForecastScenarios(){return ForecastStateStore.scenarios();}
 function cloneForecastValue(value){return JSON.parse(JSON.stringify(value));}
-function normalizedStoredScenario(value){return typeof ForecastScenarios!=='undefined'?ForecastScenarios.normalizeScenario(value,S.year):value;}
+function normalizedStoredScenario(value){return typeof ForecastScenarios!=='undefined'?ForecastScenarios.normalizeScenario(value,ForecastStateStore.year()):value;}
 
 function openForecastScenarioDialog(id=''){
   const existing=storedForecastScenarios().find(item=>item.id===id),title=existing?.title||'';
@@ -12,23 +12,18 @@ function openForecastScenarioDialog(id=''){
 
 function saveForecastScenario(id=''){
   const title=document.getElementById('forecast-scenario-title')?.value.trim();if(!title)return toast('Bitte eine Bezeichnung eingeben','err');
-  const ui=cloneForecastValue(forecastUi()),assumptions=cloneForecastValue(forecastAssumptions()),events=cloneForecastValue(S.financialEvents||[]),existing=storedForecastScenarios().find(item=>item.id===id),nowIso=new Date().toISOString();
-  const next=existing?ForecastScenarios.update(existing,{title,ui,assumptions,financialEvents:events,baseYear:S.year,nowIso}):ForecastScenarios.snapshot({id:uid(),title,ui,assumptions,financialEvents:events,baseYear:S.year,nowIso});
-  S.forecastScenarios=storedForecastScenarios().filter(item=>item.id!==id);S.forecastScenarios.push(next);persist();closeGenSheet();render();toast(existing?'Szenario aktualisiert':'Szenario gespeichert');
+  const baseYear=ForecastStateStore.year(),ui=cloneForecastValue(forecastUi()),assumptions=cloneForecastValue(forecastAssumptions()),events=ForecastStateStore.financialEvents(),scenarios=storedForecastScenarios(),existing=scenarios.find(item=>item.id===id),nowIso=new Date().toISOString();
+  const next=existing?ForecastScenarios.update(existing,{title,ui,assumptions,financialEvents:events,baseYear,nowIso}):ForecastScenarios.snapshot({id:uid(),title,ui,assumptions,financialEvents:events,baseYear,nowIso});
+  const updated=scenarios.filter(item=>item.id!==id);updated.push(next);ForecastStateStore.setScenarios(updated);ForecastStateStore.save();closeGenSheet();render();toast(existing?'Szenario aktualisiert':'Szenario gespeichert');
 }
 
 function loadForecastScenario(id){
   const scenario=storedForecastScenarios().find(item=>item.id===id);if(!scenario)return;
-  const normalized=normalizedStoredScenario(scenario);S.ui=S.ui||{};S.ui.forecast=cloneForecastValue(normalized.ui);S.forecastAssumptions=cloneForecastValue(normalized.assumptions);S.financialEvents=cloneForecastValue(normalized.financialEvents);persist();render();toast(`Szenario „${normalized.title}“ geladen`);
+  const normalized=normalizedStoredScenario(scenario);ForecastStateStore.setForecastUi(normalized.ui);ForecastStateStore.setAssumptions(normalized.assumptions);ForecastStateStore.setFinancialEvents(normalized.financialEvents);ForecastStateStore.save();render();toast(`Szenario „${normalized.title}“ geladen`);
 }
-function deleteForecastScenario(id){const scenario=storedForecastScenarios().find(item=>item.id===id);if(!scenario||!confirm(`Szenario „${scenario.title}“ wirklich löschen?`))return;S.forecastScenarios=storedForecastScenarios().filter(item=>item.id!==id);persist();render();toast('Szenario gelöscht');}
-function duplicateForecastScenario(id){const scenario=storedForecastScenarios().find(item=>item.id===id);if(!scenario)return;const normalized=normalizedStoredScenario(scenario),copy=ForecastScenarios.snapshot({id:uid(),title:`${normalized.title} Kopie`,ui:normalized.ui,assumptions:normalized.assumptions,financialEvents:normalized.financialEvents,baseYear:S.year});S.forecastScenarios.push(copy);persist();render();}
+function deleteForecastScenario(id){const scenarios=storedForecastScenarios(),scenario=scenarios.find(item=>item.id===id);if(!scenario||!confirm(`Szenario „${scenario.title}“ wirklich löschen?`))return;ForecastStateStore.setScenarios(scenarios.filter(item=>item.id!==id));ForecastStateStore.save();render();toast('Szenario gelöscht');}
+function duplicateForecastScenario(id){const scenarios=storedForecastScenarios(),scenario=scenarios.find(item=>item.id===id);if(!scenario)return;const normalized=normalizedStoredScenario(scenario),copy=ForecastScenarios.snapshot({id:uid(),title:`${normalized.title} Kopie`,ui:normalized.ui,assumptions:normalized.assumptions,financialEvents:normalized.financialEvents,baseYear:ForecastStateStore.year()});scenarios.push(copy);ForecastStateStore.setScenarios(scenarios);ForecastStateStore.save();render();}
 
-function forecastScenarioResult(raw){
-  const scenario=normalizedStoredScenario(raw),assets=forecastAssets();
-  const input=buildForecastInput(scenario.ui,assets,scenario.assumptions,scenario.financialEvents);
-  return {scenario,result:ForecastEngine.project(input)};
-}
 function forecastScenarioDate(value){if(!value)return '–';const date=new Date(value);return Number.isNaN(date.getTime())?'–':date.toLocaleDateString('de-DE');}
 
 function forecastScenarioComparison(scenarios){
@@ -38,13 +33,9 @@ function forecastScenarioComparison(scenarios){
 }
 
 function forecastScenariosPanel(){
-  const scenarios=storedForecastScenarios().slice().sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'de',{sensitivity:'base'}));
+  const scenarios=storedForecastScenarios().sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'de',{sensitivity:'base'}));
   const cards=scenarios.map(raw=>{const scenario=normalizedStoredScenario(raw);return `<div class="forecast-event-row"><div class="forecast-event-main"><strong>${esc(scenario.title)}</strong><span>${esc(ForecastEngine.SCENARIOS[scenario.ui.scenarioKey]?.label||scenario.ui.scenarioKey)} · bis ${scenario.ui.endYear} · ${scenario.financialEvents.length} Ereignisse · ${forecastScenarioDate(scenario.updatedAt||scenario.createdAt)}</span></div><div class="forecast-event-actions"><button class="btn btn-ghost" onclick="loadForecastScenario('${esc(scenario.id)}')">Laden</button><button class="btn btn-ghost" onclick="openForecastScenarioDialog('${esc(scenario.id)}')">Aktualisieren</button><button class="btn btn-ghost" onclick="duplicateForecastScenario('${esc(scenario.id)}')">Duplizieren</button><button class="btn btn-red" onclick="deleteForecastScenario('${esc(scenario.id)}')">Löschen</button></div></div>`;}).join('');
   return `<section class="card"><div class="compact-toolbar"><div><div class="card-title">Szenarien</div><div class="field-hint">Varianten mit identischem Startvermögen speichern und direkt vergleichen.</div></div><button class="btn btn-primary" onclick="openForecastScenarioDialog()">+ Szenario speichern</button></div><div class="forecast-event-list">${cards||'<div class="forecast-note">Noch keine Szenarien gespeichert.</div>'}</div>${scenarios.length?`<div class="sheet-divider"></div><div class="card-title">Szenariovergleich</div>${forecastScenarioComparison(scenarios)}`:''}</section>`;
 }
 
-if(typeof vPrognose==='function'){
-  const forecastViewWithoutScenarioPanel=vPrognose;
-  vPrognose=function(){const html=forecastViewWithoutScenarioPanel(),anchor='<section class="forecast-kpis">';return html.includes(anchor)?html.replace(anchor,forecastScenariosPanel()+anchor):html+forecastScenariosPanel();};
-  vEinstellungen=vPrognose;
-}
+ForecastPanelRegistry.register('beforeKpis','forecast-scenarios',forecastScenariosPanel,200);

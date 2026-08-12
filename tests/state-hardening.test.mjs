@@ -18,18 +18,27 @@ function makeContext(extra={}){const context={console,setTimeout,clearTimeout,Da
   const store=new Map([['hp5','{"defekt":']]);
   const localStorage={getItem:key=>store.has(key)?store.get(key):null,setItem:(key,value)=>store.set(key,String(value)),removeItem:key=>store.delete(key)};
   const S={data:{},cats:[],kredite:[],years:[],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],financialEvents:[],forecastAssets:{},forecastAssumptions:{},year:2026,month:0};let factoryCalls=0;
-  const context=makeContext({S,localStorage,LS_KEY:'hp5',_pTimer:null,persist:()=>{},load:()=>{},now:new Date(2026,0,1),defaultYears:()=>[2026,2027,2028],applyFactoryState:()=>{factoryCalls++;Object.assign(S,{data:{},cats:[],kredite:[],years:[2026,2027,2028],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],financialEvents:[],forecastAssets:{},forecastAssumptions:{}});},normalizeVariableCategories:()=>{},creditStartAmount:k=>Number(k.s??0),creditReferenceYear:k=>Number(k.balanceYear??2026),creditReferenceMonth:k=>Number(k.balanceMonth??0),syncAllLoans:()=>{},sortCategoriesInPlace:()=>{}});
-  await run('js/state-schema.js',context);await run('js/state-storage.js',context);context.load();
+  const DataManagementStore={applyFactoryState:()=>{factoryCalls++;Object.assign(S,{data:{},cats:[],kredite:[],years:[2026,2027,2028],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],financialEvents:[],forecastAssets:{},forecastAssumptions:{}});},normalizeVariableCategories:()=>{},sortCategoriesInPlace:()=>{}};
+  const context=makeContext({S,localStorage,LS_KEY:'hp5',now:new Date(2026,0,1),defaultYears:()=>[2026,2027,2028],DataManagementStore,LoanCategoryStore:{syncAll:()=>{}},creditStartAmount:k=>Number(k.s??0),creditReferenceYear:k=>Number(k.balanceYear??2026),creditReferenceMonth:k=>Number(k.balanceMonth??0)});
+  await run('js/state-schema.js',context);await run('js/state-storage.js',context);context.StateStorage.load();
   assert.equal(factoryCalls,1);assert.equal(localStorage.getItem('hp5_corrupt_backup'),'{"defekt":');assert.equal(JSON.parse(localStorage.getItem('hp5')).schemaVersion,context.StateSchema.CURRENT_VERSION);assert.deepEqual([...S.financialEvents],[]);
 }
 
 {
   const oldState={schemaVersion:3,data:{},cats:[],kredite:[],years:[2026,2027],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],forecastAssets:{cash:500},forecastAssumptions:{annualReturns:{etf:6},purchasingPowerInflation:2,savingsTarget:'etf'}};
   const store=new Map([['hp5',JSON.stringify(oldState)]]),localStorage={getItem:key=>store.has(key)?store.get(key):null,setItem:(key,value)=>store.set(key,String(value))};const S={...oldState,year:2026,month:0};
-  const context=makeContext({S,localStorage,LS_KEY:'hp5',_pTimer:null,persist:()=>{},load:()=>{},now:new Date(2026,0,1),defaultYears:()=>[2026,2027,2028],applyFactoryState:()=>{throw new Error('gültiger Altzustand darf nicht verworfen werden');},normalizeVariableCategories:()=>{},creditStartAmount:k=>Number(k.s??0),creditReferenceYear:k=>Number(k.balanceYear??2026),creditReferenceMonth:k=>Number(k.balanceMonth??0),syncAllLoans:()=>{},sortCategoriesInPlace:()=>{}});
-  await run('js/state-schema.js',context);await run('js/state-storage.js',context);context.load();
+  const DataManagementStore={applyFactoryState:()=>{throw new Error('gültiger Altzustand darf nicht verworfen werden');},normalizeVariableCategories:()=>{},sortCategoriesInPlace:()=>{}};
+  const context=makeContext({S,localStorage,LS_KEY:'hp5',now:new Date(2026,0,1),defaultYears:()=>[2026,2027,2028],DataManagementStore,LoanCategoryStore:{syncAll:()=>{}},creditStartAmount:k=>Number(k.s??0),creditReferenceYear:k=>Number(k.balanceYear??2026),creditReferenceMonth:k=>Number(k.balanceMonth??0)});
+  await run('js/state-schema.js',context);await run('js/state-storage.js',context);context.StateStorage.load();
   const migrated=JSON.parse(localStorage.getItem('hp5'));
   assert.equal(migrated.schemaVersion,context.StateSchema.CURRENT_VERSION);assert.deepEqual([...S.years],[2026,2027]);assert.equal(S.kredite.length,0);assert.deepEqual([...S.amountAdjustments],[]);assert.deepEqual([...S.oneTimeEntries],[]);assert.deepEqual([...S.financialEvents],[]);assert.equal(S.forecastAssets.cash,500);assert.equal(S.forecastAssumptions.savingsTarget,'etf');assert.equal(S.forecastAssumptions.purchasingPowerInflation,2);
 }
+
+const storageSource=await source('js/state-storage.js');
+assert.ok(storageSource.includes('root.StateStorage=Object.freeze'),'StateStorage muss eine explizite Modulschnittstelle bereitstellen');
+assert.ok(!/\bpersist\s*=\s*function/.test(storageSource),'StateStorage darf persist nicht global überschreiben');
+assert.ok(!/\bload\s*=\s*function/.test(storageSource),'StateStorage darf load nicht global überschreiben');
+assert.ok(storageSource.includes('DataManagementStore.normalizeVariableCategories'),'StateStorage muss die Datenverwaltungsgrenze nutzen');
+assert.ok(storageSource.includes('LoanCategoryStore?.syncAll'),'StateStorage muss die Kreditkategorie-Grenze nutzen');
 
 console.log('Alle State-Härtungstests erfolgreich.');

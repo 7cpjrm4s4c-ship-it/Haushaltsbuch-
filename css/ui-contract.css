@@ -1,0 +1,38 @@
+/* Globaler UI-Vertrag: einheitliche Abstände und Layout-Verantwortung. */
+:root{
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --control-h:46px;
+  --section-gap:14px;
+}
+
+/* Außenabstände gehören dem Container, nicht dem Kind. */
+.stack{display:flex;flex-direction:column;gap:var(--section-gap)}
+.stack>*{margin-block:0}
+
+/* Karten und Formulare folgen einem gemeinsamen vertikalen Rhythmus. */
+.card{padding:var(--space-4);margin-bottom:var(--space-3)}
+.card-title{margin-bottom:var(--space-3)}
+.form-grid{gap:var(--space-3)}
+.form-grid .field{margin-bottom:0}
+.field{margin-bottom:var(--space-3)}
+.lbl{margin-bottom:var(--space-2)}
+.inp,.sel{min-height:var(--control-h)}
+
+/* Direkt aufeinanderfolgende Inhaltsblöcke erhalten genau einen Abstand. */
+.card>.form-grid+.forecast-note,
+.card>.forecast-note+.form-grid,
+.card>.form-actions,
+.card>.btn-full{margin-top:var(--space-3)}
+
+/* Listen und Aktionsgruppen verwenden denselben Basisschritt. */
+.form-actions,.forecast-event-actions{gap:var(--space-2)}
+
+@media(max-width:420px){
+  :root{--section-gap:12px}
+  .card{padding:var(--space-3)}
+}
