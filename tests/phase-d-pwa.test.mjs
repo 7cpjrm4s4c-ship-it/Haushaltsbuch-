@@ -18,8 +18,10 @@ for(const asset of localAssets)assert.ok(sw.includes(`'${asset}'`)||sw.includes(
 
 assert.match(sw,/const CACHE_VERSION=['"]hp-v\d+['"]/,'Service Worker braucht versionierten Cache');
 assert.ok(sw.includes("request.mode==='navigate'"),'Navigation muss separat behandelt werden');
-assert.ok(sw.includes("['script','style','image','font']"),'Statische Ressourcen brauchen eigene Strategie');
-assert.ok(sw.includes('const cached=await caches.match(request)'),'Statische Ressourcen müssen Cache-first/stale-while-revalidate nutzen');
+assert.ok(sw.includes("['script','style']"),'Code-Ressourcen brauchen eine eigene kohärente Update-Strategie');
+assert.ok(sw.includes("fetch(request,{cache:'no-store'})"),'Navigation und Code müssen neue Deployments ohne HTTP-Cache laden');
+assert.ok(sw.includes('async function codeResponse(request)'),'JS/CSS müssen Network-first mit Offline-Fallback geladen werden');
+assert.ok(sw.includes("['image','font']"),'Bilder und Fonts dürfen cachefreundlich geladen werden');
 assert.ok(sw.includes("caches.match('./index.html')"),'Navigation braucht Offline-HTML-Fallback');
 assert.ok(!/catch\([^)]*\)\s*=>\s*caches\.match\([^)]*\)\.then\([^)]*index\.html/.test(sw),'JS/CSS dürfen nicht pauschal index.html als Fehlerantwort erhalten');
 assert.ok(sw.includes('keys.filter(key=>key!==CACHE_VERSION)'),'Alte Caches müssen beim Aktivieren bereinigt werden');
