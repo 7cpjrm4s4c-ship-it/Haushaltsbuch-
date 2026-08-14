@@ -1,4 +1,4 @@
-/* Navigations-Shell und Header-Scrollverhalten. */
+/* Navigations-Shell. Header bleibt dauerhaft sichtbar; Geometrie liegt im globalen UI-Vertrag. */
 'use strict';
 (function(){
   const bnav=document.getElementById('bnav'),slider=document.getElementById('bnavSlider');if(!bnav||!slider)return;
@@ -12,4 +12,3 @@
   bnav.addEventListener('touchmove',event=>{if(!dragging)return;const dx=event.touches[0].clientX-startX,rect=bnav.getBoundingClientRect();slider.style.left=Math.max(0,Math.min(rect.width-parseFloat(slider.style.width||60),startLeft+dx))+'px';},{passive:true});
   bnav.addEventListener('touchend',event=>{if(!dragging)return;dragging=false;const x=event.changedTouches[0].clientX;let best=null,bestDist=Infinity;for(const button of bnav.querySelectorAll('.bnav-btn')){const rect=button.getBoundingClientRect(),dist=Math.abs(x-(rect.left+rect.width/2));if(dist<bestDist){bestDist=dist;best=button;}}if(best?.dataset.v){snap(best);nav(best.dataset.v);}},{passive:true});
 })();
-(function(){const header=document.getElementById('appHeader');if(!header)return;let previous=0;function check(){const y=window.scrollY||document.documentElement.scrollTop||0;if(y!==previous){if(y>60&&y>previous)header.classList.add('hidden');else if(y<previous||y<=60)header.classList.remove('hidden');previous=y;}requestAnimationFrame(check);}check();})();
