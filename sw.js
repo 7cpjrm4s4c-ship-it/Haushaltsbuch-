@@ -1,7 +1,7 @@
 /* Offline-PWA: vollständige App-Shell, sichere Updates und typgerechte Cache-Strategien. */
 'use strict';
 
-const CACHE_VERSION='hp-v10';
+const CACHE_VERSION='hp-v11';
 const APP_SHELL=[
   './','./index.html','./manifest.json','./favicon.ico','./icon-16.png','./icon-32.png','./apple-touch-icon.png','./icon-192.png','./icon-512.png',
   './css/app.css','./css/structured-forms.css','./css/refinements.css','./css/ui-polish.css','./css/compact-manager.css','./css/header-layout-fix.css','./css/loan-integration.css','./css/backup-manager.css','./css/category-manager.css','./css/forecast.css','./css/forecast-goals.css','./css/ui-contract.css',
