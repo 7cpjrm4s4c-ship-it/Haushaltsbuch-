@@ -2,18 +2,18 @@
 :root{
   --space-1:4px;
   --space-2:8px;
-  --space-3:12px;
+  --space-3:16px;
   --space-4:16px;
-  --space-5:20px;
+  --space-5:24px;
   --space-6:24px;
   --control-h:52px;
-  --section-gap:16px;
-  --page-inline:14px;
+  --section-gap:8px;
+  --page-inline:8px;
   --app-header-height:88px;
-  --page-top-gap:20px;
+  --page-top-gap:8px;
   --nav-height:72px;
-  --nav-inline:16px;
-  --nav-bottom-gap:10px;
+  --nav-inline:8px;
+  --nav-bottom-gap:8px;
 }
 
 /* App-Shell: Header und Bottom-Navigation bleiben permanent ueber dem Inhalt. */
@@ -54,38 +54,38 @@
   padding:var(--space-4)!important;
   margin-bottom:var(--section-gap)!important;
 }
-.card-title{margin-bottom:var(--space-3)!important;line-height:1.35}
+.card-title{margin-bottom:var(--space-2)!important;line-height:1.35}
 
-/* Formulare folgen global demselben Rhythmus. */
-.form-card{display:flex;flex-direction:column;gap:var(--space-3)}
-.form-grid{gap:var(--space-3)!important}
-.field{margin-bottom:var(--space-3)!important}
+/* Formulare folgen global demselben 8px-Grundraster. */
+.form-card{display:flex;flex-direction:column;gap:var(--space-2)}
+.form-grid{gap:var(--space-2)!important}
+.field{margin-bottom:var(--space-2)!important}
 .form-grid .field,.form-card>.field:last-child{margin-bottom:0!important}
 .lbl{margin-bottom:var(--space-2)!important}
 .inp,.sel{min-height:var(--control-h)!important}
-.form-actions,.dialog-actions{gap:var(--space-2)!important;margin-top:var(--space-4)!important}
+.form-actions,.dialog-actions{gap:var(--space-2)!important;margin-top:var(--space-2)!important}
 .dialog-actions{position:static!important;padding-top:0!important;background:none!important}
 
 /* Listen, Akkordeons und Sekundaertexte verwenden denselben Abstandsschritt. */
-.list-head{padding:var(--space-3) var(--space-4)!important;margin:0!important}
-.compact-row{padding:var(--space-3)!important}
-.manager-groups{gap:var(--space-3)!important}
-.manager-group>summary{gap:var(--space-3)!important;padding:var(--space-3) var(--space-4)!important}
-.manager-group-body{gap:var(--space-2)!important;padding:0 var(--space-3) var(--space-3)!important}
-.manager-entry>summary{gap:var(--space-2)!important;padding:var(--space-3)!important}
-.manager-entry-actions{gap:var(--space-2)!important;padding:var(--space-3)!important}
+.list-head{padding:var(--space-2) var(--space-4)!important;margin:0!important}
+.compact-row{padding:var(--space-2)!important}
+.manager-groups{gap:var(--space-2)!important}
+.manager-group>summary{gap:var(--space-2)!important;padding:var(--space-2) var(--space-4)!important}
+.manager-group-body{gap:var(--space-2)!important;padding:0 var(--space-2) var(--space-2)!important}
+.manager-entry>summary{gap:var(--space-2)!important;padding:var(--space-2)!important}
+.manager-entry-actions{gap:var(--space-2)!important;padding:var(--space-2)!important}
 .compact-sub,.manager-entry-sub,.field-hint{margin-top:var(--space-1)!important}
 
-/* Seitentitel liegen immer sauber unterhalb des festen Headers. */
-.desktop-page-title{margin:0 0 var(--space-3)!important;padding:0!important;line-height:1.15;position:relative;z-index:1}
+/* Seitentitel liegen mit exakt einem Rasterabstand unterhalb des festen Headers. */
+.desktop-page-title{margin:0 0 var(--space-2)!important;padding:0!important;line-height:1.15;position:relative;z-index:1}
 .desktop-page-title+*{margin-top:0!important}
 
 @media(max-width:420px){
   :root{
-    --section-gap:12px;
-    --page-inline:12px;
-    --nav-inline:12px;
-    --page-top-gap:16px;
+    --section-gap:8px;
+    --page-inline:8px;
+    --nav-inline:8px;
+    --page-top-gap:8px;
   }
-  .card{padding:var(--space-3)!important}
+  .card{padding:var(--space-4)!important}
 }
