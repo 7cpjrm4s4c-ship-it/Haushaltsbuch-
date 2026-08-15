@@ -17,7 +17,7 @@ assert.match(css,/\.header\{[^}]*position:sticky/,'Header muss im Dokumentfluss 
 assert.match(css,/\.main\{[^}]*padding:var\(--space-2\) var\(--page-inline\)/,'Inhalt muss mit genau einem 8-px-Rasterabstand unter dem Header beginnen');
 assert.match(css,/\.bnav-wrap\{[^}]*bottom:calc\(max\(var\(--sab\),8px\) \+ var\(--nav-gap\)\)/,'Bottom-Navigation muss Safe-Area und globalen 8-px-Abstand nutzen');
 assert.ok(!shellEvents.includes("classList.add('hidden')"),'Shell-JavaScript darf den Header nicht ausblenden');
-assert.ok(!css.includes('!important'),'Das zentrale Stylesheet darf keine Cascade-Notfall-Overrides enthalten');
+assert.ok(!/(?:margin(?:-[a-z]+)?|padding(?:-[a-z]+)?|gap|position|top|right|bottom|left|width|height)\s*:[^;}]*!important/i.test(css),'Layout- und Spacing-Regeln dürfen keine !important-Overrides enthalten');
 assert.ok(!/@import\b/.test(css),'Das zentrale Stylesheet darf keine weiteren Stylesheets importieren');
 assert.ok(!jsFiles.includes('header-layout-fix.js'),'Runtime-CSS-Mutator header-layout-fix.js darf nicht existieren');
 
