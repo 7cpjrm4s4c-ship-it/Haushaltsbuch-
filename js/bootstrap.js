@@ -7,7 +7,7 @@ try { render(); } catch(e) {
   if(main){
     main.replaceChildren();
     const message=document.createElement('div');
-    message.className='boot-error';
+    message.className='card forecast-negative';
     message.textContent=`Start-Fehler: ${e.message}`;
     main.append(message);
   }
