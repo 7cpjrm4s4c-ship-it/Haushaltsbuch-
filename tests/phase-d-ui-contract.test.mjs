@@ -27,10 +27,12 @@ assert.match(css,/--nav-reserve\s*:\s*calc\(var\(--nav-h\) \+ var\(--nav-gap\) \
 assert.match(css,/html,body\{[^}]*-webkit-text-size-adjust:100%;text-size-adjust:100%/,'Globale Typografie darf im Querformat nicht automatisch skaliert werden');
 assert.match(css,/\.header\{[^}]*position:sticky/,'Header muss im Dokumentfluss sticky bleiben');
 assert.match(css,/\.main\{[^}]*display:flex;flex-direction:column;gap:var\(--surface-gap\)[^}]*padding:var\(--space-2\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Hauptinhalt muss den semantischen Flächenabstand und den Navigations-Sicherheitsbereich verwenden');
-assert.match(css,/\.stack,\.manager-groups,\.forecast-layout\{display:flex;flex-direction:column;gap:var\(--surface-gap\)\}/,'Card-Stapel müssen den semantischen 12-px-Flächenabstand verwenden');
+assert.match(css,/\.layout-grid,\.desktop-2col,\.grid-primary,\.grid-secondary,\.stack,\.manager-groups,\.forecast-layout,\.forecast-controls\{display:flex;flex-direction:column;gap:var\(--surface-gap\)\}/,'Alle mobilen View-Wrapper und Card-Stapel müssen den semantischen 12-px-Flächenabstand verwenden');
+assert.match(css,/\.forecast-controls>\*\{margin-block:0\}/,'Prognose-Cards müssen Kind-Margins neutralisieren und ausschließlich ihren Container-gap verwenden');
+assert.match(css,/\.list-head\+\.manager-groups\{margin-top:var\(--surface-gap\)\}/,'Listenüberschrift und erster Card-Eintrag müssen durch einen Flächenabstand getrennt sein');
 assert.match(css,/\.list-body\{display:flex;flex-direction:column;gap:0\}/,'Kompakte Listen dürfen keinen Card-Abstand zwischen zusammengehörigen Zeilen erhalten');
 assert.match(css,/\.main>\*\{margin-block:0\}/,'Top-Level-Komponenten dürfen keine eigenen Außenabstände in den Seitenfluss einbringen');
-const spacingOwnership='.main>*,#genBody>*,.form-card>*,.stack>*,.manager-groups>*,.list-body>*,.forecast-layout>*{margin-block:0}';
+const spacingOwnership='.main>*,#genBody>*,.form-card>*,.layout-grid>*,.desktop-2col>*,.grid-primary>*,.grid-secondary>*,.stack>*,.manager-groups>*,.list-body>*,.forecast-layout>*,.forecast-controls>*{margin-block:0}';
 const spacingOwnershipIndex=css.lastIndexOf(spacingOwnership);
 assert.ok(spacingOwnershipIndex>=0,'Container müssen Außenabstände ihrer direkten Kinder nach allen Modulregeln neutralisieren');
 for(const selector of ['.compact-toolbar{','.install-banner{','.loan-calc-card{','.backup-card{','.forecast-layout{']){

@@ -13,4 +13,4 @@
 @media(min-width:1200px){.main{padding-left:var(--space-5);padding-right:var(--space-5);max-width:1440px}.bnav-wrap{width:min(1280px,calc(100vw - 80px))}.desktop-2col{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);align-items:start}.desktop-2col .hero,.desktop-2col .tile-grid,.desktop-2col .month-grid{grid-column:1/-1}.tile-grid{grid-template-columns:repeat(4,1fr)}.hero-val{font-size:52px}.cat-grid-ausgaben{grid-template-columns:repeat(3,1fr)}.month-grid{grid-template-columns:repeat(12,1fr)}.mchip{font-size:10px}}
 
 /* Spacing-Ownership: Container-gap gewinnt immer gegen spätere Modul-Margins. */
-.main>*,#genBody>*,.form-card>*,.stack>*,.manager-groups>*,.list-body>*,.forecast-layout>*{margin-block:0}
+.main>*,#genBody>*,.form-card>*,.layout-grid>*,.desktop-2col>*,.grid-primary>*,.grid-secondary>*,.stack>*,.manager-groups>*,.list-body>*,.forecast-layout>*,.forecast-controls>*{margin-block:0}
