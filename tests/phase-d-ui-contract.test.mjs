@@ -16,7 +16,17 @@ assert.match(css,/--page-inline\s*:\s*8px/,'Globaler Seitenabstand muss 8 px bet
 assert.match(css,/--nav-reserve\s*:\s*calc\(var\(--nav-h\) \+ var\(--nav-gap\) \+ var\(--space-4\)\)/,'Unterer Inhaltsbereich muss Navigation plus Sicherheitsabstand reservieren');
 assert.match(css,/html,body\{[^}]*-webkit-text-size-adjust:100%;text-size-adjust:100%/,'Globale Typografie darf im Querformat nicht automatisch skaliert werden');
 assert.match(css,/\.header\{[^}]*position:sticky/,'Header muss im Dokumentfluss sticky bleiben');
-assert.match(css,/\.main\{[^}]*padding:var\(--space-2\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Inhalt muss oben 8 px und unten den zentralen Navigations-Sicherheitsbereich verwenden');
+assert.match(css,/\.main\{[^}]*display:flex;flex-direction:column;gap:var\(--section-gap\)[^}]*padding:var\(--space-2\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Hauptinhalt muss den zentralen 8-px-Rhythmus und den Navigations-Sicherheitsbereich verwenden');
+assert.match(css,/\.main>\*\{margin-block:0\}/,'Top-Level-Komponenten dürfen keine eigenen Außenabstände in den Seitenfluss einbringen');
+assert.match(css,/\.card\{[^}]*padding:var\(--space-3\);margin-bottom:0/,'Cards müssen 16 px Innenabstand besitzen und ihren Außenabstand dem Container überlassen');
+assert.match(css,/\.hero\{[^}]*padding:var\(--space-3\);margin-bottom:0/,'Hero-Komponenten müssen denselben zentralen Außenrhythmus verwenden');
+assert.match(css,/\.tile-grid\{[^}]*gap:var\(--space-2\);margin-bottom:0/,'Tile-Grids müssen den zentralen 8-px-Abstand verwenden');
+assert.match(css,/\.month-grid\{[^}]*gap:var\(--space-2\);margin-bottom:0/,'Monats-Grids müssen den zentralen 8-px-Abstand verwenden');
+assert.match(css,/\.sheet\{[^}]*padding:var\(--space-3\)/,'Eingabemasken müssen einen einheitlichen 16-px-Innenabstand verwenden');
+assert.match(css,/#genBody\{display:flex;flex-direction:column;gap:var\(--section-gap\)\}/,'Generische Eingabemasken müssen den globalen 8-px-Rhythmus erben');
+assert.match(css,/\.form-card,#genBody\{display:flex;flex-direction:column;gap:var\(--space-2\)\}/,'Formulare müssen zentral mit 8 px Abstand aufgebaut werden');
+assert.match(css,/\.field\{margin-bottom:0\}/,'Formularfelder dürfen keinen konkurrierenden eigenen Außenabstand besitzen');
+assert.match(css,/\.form-actions,\.dialog-actions\{[^}]*gap:var\(--space-2\)[^}]*margin-top:0/,'Formularaktionen müssen ihren Abstand ausschließlich vom Container erhalten');
 assert.match(css,/\.bnav-wrap\{[^}]*bottom:calc\(max\(var\(--sab\),8px\) \+ var\(--nav-gap\)\)/,'Bottom-Navigation muss Safe-Area und globalen 8-px-Abstand nutzen');
 assert.match(css,/@media\(orientation:landscape\) and \(max-height:600px\)\{[^}]*html,body\{[^}]*text-size-adjust:100%/,'Querformat muss die globale Schriftgröße stabil halten');
 assert.ok(!shellEvents.includes("classList.add('hidden')"),'Shell-JavaScript darf den Header nicht ausblenden');
@@ -38,4 +48,4 @@ for(const [file,source] of jsSources){
 if(/style\s*=\s*["']/.test(index))violations.push('index.html: enthält Inline-Styles');
 assert.deepEqual(violations,[],`Verbleibende Style-Ownership-Verstöße:\n${violations.join('\n')}`);
 
-console.log('Phase-D-UI-Vertrag erfolgreich geprüft: eine CSS-Quelle, 8-px-Rhythmus, Nav-Sicherheitsbereich und stabile Querformat-Typografie.');
+console.log('Phase-D-UI-Vertrag erfolgreich geprüft: eine CSS-Quelle, Container-basierter 8-px-Rhythmus, einheitliche Dialogabstände, Nav-Sicherheitsbereich und stabile Querformat-Typografie.');
