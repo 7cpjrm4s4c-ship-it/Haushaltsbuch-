@@ -42,6 +42,8 @@ assert.match(css,/\.card\{[^}]*padding:var\(--space-3\);margin-bottom:0/,'Cards 
 assert.match(css,/\.hero\{[^}]*padding:var\(--space-3\);margin-bottom:0/,'Hero-Komponenten müssen denselben zentralen Außenrhythmus verwenden');
 assert.match(css,/\.tile-grid\{[^}]*gap:var\(--space-2\);margin-bottom:0/,'Tile-Grids müssen den zentralen 8-px-Abstand verwenden');
 assert.match(css,/\.month-grid\{[^}]*gap:var\(--space-2\);margin-bottom:0/,'Monats-Grids müssen den zentralen 8-px-Abstand verwenden');
+assert.match(css,/\.overlay\{[^}]*top:calc\(var\(--sat\) \+ var\(--space-2\)\)/,'Eingabebereiche müssen 8 px unterhalb der oberen Safe Area beginnen');
+assert.match(css,/\.sheet\{[^}]*max-height:100%;overflow-y:auto/,'Lange Formulare müssen innerhalb des Safe-Area-begrenzten Overlays scrollen');
 assert.match(css,/\.sheet\{[^}]*padding:var\(--space-3\)/,'Eingabemasken müssen einen einheitlichen 16-px-Innenabstand verwenden');
 assert.match(css,/html\.dialog-open,body\.dialog-open\{overflow:hidden;overscroll-behavior:none\}/,'Geöffnete Eingabebereiche müssen den Hintergrund-Scroll sperren');
 assert.match(css,/\.sheet\{[^}]*overscroll-behavior:contain[^}]*-webkit-overflow-scrolling:touch/,'Nur das geöffnete Sheet darf mit begrenztem Scroll-Chaining scrollen');
