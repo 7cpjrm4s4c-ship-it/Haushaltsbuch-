@@ -2,13 +2,22 @@ import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
-const [index,css,shellEvents,cssFiles,jsFiles]=await Promise.all([
-  read('index.html'),read('css/app.css'),read('js/app-shell-events.js'),readdir(new URL('css/',root)),readdir(new URL('js/',root))
+const stylesheetOrder=['css/tokens.css','css/base.css','css/components.css','css/modules.css','css/responsive.css'];
+const [index,shellEvents,cssFiles,jsFiles]=await Promise.all([
+  read('index.html'),read('js/app-shell-events.js'),readdir(new URL('css/',root)),readdir(new URL('js/',root))
 ]);
+const stylesheetSources=await Promise.all(stylesheetOrder.map(read));
+const cssByFile=Object.fromEntries(stylesheetOrder.map((file,index)=>[file,stylesheetSources[index]]));
+const css=stylesheetSources.join('\n');
 
 const localStyles=[...index.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]+href=["'](css\/[^"']+)["']/g)].map(match=>match[1]);
-assert.deepEqual(localStyles,['css/app.css'],'Die App darf genau ein lokales Stylesheet laden');
-assert.deepEqual(cssFiles.filter(file=>file.endsWith('.css')).sort(),['app.css'],'css/app.css muss die einzige CSS-Datei im Repository sein');
+assert.deepEqual(localStyles,stylesheetOrder,'Stylesheets müssen vollständig und in vertraglich festgelegter Kaskadenreihenfolge geladen werden');
+assert.deepEqual(cssFiles.filter(file=>file.endsWith('.css')).sort(),stylesheetOrder.map(file=>file.slice(4)).sort(),'Das CSS-Verzeichnis darf nur die fünf verantwortlichen Stylesheets enthalten');
+assert.ok(!cssFiles.includes('app.css'),'Die monolithische app.css darf nicht wieder eingeführt werden');
+assert.match(cssByFile['css/tokens.css'],/^\/\*[^]*?\*\/\s*:root\{[^}]+\}\s*$/,'tokens.css darf ausschließlich globale Design-Tokens definieren');
+assert.ok(!/:root\s*\{/.test(stylesheetSources.slice(1).join('\n')),'Globale Design-Tokens dürfen ausschließlich in tokens.css definiert werden');
+for(const marker of ['Ausgaben / Buchungen','Import','Kreditrechner','Kategorieverwaltung','Backup','Prognose'])assert.ok(cssByFile['css/modules.css'].includes(`/* ${marker} */`),`modules.css muss den Bereich ${marker} zentral besitzen`);
+for(const file of ['css/base.css','css/components.css','css/responsive.css'])assert.ok(!/\/\* (?:Ausgaben \/ Buchungen|Import|Kreditrechner|Kategorieverwaltung|Backup|Prognose) \*\//.test(cssByFile[file]),`${file} darf keine fachlichen Modulstyles besitzen`);
 
 for(const token of ['--space-1','--space-2','--space-3','--section-gap','--control-h','--nav-h','--nav-gap','--nav-reserve'])assert.ok(css.includes(token),`Zentrales Stylesheet muss ${token} definieren`);
 assert.match(css,/--section-gap\s*:\s*8px/,'Globaler Abschnittsabstand muss 8 px betragen');
@@ -46,6 +55,7 @@ const violations=[];
 for(const [file,source] of jsSources){
   if(/style\s*=\s*["']/.test(source))violations.push(`${file}: erzeugt Inline-Styles`);
   if(/\.style\s*\.setProperty|\.style\.setProperty|style\.setProperty/.test(source))violations.push(`${file}: überschreibt CSS-Variablen zur Laufzeit`);
+  if(/createElement\s*\(\s*["'](?:style|link)["']\s*\)|insertRule\s*\(|adoptedStyleSheets/.test(source))violations.push(`${file}: injiziert eigene UI-Regeln oder Stylesheets`);
   const withoutAllowedSliderGeometry=sliderRuntimeFiles.has(file)
     ? source.replace(/slider\.style\.(?:left|width|transition)/g,'sliderRuntimeGeometry')
     : source;
@@ -54,4 +64,4 @@ for(const [file,source] of jsSources){
 if(/style\s*=\s*["']/.test(index))violations.push('index.html: enthält Inline-Styles');
 assert.deepEqual(violations,[],`Verbleibende Style-Ownership-Verstöße:\n${violations.join('\n')}`);
 
-console.log('Phase-D-UI-Vertrag erfolgreich geprüft: eine CSS-Quelle, Container-basierter 8-px-Rhythmus, einheitliche Dialogabstände, Nav-Sicherheitsbereich und stabile Querformat-Typografie.');
+console.log('Phase-D-UI-Vertrag erfolgreich geprüft: getrennte CSS-Verantwortlichkeiten, UI-freie Fachmodule, Container-basierter 8-px-Rhythmus, einheitliche Dialogabstände, Nav-Sicherheitsbereich und stabile Querformat-Typografie.');
