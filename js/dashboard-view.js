@@ -7,7 +7,7 @@ function dashboardYear(year,months=Array.from({length:12},(_,month)=>calcMonth(y
   return result;
 }
 function vDashboard(){
-  const y=AppUiState.year(),mo=AppUiState.month(),months=Array.from({length:12},(_,month)=>calcMonth(y,month)),m=months[mo],yr=dashboardYear(y,months),balance=AccountBalanceStore.get(y,mo);
+  const y=AppUiState.year(),mo=AppUiState.month(),months=Array.from({length:12},(_,month)=>calcMonth(y,month)),m=months[mo],yr=dashboardYear(y,months),balance=AccountBalanceStore.projected(y,mo,(year,month)=>year===y?months[month].saldo:calcMonth(year,month).saldo);
   const spPct=m.e>0?((m.s/m.e)*100).toFixed(0):0,krPct=m.e>0?((m.k/m.e)*100).toFixed(0):0;
   const standalone=window.navigator.standalone===true,ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const chips=MS.map((name,index)=>`<button type="button" class="mchip${index===mo?' active':''}" data-mi="${index}" aria-label="${MF[index]} ${y}; lange drücken, um den Kontostand einzugeben">${name}</button>`).join('');
