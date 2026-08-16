@@ -3,17 +3,19 @@
 
 (function(root){
   const LOCK_CLASS='dialog-open';
+  const document=root.document;
 
-  function hasOpenDialog(){return Boolean(document.querySelector('.overlay.open'));}
+  function hasOpenDialog(){return Boolean(document?.querySelector?.('.overlay.open'));}
 
   function syncScrollLock(){
     const locked=hasOpenDialog();
-    document.documentElement.classList.toggle(LOCK_CLASS,locked);
-    document.body?.classList.toggle(LOCK_CLASS,locked);
+    document?.documentElement?.classList?.toggle(LOCK_CLASS,locked);
+    document?.body?.classList?.toggle(LOCK_CLASS,locked);
   }
 
   function isDialogScroller(target){
-    return target instanceof Element&&Boolean(target.closest('.overlay.open .sheet'));
+    const ElementType=root.Element;
+    return typeof ElementType==='function'&&target instanceof ElementType&&Boolean(target.closest('.overlay.open .sheet'));
   }
 
   function blockBackgroundScroll(event){
@@ -34,18 +36,18 @@
   }
 
   function open(html){
-    const body=document.getElementById('genBody');
-    const overlay=document.getElementById('genOverlay');
+    const body=document?.getElementById?.('genBody');
+    const overlay=document?.getElementById?.('genOverlay');
     if(!body||!overlay)return;
     body.innerHTML=String(html??'');
     openOverlay(overlay);
-    setTimeout(()=>{const field=document.querySelector('#genBody input, #genBody select');if(field)field.focus();},350);
+    setTimeout(()=>{const field=document?.querySelector?.('#genBody input, #genBody select');if(field)field.focus();},350);
   }
 
-  function close(){closeOverlay(document.getElementById('genOverlay'));}
+  function close(){closeOverlay(document?.getElementById?.('genOverlay'));}
 
-  document.addEventListener('touchmove',blockBackgroundScroll,{passive:false});
-  document.addEventListener('wheel',blockBackgroundScroll,{passive:false});
+  document?.addEventListener?.('touchmove',blockBackgroundScroll,{passive:false});
+  document?.addEventListener?.('wheel',blockBackgroundScroll,{passive:false});
 
   root.AppDialogRuntime=Object.freeze({open,close,openOverlay,closeOverlay,syncScrollLock});
 })(typeof globalThis!=='undefined'?globalThis:window);
