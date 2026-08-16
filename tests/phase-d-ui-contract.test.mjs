@@ -19,13 +19,16 @@ assert.ok(!/:root\s*\{/.test(stylesheetSources.slice(1).join('\n')),'Globale Des
 for(const marker of ['Ausgaben / Buchungen','Import','Kreditrechner','Kategorieverwaltung','Backup','Prognose'])assert.ok(cssByFile['css/modules.css'].includes(`/* ${marker} */`),`modules.css muss den Bereich ${marker} zentral besitzen`);
 for(const file of ['css/base.css','css/components.css','css/responsive.css'])assert.ok(!/\/\* (?:Ausgaben \/ Buchungen|Import|Kreditrechner|Kategorieverwaltung|Backup|Prognose) \*\//.test(cssByFile[file]),`${file} darf keine fachlichen Modulstyles besitzen`);
 
-for(const token of ['--space-1','--space-2','--space-3','--section-gap','--control-h','--nav-h','--nav-gap','--nav-reserve'])assert.ok(css.includes(token),`Zentrales Stylesheet muss ${token} definieren`);
-assert.match(css,/--section-gap\s*:\s*8px/,'Globaler Abschnittsabstand muss 8 px betragen');
+for(const token of ['--space-1','--space-2','--space-3','--section-gap','--surface-gap','--control-h','--nav-h','--nav-gap','--nav-reserve'])assert.ok(css.includes(token),`Zentrales Stylesheet muss ${token} definieren`);
+assert.match(css,/--section-gap\s*:\s*8px/,'Interner Abschnittsabstand muss 8 px betragen');
+assert.match(css,/--surface-gap\s*:\s*12px/,'Abstand zwischen Cards und eigenständigen Inhaltsblöcken muss 12 px betragen');
 assert.match(css,/--page-inline\s*:\s*8px/,'Globaler Seitenabstand muss 8 px betragen');
 assert.match(css,/--nav-reserve\s*:\s*calc\(var\(--nav-h\) \+ var\(--nav-gap\) \+ var\(--space-4\)\)/,'Unterer Inhaltsbereich muss Navigation plus Sicherheitsabstand reservieren');
 assert.match(css,/html,body\{[^}]*-webkit-text-size-adjust:100%;text-size-adjust:100%/,'Globale Typografie darf im Querformat nicht automatisch skaliert werden');
 assert.match(css,/\.header\{[^}]*position:sticky/,'Header muss im Dokumentfluss sticky bleiben');
-assert.match(css,/\.main\{[^}]*display:flex;flex-direction:column;gap:var\(--section-gap\)[^}]*padding:var\(--space-2\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Hauptinhalt muss den zentralen 8-px-Rhythmus und den Navigations-Sicherheitsbereich verwenden');
+assert.match(css,/\.main\{[^}]*display:flex;flex-direction:column;gap:var\(--surface-gap\)[^}]*padding:var\(--space-2\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Hauptinhalt muss den semantischen Flächenabstand und den Navigations-Sicherheitsbereich verwenden');
+assert.match(css,/\.stack,\.manager-groups,\.forecast-layout\{display:flex;flex-direction:column;gap:var\(--surface-gap\)\}/,'Card-Stapel müssen den semantischen 12-px-Flächenabstand verwenden');
+assert.match(css,/\.list-body\{display:flex;flex-direction:column;gap:0\}/,'Kompakte Listen dürfen keinen Card-Abstand zwischen zusammengehörigen Zeilen erhalten');
 assert.match(css,/\.main>\*\{margin-block:0\}/,'Top-Level-Komponenten dürfen keine eigenen Außenabstände in den Seitenfluss einbringen');
 const spacingOwnership='.main>*,#genBody>*,.form-card>*,.stack>*,.manager-groups>*,.list-body>*,.forecast-layout>*{margin-block:0}';
 const spacingOwnershipIndex=css.lastIndexOf(spacingOwnership);

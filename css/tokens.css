@@ -7,5 +7,5 @@
   --r-xs:8px;--r-sm:12px;--r-md:16px;--r-lg:22px;--r-xl:28px;
   --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
   --space-1:4px;--space-2:8px;--space-3:16px;--space-4:24px;--space-5:32px;
-  --section-gap:8px;--page-inline:8px;--control-h:48px;--nav-h:72px;--nav-gap:8px;--nav-reserve:calc(var(--nav-h) + var(--nav-gap) + var(--space-4));
+  --section-gap:8px;--surface-gap:12px;--page-inline:8px;--control-h:48px;--nav-h:72px;--nav-gap:8px;--nav-reserve:calc(var(--nav-h) + var(--nav-gap) + var(--space-4));
 }
