@@ -18,6 +18,12 @@ assert.match(css,/html,body\{[^}]*-webkit-text-size-adjust:100%;text-size-adjust
 assert.match(css,/\.header\{[^}]*position:sticky/,'Header muss im Dokumentfluss sticky bleiben');
 assert.match(css,/\.main\{[^}]*display:flex;flex-direction:column;gap:var\(--section-gap\)[^}]*padding:var\(--space-2\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Hauptinhalt muss den zentralen 8-px-Rhythmus und den Navigations-Sicherheitsbereich verwenden');
 assert.match(css,/\.main>\*\{margin-block:0\}/,'Top-Level-Komponenten dürfen keine eigenen Außenabstände in den Seitenfluss einbringen');
+const spacingOwnership='.main>*,#genBody>*,.form-card>*,.stack>*,.manager-groups>*,.list-body>*,.forecast-layout>*{margin-block:0}';
+const spacingOwnershipIndex=css.lastIndexOf(spacingOwnership);
+assert.ok(spacingOwnershipIndex>=0,'Container müssen Außenabstände ihrer direkten Kinder nach allen Modulregeln neutralisieren');
+for(const selector of ['.compact-toolbar{','.install-banner{','.loan-calc-card{','.backup-card{','.forecast-layout{']){
+  assert.ok(spacingOwnershipIndex>css.lastIndexOf(selector),`Spacing-Ownership muss nach ${selector} in der Kaskade stehen`);
+}
 assert.match(css,/\.card\{[^}]*padding:var\(--space-3\);margin-bottom:0/,'Cards müssen 16 px Innenabstand besitzen und ihren Außenabstand dem Container überlassen');
 assert.match(css,/\.hero\{[^}]*padding:var\(--space-3\);margin-bottom:0/,'Hero-Komponenten müssen denselben zentralen Außenrhythmus verwenden');
 assert.match(css,/\.tile-grid\{[^}]*gap:var\(--space-2\);margin-bottom:0/,'Tile-Grids müssen den zentralen 8-px-Abstand verwenden');
