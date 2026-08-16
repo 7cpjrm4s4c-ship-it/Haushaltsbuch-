@@ -10,12 +10,15 @@ const localStyles=[...index.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]+href=
 assert.deepEqual(localStyles,['css/app.css'],'Die App darf genau ein lokales Stylesheet laden');
 assert.deepEqual(cssFiles.filter(file=>file.endsWith('.css')).sort(),['app.css'],'css/app.css muss die einzige CSS-Datei im Repository sein');
 
-for(const token of ['--space-1','--space-2','--space-3','--section-gap','--control-h','--nav-h','--nav-gap'])assert.ok(css.includes(token),`Zentrales Stylesheet muss ${token} definieren`);
+for(const token of ['--space-1','--space-2','--space-3','--section-gap','--control-h','--nav-h','--nav-gap','--nav-reserve'])assert.ok(css.includes(token),`Zentrales Stylesheet muss ${token} definieren`);
 assert.match(css,/--section-gap\s*:\s*8px/,'Globaler Abschnittsabstand muss 8 px betragen');
 assert.match(css,/--page-inline\s*:\s*8px/,'Globaler Seitenabstand muss 8 px betragen');
+assert.match(css,/--nav-reserve\s*:\s*calc\(var\(--nav-h\) \+ var\(--nav-gap\) \+ var\(--space-4\)\)/,'Unterer Inhaltsbereich muss Navigation plus Sicherheitsabstand reservieren');
+assert.match(css,/html,body\{[^}]*-webkit-text-size-adjust:100%;text-size-adjust:100%/,'Globale Typografie darf im Querformat nicht automatisch skaliert werden');
 assert.match(css,/\.header\{[^}]*position:sticky/,'Header muss im Dokumentfluss sticky bleiben');
-assert.match(css,/\.main\{[^}]*padding:var\(--space-2\) var\(--page-inline\)/,'Inhalt muss mit genau einem 8-px-Rasterabstand unter dem Header beginnen');
+assert.match(css,/\.main\{[^}]*padding:var\(--space-2\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Inhalt muss oben 8 px und unten den zentralen Navigations-Sicherheitsbereich verwenden');
 assert.match(css,/\.bnav-wrap\{[^}]*bottom:calc\(max\(var\(--sab\),8px\) \+ var\(--nav-gap\)\)/,'Bottom-Navigation muss Safe-Area und globalen 8-px-Abstand nutzen');
+assert.match(css,/@media\(orientation:landscape\) and \(max-height:600px\)\{[^}]*html,body\{[^}]*text-size-adjust:100%/,'Querformat muss die globale Schriftgröße stabil halten');
 assert.ok(!shellEvents.includes("classList.add('hidden')"),'Shell-JavaScript darf den Header nicht ausblenden');
 assert.ok(!/(?:margin(?:-[a-z]+)?|padding(?:-[a-z]+)?|gap|position|top|right|bottom|left|width|height)\s*:[^;}]*!important/i.test(css),'Layout- und Spacing-Regeln dürfen keine !important-Overrides enthalten');
 assert.ok(!/@import\b/.test(css),'Das zentrale Stylesheet darf keine weiteren Stylesheets importieren');
@@ -35,4 +38,4 @@ for(const [file,source] of jsSources){
 if(/style\s*=\s*["']/.test(index))violations.push('index.html: enthält Inline-Styles');
 assert.deepEqual(violations,[],`Verbleibende Style-Ownership-Verstöße:\n${violations.join('\n')}`);
 
-console.log('Phase-D-UI-Vertrag erfolgreich geprüft: eine CSS-Quelle, ein Spacing-Vertrag, nur dynamische Slider-Geometrie als Runtime-Ausnahme.');
+console.log('Phase-D-UI-Vertrag erfolgreich geprüft: eine CSS-Quelle, 8-px-Rhythmus, Nav-Sicherheitsbereich und stabile Querformat-Typografie.');
