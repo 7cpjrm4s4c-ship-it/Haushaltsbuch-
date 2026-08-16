@@ -2,7 +2,7 @@
 'use strict';
 function openYearSheet(){
   const years=YearStore.years(),current=YearStore.current();
-  document.getElementById('yearSheetBody').innerHTML=years.map(year=>`<div class="year-item${year===current?' active-year':''}" onclick="selYear(${year});closeYearSheet()"><span class="year-item-num">${year}</span>${year===current?'<span style="font-size:12px;color:var(--accent)">✓ Aktiv</span>':''}</div>`).join('');
+  document.getElementById('yearSheetBody').innerHTML=years.map(year=>`<div class="year-item${year===current?' active-year':''}" onclick="selYear(${year});closeYearSheet()"><span class="year-item-num">${year}</span>${year===current?'<span class="forecast-positive">✓ Aktiv</span>':''}</div>`).join('');
   document.getElementById('yearSheetFooter').innerHTML='<button class="btn btn-ghost btn-full" onclick="openAddYear()">+ Jahr hinzufügen</button>';
   document.getElementById('yearOverlay').classList.add('open');
 }
