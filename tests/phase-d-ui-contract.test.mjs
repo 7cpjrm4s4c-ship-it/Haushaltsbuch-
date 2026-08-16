@@ -19,14 +19,15 @@ assert.ok(!/:root\s*\{/.test(stylesheetSources.slice(1).join('\n')),'Globale Des
 for(const marker of ['Ausgaben / Buchungen','Import','Kreditrechner','Kategorieverwaltung','Backup','Prognose'])assert.ok(cssByFile['css/modules.css'].includes(`/* ${marker} */`),`modules.css muss den Bereich ${marker} zentral besitzen`);
 for(const file of ['css/base.css','css/components.css','css/responsive.css'])assert.ok(!/\/\* (?:Ausgaben \/ Buchungen|Import|Kreditrechner|Kategorieverwaltung|Backup|Prognose) \*\//.test(cssByFile[file]),`${file} darf keine fachlichen Modulstyles besitzen`);
 
-for(const token of ['--space-1','--space-2','--space-3','--section-gap','--surface-gap','--control-h','--nav-h','--nav-gap','--nav-reserve'])assert.ok(css.includes(token),`Zentrales Stylesheet muss ${token} definieren`);
+for(const token of ['--space-1','--space-2','--space-3','--section-gap','--surface-gap','--header-h','--control-h','--nav-h','--nav-gap','--nav-reserve'])assert.ok(css.includes(token),`Zentrales Stylesheet muss ${token} definieren`);
 assert.match(css,/--section-gap\s*:\s*8px/,'Interner Abschnittsabstand muss 8 px betragen');
 assert.match(css,/--surface-gap\s*:\s*12px/,'Abstand zwischen Cards und eigenständigen Inhaltsblöcken muss 12 px betragen');
 assert.match(css,/--page-inline\s*:\s*8px/,'Globaler Seitenabstand muss 8 px betragen');
 assert.match(css,/--nav-reserve\s*:\s*calc\(var\(--nav-h\) \+ var\(--nav-gap\) \+ var\(--space-4\)\)/,'Unterer Inhaltsbereich muss Navigation plus Sicherheitsabstand reservieren');
 assert.match(css,/html,body\{[^}]*-webkit-text-size-adjust:100%;text-size-adjust:100%/,'Globale Typografie darf im Querformat nicht automatisch skaliert werden');
-assert.match(css,/\.header\{[^}]*position:sticky/,'Header muss im Dokumentfluss sticky bleiben');
-assert.match(css,/\.main\{[^}]*display:flex;flex-direction:column;gap:var\(--surface-gap\)[^}]*padding:var\(--space-2\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Hauptinhalt muss den semantischen Flächenabstand und den Navigations-Sicherheitsbereich verwenden');
+assert.match(css,/--header-h\s*:\s*60px/,'Die mobile Header-Höhe muss zentral definiert sein');
+assert.match(css,/\.header\{[^}]*position:fixed[^}]*z-index:1000/,'Der Header muss fixiert über dem scrollenden Grid liegen');
+assert.match(css,/\.main\{[^}]*display:flex;flex-direction:column;gap:var\(--surface-gap\)[^}]*padding:calc\(var\(--sat\) \+ var\(--header-h\) \+ var\(--space-2\)\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Hauptinhalt muss unter dem fixierten Header starten und anschließend darunter scrollen');
 assert.match(css,/\.layout-grid,\.desktop-2col,\.grid-primary,\.grid-secondary,\.stack,\.manager-groups,\.forecast-layout,\.forecast-controls\{display:flex;flex-direction:column;gap:var\(--surface-gap\)\}/,'Alle mobilen View-Wrapper und Card-Stapel müssen den semantischen 12-px-Flächenabstand verwenden');
 assert.match(css,/\.forecast-controls>\*\{margin-block:0\}/,'Prognose-Cards müssen Kind-Margins neutralisieren und ausschließlich ihren Container-gap verwenden');
 assert.match(css,/\.list-head\+\.manager-groups\{margin-top:var\(--surface-gap\)\}/,'Listenüberschrift und erster Card-Eintrag müssen durch einen Flächenabstand getrennt sein');
@@ -59,23 +60,25 @@ assert.ok(!/(?:margin(?:-[a-z]+)?|padding(?:-[a-z]+)?|gap|position|top|right|bot
 assert.ok(!/@import\b/.test(css),'Das zentrale Stylesheet darf keine weiteren Stylesheets importieren');
 assert.ok(!jsFiles.includes('header-layout-fix.js'),'Runtime-CSS-Mutator header-layout-fix.js darf nicht existieren');
 
-const sliderRuntimeFiles=new Set(['app-shell-events.js','app-view-runtime.js']);
+const geometryRuntimeFiles=new Set(['app-shell-events.js','app-view-runtime.js','app-dialog-runtime.js']);
 const jsSources=await Promise.all(jsFiles.filter(file=>file.endsWith('.js')).map(async file=>[file,await read(`js/${file}`)]));
 const jsSourceMap=new Map(jsSources);
 const dialogRuntime=jsSourceMap.get('app-dialog-runtime.js')||'';
 assert.match(dialogRuntime,/CLOSE_DISTANCE=140/,'Schließen per Wischgeste muss eine ausreichend große Abwärtsdistanz verlangen');
 assert.match(dialogRuntime,/closest\?\.\('\.overlay\.open \.sheet-handle'\)/,'Die Schließgeste darf ausschließlich in der oberen Griffzone beginnen');
-assert.match(dialogRuntime,/dy>=CLOSE_DISTANCE&&dy>=Math\.abs\(dx\).*closeOverlay\(active\.overlay\)/s,'Nur eine überwiegend vertikale Abwärtsgeste darf das Sheet zentral schließen');
+assert.match(dialogRuntime,/drag\.sheet\.style\.transform=`translateY\(\$\{dy\}px\)`/,'Das Sheet muss der Abwärtsbewegung des Fingers unmittelbar folgen');
+assert.match(dialogRuntime,/settleSheet\(active,dy>=CLOSE_DISTANCE&&dy>=Math\.abs\(dx\)\)/,'Nur eine überwiegend vertikale Abwärtsgeste darf die Schließanimation auslösen');
+assert.match(dialogRuntime,/translateY\(100%\).*closeOverlay\(active\.overlay\)/s,'Die Schließanimation muss das Sheet vollständig nach unten führen und danach zentral schließen');
 assert.ok(!/enableSwipeClose|closest\('\.sheet'\)/.test(jsSourceMap.get('refinements.js')||''),'Fachliche Eingabehilfen dürfen keine eigene Dialoggeste besitzen');
 const violations=[];
 for(const [file,source] of jsSources){
   if(/style\s*=\s*["']/.test(source))violations.push(`${file}: erzeugt Inline-Styles`);
   if(/\.style\s*\.setProperty|\.style\.setProperty|style\.setProperty/.test(source))violations.push(`${file}: überschreibt CSS-Variablen zur Laufzeit`);
   if(/createElement\s*\(\s*["'](?:style|link)["']\s*\)|insertRule\s*\(|adoptedStyleSheets/.test(source))violations.push(`${file}: injiziert eigene UI-Regeln oder Stylesheets`);
-  const withoutAllowedSliderGeometry=sliderRuntimeFiles.has(file)
-    ? source.replace(/slider\.style\.(?:left|width|transition)/g,'sliderRuntimeGeometry')
+  const withoutAllowedRuntimeGeometry=geometryRuntimeFiles.has(file)
+    ? source.replace(/slider\.style\.(?:left|width|transition)|sheet\.style\.(?:transform|transition)/g,'allowedRuntimeGeometry')
     : source;
-  if(/\.style\s*\./.test(withoutAllowedSliderGeometry))violations.push(`${file}: mutiert DOM-Styles direkt`);
+  if(/\.style\s*\./.test(withoutAllowedRuntimeGeometry))violations.push(`${file}: mutiert DOM-Styles direkt`);
 }
 if(/style\s*=\s*["']/.test(index))violations.push('index.html: enthält Inline-Styles');
 assert.deepEqual(violations,[],`Verbleibende Style-Ownership-Verstöße:\n${violations.join('\n')}`);

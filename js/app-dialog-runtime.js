@@ -48,28 +48,51 @@
   function close(){closeOverlay(document?.getElementById?.('genOverlay'));}
 
   let drag=null;
+  function clearDragGeometry(sheet){
+    if(!sheet)return;
+    sheet.style.transform='';
+    sheet.style.transition='';
+  }
+  function settleSheet(active,close){
+    const sheet=active?.sheet;
+    if(!sheet)return;
+    sheet.style.transition='transform .22s cubic-bezier(.32,.72,0,1)';
+    sheet.style.transform=close?'translateY(100%)':'translateY(0)';
+    root.setTimeout?.(()=>{
+      if(close)closeOverlay(active.overlay);
+      clearDragGeometry(sheet);
+    },220);
+  }
   function beginHandleDrag(event){
     const handle=event.target?.closest?.('.overlay.open .sheet-handle');
-    const touch=event.touches?.[0];
-    if(!handle||!touch)return;
-    drag={overlay:handle.closest('.overlay'),startX:touch.clientX,startY:touch.clientY};
+    const touch=event.touches?.[0],sheet=handle?.closest?.('.sheet');
+    if(!handle||!sheet||!touch)return;
+    sheet.style.transition='none';
+    drag={overlay:handle.closest('.overlay'),sheet,startX:touch.clientX,startY:touch.clientY};
   }
   function moveHandleDrag(event){
     if(!drag)return;
     const touch=event.touches?.[0];
     if(!touch)return;
-    const dx=touch.clientX-drag.startX,dy=touch.clientY-drag.startY;
-    if(dy>0&&dy>=Math.abs(dx))event.preventDefault();
+    const dx=touch.clientX-drag.startX,dy=Math.max(0,touch.clientY-drag.startY);
+    if(dy>=Math.abs(dx)){
+      event.preventDefault();
+      drag.sheet.style.transform=`translateY(${dy}px)`;
+    }
   }
   function endHandleDrag(event){
     if(!drag)return;
     const touch=event.changedTouches?.[0],active=drag;
     drag=null;
-    if(!touch)return;
+    if(!touch){settleSheet(active,false);return;}
     const dx=touch.clientX-active.startX,dy=touch.clientY-active.startY;
-    if(dy>=CLOSE_DISTANCE&&dy>=Math.abs(dx))closeOverlay(active.overlay);
+    settleSheet(active,dy>=CLOSE_DISTANCE&&dy>=Math.abs(dx));
   }
-  function cancelHandleDrag(){drag=null;}
+  function cancelHandleDrag(){
+    const active=drag;
+    drag=null;
+    settleSheet(active,false);
+  }
 
   document?.addEventListener?.('touchstart',beginHandleDrag,{passive:true});
   document?.addEventListener?.('touchmove',moveHandleDrag,{passive:false});
