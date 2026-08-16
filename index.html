@@ -18,18 +18,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="css/app.css"/>
-<link rel="stylesheet" href="css/structured-forms.css"/>
-<link rel="stylesheet" href="css/refinements.css"/>
-<link rel="stylesheet" href="css/ui-polish.css"/>
-<link rel="stylesheet" href="css/compact-manager.css"/>
-<link rel="stylesheet" href="css/header-layout-fix.css"/>
-<link rel="stylesheet" href="css/loan-integration.css"/>
-<link rel="stylesheet" href="css/backup-manager.css"/>
-<link rel="stylesheet" href="css/category-manager.css"/>
-<link rel="stylesheet" href="css/forecast.css"/>
-<link rel="stylesheet" href="css/forecast-goals.css"/>
-<link rel="stylesheet" href="css/ui-contract.css"/>
+<link rel="stylesheet" href="css/tokens.css"/>
+<link rel="stylesheet" href="css/base.css"/>
+<link rel="stylesheet" href="css/components.css"/>
+<link rel="stylesheet" href="css/modules.css"/>
+<link rel="stylesheet" href="css/responsive.css"/>
 </head>
 <body>
 <header class="header" id="appHeader"><div class="header-left"><div class="header-title" id="headerTitle">Haushaltsplan</div><div class="header-sub" id="headerSub">Lade…</div></div><button class="year-pill" id="yearPill" onclick="openYearSheet()">–</button></header>
@@ -44,7 +37,6 @@
 </nav></div>
 <div class="overlay" id="yearOverlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Jahr auswählen</div><div id="yearSheetBody"></div><div class="sheet-divider"></div><div id="yearSheetFooter"></div></div></div>
 <div class="overlay" id="genOverlay"><div class="sheet"><div class="sheet-handle"></div><div id="genBody"></div></div></div>
-<script src="js/header-layout-fix.js"></script>
 <script src="js/app-core-state.js"></script>
 <script src="js/app-ui-state.js"></script>
 <script src="js/app-view-runtime.js"></script>

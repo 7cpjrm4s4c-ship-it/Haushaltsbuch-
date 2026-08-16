@@ -49,7 +49,7 @@ function variableBookingGroups(year, month){
     return `<details class="manager-group">
       <summary><div class="manager-group-title">${esc(cat.p)}</div><div class="manager-group-meta">${items.length} · <span class="manager-total">${fmt(total)}</span></div><span class="manager-chevron">▼</span></summary>
       <div class="manager-group-body">${items.map(item=>`<details class="manager-entry">
-        <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung||cat.p)}</div><div class="manager-entry-sub">${new Date(item.ts).toLocaleDateString('de-DE')} · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value" style="color:var(--red)">-${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary>
+        <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung||cat.p)}</div><div class="manager-entry-sub">${new Date(item.ts).toLocaleDateString('de-DE')} · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value is-expense">-${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary>
         <div class="manager-entry-actions">${managerButton('Bearbeiten',`openBookingDialog('${esc(item.id)}')`)}${managerButton('Löschen',`deleteBooking('${esc(item.id)}')`,true)}</div>
       </details>`).join('')}</div>
     </details>`;
@@ -59,7 +59,7 @@ function variableBookingGroups(year, month){
   if(!orphaned.length)return regular;
   const orphanTotal=orphaned.reduce((sum,item)=>sum+Number(item.betrag||0),0);
   const orphanRows=orphaned.map(item=>`<details class="manager-entry">
-    <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung||'Ausgabe')}</div><div class="manager-entry-sub">Kategorie nicht mehr vorhanden · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value" style="color:var(--red)">-${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary>
+    <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung||'Ausgabe')}</div><div class="manager-entry-sub">Kategorie nicht mehr vorhanden · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value is-expense">-${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary>
     <div class="manager-entry-actions">${managerButton('Bearbeiten',`openBookingDialog('${esc(item.id)}')`)}${managerButton('Löschen',`deleteBooking('${esc(item.id)}')`,true)}</div>
   </details>`).join('');
   return regular+`<details class="manager-group" open><summary><div class="manager-group-title">Ohne Kategorie</div><div class="manager-group-meta">${orphaned.length} · <span class="manager-total">${fmt(orphanTotal)}</span></div><span class="manager-chevron">▼</span></summary><div class="manager-group-body">${orphanRows}</div></details>`;
@@ -109,7 +109,7 @@ function compactExpensesView(){
       <div class="category-tools"><button class="btn btn-ghost" type="button" onclick="openVariableCategoryManager()">Kategorien verwalten</button></div>
       <div class="dialog-actions"><button class="btn btn-cancel" onclick="clearExpenseForm();ManagerUiState.resetExpense()">Abbrechen</button><button class="btn btn-green" onclick="saveStructuredExpense()">Speichern</button></div>
     </div></div>
-    <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title" style="margin:0">Gespeicherte Ausgaben</div><span class="muted">${MF[mo]} ${y}</span></div><div class="manager-groups">${groups||'<div class="manager-empty">Noch keine Ausgaben in diesem Monat.</div>'}</div></div></div>
+    <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title">Gespeicherte Ausgaben</div><span class="muted">${MF[mo]} ${y}</span></div><div class="manager-groups">${groups||'<div class="manager-empty">Noch keine Ausgaben in diesem Monat.</div>'}</div></div></div>
     </div>`;
 }
 
@@ -124,7 +124,7 @@ function compactFixedCostsView(){
       <div class="compact-toolbar"><input class="inp wide" id="fixed-search" placeholder="Position suchen" value="${esc(ui.fixedSearch)}"/><button class="btn btn-ghost" onclick="applyManagerFixedSearch()">Suchen</button><div class="sw"><select class="sel" onchange="ManagerUiState.setFixedType(this.value);render()">${fixedCostTypeOptions(type)}</select></div><div class="sw"><select class="sel" onchange="ManagerUiState.setFixedGroup(this.value);render()">${fixedCostGroups(group)}</select></div></div>
       <button class="btn btn-primary btn-full" onclick="openPositionDialog('')">Position hinzufügen</button><div class="category-tools"><button class="btn btn-ghost" type="button" onclick="openFixedCategoryManager()">Kategorien verwalten</button></div>
     </div></div>
-    <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title" style="margin:0">Gespeicherte Positionen</div><span class="muted">${categories.length} Einträge</span></div><div class="manager-groups">${fixedManagerGroups(categories)||'<div class="manager-empty">Keine passenden Positionen.</div>'}</div></div>
+    <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title">Gespeicherte Positionen</div><span class="muted">${categories.length} Einträge</span></div><div class="manager-groups">${fixedManagerGroups(categories)||'<div class="manager-empty">Keine passenden Positionen.</div>'}</div></div>
     <div class="card"><div class="card-title">Verwaltung</div><div class="form-actions"><button class="btn btn-ghost" onclick="openAddYear()">Jahr hinzufügen</button><button class="btn btn-ghost" onclick="openFixedDataActions()">Daten verwalten</button></div></div></div>
     </div>`;
 }
