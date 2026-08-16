@@ -23,14 +23,16 @@ assert.ok(!jsFiles.includes('header-layout-fix.js'),'Runtime-CSS-Mutator header-
 
 const sliderRuntimeFiles=new Set(['app-shell-events.js','app-view-runtime.js']);
 const jsSources=await Promise.all(jsFiles.filter(file=>file.endsWith('.js')).map(async file=>[file,await read(`js/${file}`)]));
+const violations=[];
 for(const [file,source] of jsSources){
-  assert.ok(!/style\s*=\s*["']/.test(source),`${file} darf keine Inline-Styles erzeugen`);
-  assert.ok(!/\.style\s*\.setProperty|\.style\.setProperty|style\.setProperty/.test(source),`${file} darf keine CSS-Variablen zur Laufzeit überschreiben`);
+  if(/style\s*=\s*["']/.test(source))violations.push(`${file}: erzeugt Inline-Styles`);
+  if(/\.style\s*\.setProperty|\.style\.setProperty|style\.setProperty/.test(source))violations.push(`${file}: überschreibt CSS-Variablen zur Laufzeit`);
   const withoutAllowedSliderGeometry=sliderRuntimeFiles.has(file)
     ? source.replace(/slider\.style\.(?:left|width|transition)/g,'sliderRuntimeGeometry')
     : source;
-  assert.ok(!/\.style\s*\./.test(withoutAllowedSliderGeometry),`${file} darf DOM-Styles nicht direkt mutieren; einzige Ausnahme ist die gemessene Slider-Geometrie`);
+  if(/\.style\s*\./.test(withoutAllowedSliderGeometry))violations.push(`${file}: mutiert DOM-Styles direkt`);
 }
-assert.ok(!/style\s*=\s*["']/.test(index),'index.html darf keine Inline-Styles enthalten');
+if(/style\s*=\s*["']/.test(index))violations.push('index.html: enthält Inline-Styles');
+assert.deepEqual(violations,[],`Verbleibende Style-Ownership-Verstöße:\n${violations.join('\n')}`);
 
 console.log('Phase-D-UI-Vertrag erfolgreich geprüft: eine CSS-Quelle, ein Spacing-Vertrag, nur dynamische Slider-Geometrie als Runtime-Ausnahme.');
