@@ -43,6 +43,9 @@ assert.match(css,/\.card\{[^}]*padding:var\(--space-3\);margin-bottom:0/,'Cards 
 assert.match(css,/\.hero\{[^}]*padding:var\(--space-3\);margin-bottom:0/,'Hero-Komponenten müssen denselben zentralen Außenrhythmus verwenden');
 assert.match(css,/\.tile-grid\{[^}]*gap:var\(--space-2\);margin-bottom:0/,'Tile-Grids müssen den zentralen 8-px-Abstand verwenden');
 assert.match(css,/\.month-grid\{[^}]*gap:var\(--space-2\);margin-bottom:0/,'Monats-Grids müssen den zentralen 8-px-Abstand verwenden');
+assert.match(css,/\.forecast-period-card>summary,\.forecast-year-card>summary\{[^}]*display:grid;grid-template-columns:minmax\(0,1fr\) auto 12px/,'Geschlossene Prognosezeilen müssen Titel, Summe und Chevron in identischen Spalten ausrichten');
+assert.match(css,/\.forecast-period-card>summary div:last-child,\.forecast-year-card>summary div:last-child\{[^}]*min-width:9\.5ch[^}]*font-variant-numeric:tabular-nums[^}]*text-align:right;justify-self:end/,'Gesamtsummen müssen eine stabile Mindestbreite besitzen und exakt rechtsbündig stehen');
+assert.match(css,/\.forecast-period-card>summary::after,\.forecast-year-card>summary::after\{[^}]*width:12px/,'Beide Prognosekartentypen müssen dieselbe Chevron-Spalte verwenden');
 assert.match(css,/\.overlay\{[^}]*top:calc\(var\(--sat\) \+ var\(--space-2\)\)/,'Eingabebereiche müssen 8 px unterhalb der oberen Safe Area beginnen');
 assert.match(css,/\.sheet\{[^}]*max-height:100%;overflow-y:auto/,'Lange Formulare müssen innerhalb des Safe-Area-begrenzten Overlays scrollen');
 assert.match(css,/\.sheet\{[^}]*border:1px solid var\(--glass-border\);border-radius:var\(--r-xl\);padding:var\(--space-3\)/,'Eingabebereiche müssen an allen vier Ecken denselben Radius und einen vollständigen Rahmen besitzen');
