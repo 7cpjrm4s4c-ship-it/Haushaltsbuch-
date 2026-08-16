@@ -4,9 +4,9 @@ function openYearSheet(){
   const years=YearStore.years(),current=YearStore.current();
   document.getElementById('yearSheetBody').innerHTML=years.map(year=>`<div class="year-item${year===current?' active-year':''}" onclick="selYear(${year});closeYearSheet()"><span class="year-item-num">${year}</span>${year===current?'<span class="forecast-positive">✓ Aktiv</span>':''}</div>`).join('');
   document.getElementById('yearSheetFooter').innerHTML='<button class="btn btn-ghost btn-full" onclick="openAddYear()">+ Jahr hinzufügen</button>';
-  document.getElementById('yearOverlay').classList.add('open');
+  AppDialogRuntime.openOverlay(document.getElementById('yearOverlay'));
 }
-function closeYearSheet(){document.getElementById('yearOverlay').classList.remove('open');}
+function closeYearSheet(){AppDialogRuntime.closeOverlay(document.getElementById('yearOverlay'));}
 function openAddYear(){
   const existing=new Set(YearStore.years());const available=Array.from({length:28},(_,index)=>2025+index).filter(year=>!existing.has(year));
   if(!available.length)return toast('Alle Jahre bereits vorhanden','err');
