@@ -4,10 +4,21 @@
 (function(root){
   const LOCK_CLASS='dialog-open';
 
+  function hasOpenDialog(){return Boolean(document.querySelector('.overlay.open'));}
+
   function syncScrollLock(){
-    const hasOpenDialog=Boolean(document.querySelector('.overlay.open'));
-    document.documentElement.classList.toggle(LOCK_CLASS,hasOpenDialog);
-    document.body?.classList.toggle(LOCK_CLASS,hasOpenDialog);
+    const locked=hasOpenDialog();
+    document.documentElement.classList.toggle(LOCK_CLASS,locked);
+    document.body?.classList.toggle(LOCK_CLASS,locked);
+  }
+
+  function isDialogScroller(target){
+    return target instanceof Element&&Boolean(target.closest('.overlay.open .sheet'));
+  }
+
+  function blockBackgroundScroll(event){
+    if(!hasOpenDialog()||isDialogScroller(event.target))return;
+    event.preventDefault();
   }
 
   function openOverlay(overlay){
@@ -32,6 +43,9 @@
   }
 
   function close(){closeOverlay(document.getElementById('genOverlay'));}
+
+  document.addEventListener('touchmove',blockBackgroundScroll,{passive:false});
+  document.addEventListener('wheel',blockBackgroundScroll,{passive:false});
 
   root.AppDialogRuntime=Object.freeze({open,close,openOverlay,closeOverlay,syncScrollLock});
 })(typeof globalThis!=='undefined'?globalThis:window);
