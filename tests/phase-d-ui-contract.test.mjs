@@ -43,6 +43,9 @@ assert.match(css,/\.hero\{[^}]*padding:var\(--space-3\);margin-bottom:0/,'Hero-K
 assert.match(css,/\.tile-grid\{[^}]*gap:var\(--space-2\);margin-bottom:0/,'Tile-Grids müssen den zentralen 8-px-Abstand verwenden');
 assert.match(css,/\.month-grid\{[^}]*gap:var\(--space-2\);margin-bottom:0/,'Monats-Grids müssen den zentralen 8-px-Abstand verwenden');
 assert.match(css,/\.sheet\{[^}]*padding:var\(--space-3\)/,'Eingabemasken müssen einen einheitlichen 16-px-Innenabstand verwenden');
+assert.match(css,/html\.dialog-open,body\.dialog-open\{overflow:hidden;overscroll-behavior:none\}/,'Geöffnete Eingabebereiche müssen den Hintergrund-Scroll sperren');
+assert.match(css,/\.sheet\{[^}]*overscroll-behavior:contain[^}]*-webkit-overflow-scrolling:touch/,'Nur das geöffnete Sheet darf mit begrenztem Scroll-Chaining scrollen');
+assert.match(css,/\.sheet-handle\{[^}]*width:100%;height:44px[^}]*touch-action:none/,'Die Schließgeste muss eine ausreichend große, exklusive Griffzone besitzen');
 assert.match(css,/#genBody\{display:flex;flex-direction:column;gap:var\(--section-gap\)\}/,'Generische Eingabemasken müssen den globalen 8-px-Rhythmus erben');
 assert.match(css,/\.form-card,#genBody\{display:flex;flex-direction:column;gap:var\(--space-2\)\}/,'Formulare müssen zentral mit 8 px Abstand aufgebaut werden');
 assert.match(css,/\.field\{margin-bottom:0\}/,'Formularfelder dürfen keinen konkurrierenden eigenen Außenabstand besitzen');
@@ -56,6 +59,12 @@ assert.ok(!jsFiles.includes('header-layout-fix.js'),'Runtime-CSS-Mutator header-
 
 const sliderRuntimeFiles=new Set(['app-shell-events.js','app-view-runtime.js']);
 const jsSources=await Promise.all(jsFiles.filter(file=>file.endsWith('.js')).map(async file=>[file,await read(`js/${file}`)]));
+const jsSourceMap=new Map(jsSources);
+const dialogRuntime=jsSourceMap.get('app-dialog-runtime.js')||'';
+assert.match(dialogRuntime,/CLOSE_DISTANCE=140/,'Schließen per Wischgeste muss eine ausreichend große Abwärtsdistanz verlangen');
+assert.match(dialogRuntime,/closest\?\.\('\.overlay\.open \.sheet-handle'\)/,'Die Schließgeste darf ausschließlich in der oberen Griffzone beginnen');
+assert.match(dialogRuntime,/dy>=CLOSE_DISTANCE&&dy>=Math\.abs\(dx\).*closeOverlay\(active\.overlay\)/s,'Nur eine überwiegend vertikale Abwärtsgeste darf das Sheet zentral schließen');
+assert.ok(!/enableSwipeClose|closest\('\.sheet'\)/.test(jsSourceMap.get('refinements.js')||''),'Fachliche Eingabehilfen dürfen keine eigene Dialoggeste besitzen');
 const violations=[];
 for(const [file,source] of jsSources){
   if(/style\s*=\s*["']/.test(source))violations.push(`${file}: erzeugt Inline-Styles`);
