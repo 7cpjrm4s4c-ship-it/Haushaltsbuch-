@@ -18,7 +18,9 @@ assert.ok(!/\blocalStorage\b/.test(managerSource),'Backup-UI darf die Opt-out-Ei
 assert.match(managerSource,/if\(!store\.isReminderEnabled\(\)\|\|sessionStorage\.getItem\(SESSION_PROMPT_KEY\)\)return/,'Opt-out muss den Start-Hinweis verhindern');
 assert.match(managerSource,/if\(!store\.isReminderEnabled\(\)\|\|!store\.isDirty\(\)\)return/,'Opt-out muss auch den automatischen Verlassen-Hinweis verhindern');
 assert.match(managerSource,/>Nicht mehr erinnern</);
+assert.match(managerSource,/btn btn-ghost backup-reminder-optout/);
 assert.ok(managerSource.includes("'Backup-Erinnerung aktivieren'"),'Die Datensicherung muss das Opt-in jederzeit wieder anbieten');
 assert.match(modulesSource,/\.backup-reminder-toggle\{width:100%;margin-top:var\(--space-2\)\}/);
+assert.match(modulesSource,/\.backup-actions \.btn\.backup-reminder-optout\{color:var\(--t2\)\}/,'Opt-out muss die graue Sekundärfarbe gegen die ältere Backup-Buttonregel behaupten');
 
 console.log('Backup-Erinnerungs-Opt-out erfolgreich geprüft.');

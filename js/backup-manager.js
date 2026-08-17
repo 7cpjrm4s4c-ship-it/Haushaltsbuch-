@@ -54,7 +54,7 @@
 
   function showStartupPrompt(){
     if(!store.isReminderEnabled()||sessionStorage.getItem(SESSION_PROMPT_KEY))return;sessionStorage.setItem(SESSION_PROMPT_KEY,'1');
-    setTimeout(()=>openGenSheet(`<div class="sheet-title">Vorhandenes Backup laden?</div><p class="backup-note">Falls du auf einem anderen Gerät gearbeitet hast, kannst du jetzt die aktuelle JSON-Datei laden.</p><div class="backup-actions"><button class="btn btn-primary" onclick="closeGenSheet();chooseHouseholdBackup()">Backup laden</button><button class="btn" onclick="closeGenSheet()">Lokale Daten verwenden</button><button class="btn btn-ghost" onclick="setBackupReminderEnabled(false)">Nicht mehr erinnern</button></div>`),500);
+    setTimeout(()=>openGenSheet(`<div class="sheet-title">Vorhandenes Backup laden?</div><p class="backup-note">Falls du auf einem anderen Gerät gearbeitet hast, kannst du jetzt die aktuelle JSON-Datei laden.</p><div class="backup-actions"><button class="btn btn-primary" onclick="closeGenSheet();chooseHouseholdBackup()">Backup laden</button><button class="btn" onclick="closeGenSheet()">Lokale Daten verwenden</button><button class="btn btn-ghost backup-reminder-optout" onclick="setBackupReminderEnabled(false)">Nicht mehr erinnern</button></div>`),500);
   }
 
   window.addEventListener('beforeunload',event=>{if(!store.isReminderEnabled()||!store.isDirty())return;event.preventDefault();event.returnValue='';});
