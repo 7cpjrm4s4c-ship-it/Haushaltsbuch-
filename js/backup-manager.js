@@ -41,18 +41,22 @@
     const applied=store.apply(pendingBackup,mode);pendingBackup=null;closeGenSheet();render();toast(applied==='replace'?'Backup wurde geladen':'Backup wurde zusammengeführt');
   };
 
+  window.setBackupReminderEnabled=function(enabled){
+    const active=store.setReminderEnabled(enabled);closeGenSheet();render();toast(active?'Backup-Erinnerung aktiviert':'Backup-Erinnerung deaktiviert');
+  };
+
   function backupPanel(){
-    const meta=store.readMeta(),count=Number(meta.changesSinceBackup||0);
-    return `<section class="backup-card"><div class="backup-title">Datensicherung</div><div class="backup-status"><span>Letztes Backup</span><strong>${esc(dateText(meta.lastBackupAt))}</strong></div><div class="backup-status"><span>Status</span><strong>${count?`${count} Änderungen nicht gesichert`:'Backup aktuell'}</strong></div><div class="backup-actions backup-actions-row"><button class="btn btn-primary" onclick="createHouseholdBackup()">Backup erstellen</button><button class="btn" onclick="chooseHouseholdBackup()">Backup laden</button></div></section>`;
+    const meta=store.readMeta(),count=Number(meta.changesSinceBackup||0),reminderEnabled=store.isReminderEnabled();
+    return `<section class="backup-card"><div class="backup-title">Datensicherung</div><div class="backup-status"><span>Letztes Backup</span><strong>${esc(dateText(meta.lastBackupAt))}</strong></div><div class="backup-status"><span>Status</span><strong>${count?`${count} Änderungen nicht gesichert`:'Backup aktuell'}</strong></div><div class="backup-status"><span>Automatische Erinnerung</span><strong>${reminderEnabled?'Aktiv':'Deaktiviert'}</strong></div><div class="backup-actions backup-actions-row"><button class="btn btn-primary" onclick="createHouseholdBackup()">Backup erstellen</button><button class="btn" onclick="chooseHouseholdBackup()">Backup laden</button></div><button class="btn btn-ghost backup-reminder-toggle" onclick="setBackupReminderEnabled(${reminderEnabled?'false':'true'})">${reminderEnabled?'Nicht mehr automatisch erinnern':'Backup-Erinnerung aktivieren'}</button></section>`;
   }
 
   globalThis.BackupManager=Object.freeze({panel:backupPanel});
 
   function showStartupPrompt(){
-    if(sessionStorage.getItem(SESSION_PROMPT_KEY))return;sessionStorage.setItem(SESSION_PROMPT_KEY,'1');
-    setTimeout(()=>openGenSheet(`<div class="sheet-title">Vorhandenes Backup laden?</div><p class="backup-note">Falls du auf einem anderen Gerät gearbeitet hast, kannst du jetzt die aktuelle JSON-Datei laden.</p><div class="backup-actions"><button class="btn btn-primary" onclick="closeGenSheet();chooseHouseholdBackup()">Backup laden</button><button class="btn" onclick="closeGenSheet()">Lokale Daten verwenden</button></div>`),500);
+    if(!store.isReminderEnabled()||sessionStorage.getItem(SESSION_PROMPT_KEY))return;sessionStorage.setItem(SESSION_PROMPT_KEY,'1');
+    setTimeout(()=>openGenSheet(`<div class="sheet-title">Vorhandenes Backup laden?</div><p class="backup-note">Falls du auf einem anderen Gerät gearbeitet hast, kannst du jetzt die aktuelle JSON-Datei laden.</p><div class="backup-actions"><button class="btn btn-primary" onclick="closeGenSheet();chooseHouseholdBackup()">Backup laden</button><button class="btn" onclick="closeGenSheet()">Lokale Daten verwenden</button><button class="btn btn-ghost" onclick="setBackupReminderEnabled(false)">Nicht mehr erinnern</button></div>`),500);
   }
 
-  window.addEventListener('beforeunload',event=>{if(!store.isDirty())return;event.preventDefault();event.returnValue='';});
+  window.addEventListener('beforeunload',event=>{if(!store.isReminderEnabled()||!store.isDirty())return;event.preventDefault();event.returnValue='';});
   window.addEventListener('load',showStartupPrompt,{once:true});
 })();
