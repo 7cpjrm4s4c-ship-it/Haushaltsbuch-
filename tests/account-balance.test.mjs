@@ -3,8 +3,8 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
-const [schemaSource,storeSource,uiSource,dashboardSource,storageSource,backupSource,index,sw]=await Promise.all([
-  'js/state-schema.js','js/account-balance-store.js','js/account-balance-ui.js','js/dashboard-view.js','js/state-storage.js','js/backup-store.js','index.html','sw.js'
+const [schemaSource,storeSource,uiSource,dashboardSource,storageSource,backupSource,componentsSource,index,sw]=await Promise.all([
+  'js/state-schema.js','js/account-balance-store.js','js/account-balance-ui.js','js/dashboard-view.js','js/state-storage.js','js/backup-store.js','css/components.css','index.html','sw.js'
 ].map(read));
 
 const schemaContext={Object,Array,Set,String,Number,Date,Math,RegExp};schemaContext.globalThis=schemaContext;vm.createContext(schemaContext);vm.runInContext(schemaSource,schemaContext);
@@ -30,6 +30,9 @@ assert.match(uiSource,/HOLD_DURATION=600/);
 assert.match(uiSource,/MOVE_TOLERANCE=12/);
 assert.match(uiSource,/inputmode="decimal"/);
 assert.match(uiSource,/Kontostand am Monatsanfang/);
+assert.match(uiSource,/aria-label="Vorzeichen wechseln"/);
+assert.match(uiSource,/function toggleSign\(\)/);
+assert.match(componentsSource,/\.field-sign-toggle\{[^}]*width:var\(--control-h\)[^}]*min-height:var\(--control-h\)/,'Vorzeichenumschalter muss eine zentrale, touchgerechte Trefferfläche verwenden');
 assert.match(uiSource,/event\.shiftKey&&event\.key==='Enter'/);
 assert.ok(!/(^|[^\w$])S\s*\./m.test(uiSource),'Kontostand-UI darf den App-State nicht direkt lesen');
 assert.ok(!/\.style\s*\./.test(uiSource),'Kontostand-UI darf keine CSS-Regeln zur Laufzeit erzeugen');

@@ -16,8 +16,9 @@
   }
   function open(year,month){
     const value=root.AccountBalanceStore.get(year,month),hasValue=value!==null;
-    root.openGenSheet(`<div class="sheet-title">Kontostand · ${MF[month]} ${year}</div><div class="field-hint">Der Wert gilt am Monatsanfang. Einnahmen und Ausgaben werden ab diesem Monat automatisch fortgeschrieben.</div><div class="field"><label class="lbl" for="account-balance-amount">Kontostand am Monatsanfang</label><input class="inp" id="account-balance-amount" type="text" inputmode="decimal" autocomplete="off" value="${hasValue?esc(String(value).replace('.',',')):''}" placeholder="0,00"/></div><div class="dialog-actions"><button class="btn btn-cancel" onclick="closeGenSheet()">Abbrechen</button>${hasValue?`<button class="btn btn-danger-ghost" onclick="AccountBalanceUi.remove(${year},${month})">Löschen</button>`:''}<button class="btn btn-primary" onclick="AccountBalanceUi.save(${year},${month})">Speichern</button></div>`);
+    root.openGenSheet(`<div class="sheet-title">Kontostand · ${MF[month]} ${year}</div><div class="field-hint">Der Wert gilt am Monatsanfang. Einnahmen und Ausgaben werden ab diesem Monat automatisch fortgeschrieben.</div><div class="field"><label class="lbl" for="account-balance-amount">Kontostand am Monatsanfang</label><div class="field-control-row"><input class="inp" id="account-balance-amount" type="text" inputmode="decimal" autocomplete="off" value="${hasValue?esc(String(value).replace('.',',')):''}" placeholder="0,00"/><button class="btn btn-ghost field-sign-toggle" type="button" aria-label="Vorzeichen wechseln" onclick="AccountBalanceUi.toggleSign()">+/−</button></div><div class="field-hint">Mit +/− kann auch ein negativer Anfangsbestand erfasst werden.</div></div><div class="dialog-actions"><button class="btn btn-cancel" onclick="closeGenSheet()">Abbrechen</button>${hasValue?`<button class="btn btn-danger-ghost" onclick="AccountBalanceUi.remove(${year},${month})">Löschen</button>`:''}<button class="btn btn-primary" onclick="AccountBalanceUi.save(${year},${month})">Speichern</button></div>`);
   }
+  function toggleSign(){const input=document.getElementById('account-balance-amount');if(!input)return;const value=String(input.value||'').trim();input.value=value.startsWith('-')?value.slice(1):`-${value.replace(/^\+/,'')}`;input.focus({preventScroll:true});}
   function save(year,month){
     const amount=parseAmount(document.getElementById('account-balance-amount')?.value);
     if(!Number.isFinite(amount))return root.toast('Bitte einen gültigen Kontostand eingeben','err');
@@ -47,5 +48,5 @@
     grid.addEventListener('keydown',openFromKeyboard);
     grid.addEventListener('click',blockTriggeredClick,true);
   }
-  root.AccountBalanceUi=Object.freeze({bindMonthGrid,open,save,remove,parseAmount});
+  root.AccountBalanceUi=Object.freeze({bindMonthGrid,open,save,remove,parseAmount,toggleSign});
 })(typeof globalThis!=='undefined'?globalThis:window);
