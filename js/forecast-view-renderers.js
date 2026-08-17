@@ -14,3 +14,12 @@ function forecastAssetInputs(assets=forecastAssets()){return Object.entries(FORE
 function forecastReturnInputs(assumptions=forecastAssumptions()){return Object.entries(FORECAST_ASSET_LABELS).map(([key,label])=>`<div class="field"><div class="lbl">${label} (% p.a.)</div><input class="inp" type="number" min="-99" max="100" step="0.1" inputmode="decimal" value="${assumptions.annualReturns[key]}" onchange="setForecastReturn('${key}',this.value)"/></div>`).join('');}
 function forecastSavingsTargetOptions(selected){return Object.entries(FORECAST_ASSET_LABELS).map(([key,label])=>`<option value="${key}"${selected===key?' selected':''}>${label}</option>`).join('');}
 function forecastLowPoint(summary){if(summary.minLiquidityYear===null||summary.minLiquidityMonth===null)return '–';return `${MF[summary.minLiquidityMonth]} ${summary.minLiquidityYear}`;}
+function forecastPrimaryResult(focus,ui,months,summary){
+  if(focus==='debtFree'){
+    if(Number(summary.startDebt||0)<=0)return `<section class="forecast-primary-result forecast-positive"><span>Schuldenfrei</span><strong>Bereits schuldenfrei</strong><small>Es ist keine Restschuld vorhanden.</small></section>`;
+    const row=months.find(item=>Number(item.debt||0)<=0),last=months[months.length-1];
+    return `<section class="forecast-primary-result ${row?'forecast-positive':'forecast-negative'}"><span>Voraussichtlich schuldenfrei</span><strong>${row?`${MF[row.month]} ${row.year}`:`Nach ${last?.year||ui.endYear}`}</strong><small>${row?'Auf Basis der aktuellen Kredite und geplanten Sondertilgungen.':'Im berechneten Zeitraum bleibt eine Restschuld bestehen.'}</small></section>`;
+  }
+  const target=[...months].reverse().find(item=>Number(item.year)===Number(ui.endYear)),key=focus==='liquidity'?'liquidity':'netWorth',value=Number(target?.[key]||0),label=focus==='liquidity'?'Liquidität':'Vermögen';
+  return `<section class="forecast-primary-result ${value>=0?'forecast-positive':'forecast-negative'}"><span>${label} Ende ${ui.endYear}</span><strong>${fmt(value)}</strong><small>${focus==='liquidity'?'Verfügbares Geld nach allen geplanten Einnahmen und Ausgaben.':'Anlagen und Liquidität abzüglich der verbleibenden Schulden.'}</small></section>`;
+}

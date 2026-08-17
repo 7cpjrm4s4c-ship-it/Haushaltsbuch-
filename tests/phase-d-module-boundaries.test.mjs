@@ -36,7 +36,7 @@ for(const [name,source] of [['Szenarien',scenariosUi],['Finanzziele',goalsUi]]){
   assert.ok(!/\bvEinstellungen\s*=/.test(source),`${name} dürfen vEinstellungen nicht überschreiben`);
 }
 assert.ok(financialEventsUi.includes("ForecastPanelRegistry.register('beforeKpis','financial-events'"));
-assert.ok(composer.includes("ForecastPanelRegistry.render('beforeKpis')"),'Composer muss alle registrierten Panels zusammensetzen');
+assert.ok(composer.includes("{include:['financial-events']}"),'Vereinfachter Composer darf ausschließlich die relevante Ereignisplanung automatisch einblenden');
 assert.ok(composer.includes("AppExtensionRegistry.registerView('einstellungen',composeForecastView,200)"));
 assert.ok(!/root\.vPrognose\s*=/.test(composer),'Forecast-Composer darf vPrognose nicht überschreiben');
 assert.ok(!/root\.vEinstellungen\s*=/.test(composer),'Forecast-Composer darf vEinstellungen nicht überschreiben');

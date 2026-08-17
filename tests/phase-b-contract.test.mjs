@@ -14,7 +14,7 @@ assert.ok(adapter.includes('FinancialEvents.applyToBaseMonths'));assert.ok(adapt
 assert.ok(eventUi.includes('openFinancialEventDialog'));assert.ok(eventUi.includes('duplicateFinancialEvent'));assert.ok(eventUi.includes('fe-end-year'));assert.ok(eventUi.includes('fe-loan'));
 assert.ok(eventUi.includes('financialEventsPanel'),'Finanzereignis-Panel gehört in die Feature-UI');
 assert.ok(renderers.includes('forecastEventBadges'),'Ereignis-Badges gehören in die Renderer-Schicht');
-assert.ok(view.includes('Sondertilgungen'),'Basis-View muss Sondertilgungs-KPI weiterhin anzeigen');
+assert.ok(eventUi.includes('+ Sondertilgung'),'Vereinfachte Prognose muss Sondertilgungen weiterhin direkt erfassbar machen');
 assert.ok(dataManagementStore.includes('s.financialEvents=[]'));assert.ok(backupStore.includes('financialEvents'));
 assert.ok(index.includes('js/financial-events.js'));assert.ok(index.includes('js/financial-events-ui.js'));
 assert.ok(index.indexOf('js/financial-events.js')<index.indexOf('js/forecast-adapter.js'),'Ereignislogik muss vor dem Adapter geladen werden');

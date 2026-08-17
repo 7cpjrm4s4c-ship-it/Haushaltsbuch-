@@ -6,6 +6,7 @@ const FORECAST_ASSET_LABELS={cash:'Kontostand / Liquidität',callMoney:'Tagesgel
 function forecastUi(){
   const baseYear=ForecastStateStore.year(),current=ForecastStateStore.forecastUi(),minEnd=baseYear+1;
   return {
+    focus:['netWorth','debtFree','liquidity'].includes(current.focus)?current.focus:'netWorth',
     scenarioKey:current.scenarioKey||'realistic',
     lookbackMonths:[3,6,12].includes(Number(current.lookbackMonths))?Number(current.lookbackMonths):3,
     annualInflation:Number.isFinite(Number(current.annualInflation))?Number(current.annualInflation):0,
@@ -45,6 +46,6 @@ function forecastAssetBuckets(assets=forecastAssets()){
 
 function forecastData(){
   const baseYear=ForecastStateStore.year(),ui=forecastUi(),assets=forecastAssets(),assumptions=forecastAssumptions(),buckets=forecastAssetBuckets(assets);
-  const input=buildForecastInput(ui,assets,assumptions),result=ForecastEngine.project(input);
+  const calculationUi=ui.focus==='debtFree'?{...ui,endYear:baseYear+40}:ui,input=buildForecastInput(calculationUi,assets,assumptions),result=ForecastEngine.project(input);
   return {baseYear,ui,assets,assumptions,startAssets:buckets.total,buckets,baseline:input.variableBaseline,...result};
 }

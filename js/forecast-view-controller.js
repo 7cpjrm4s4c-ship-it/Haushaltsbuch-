@@ -20,6 +20,14 @@ function setForecastAsset(key,value){
   commitForecastChange(()=>ForecastStateStore.setAssets(assets));
 }
 
+function setForecastBucket(bucket,value){
+  const assets=forecastAssets(),amount=Math.max(0,Number(value)||0),keys=bucket==='liquidity'?['cash','callMoney','fixedDeposit']:['etf','depot','other'];
+  const current=keys.reduce((sum,key)=>sum+Number(assets[key]||0),0);
+  if(current>0)for(const key of keys)assets[key]=amount*Number(assets[key]||0)/current;
+  else{for(const key of keys)assets[key]=0;assets[keys[0]]=amount;}
+  commitForecastChange(()=>ForecastStateStore.setAssets(assets));
+}
+
 function setForecastReturn(key,value){
   const assumptions=forecastAssumptions();
   assumptions.annualReturns[key]=Math.max(-99,Math.min(100,Number(value)||0));
