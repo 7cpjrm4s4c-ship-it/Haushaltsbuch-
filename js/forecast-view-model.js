@@ -23,6 +23,11 @@ function forecastAssets(){
   return result;
 }
 
+function forecastAccounts(){
+  const source=ForecastStateStore.accounts();
+  return source.map((item,index)=>({id:String(item.id||`forecast_account_${index+1}`),name:String(item.name||'Konto'),bucket:item.bucket==='investments'?'investments':'liquidity',amount:Math.max(0,Number(item.amount)||0),annualReturn:Math.max(-99,Math.min(100,Number(item.annualReturn)||0))}));
+}
+
 function forecastAssumptions(){
   const raw=ForecastStateStore.assumptions();
   if(typeof StateSchema!=='undefined'&&typeof StateSchema.normalizeForecastAssumptions==='function')return StateSchema.normalizeForecastAssumptions(raw);
@@ -38,9 +43,9 @@ function forecastAssumptions(){
   };
 }
 
-function forecastAssetBuckets(assets=forecastAssets()){
-  const liquidity=Number(assets.cash||0)+Number(assets.callMoney||0)+Number(assets.fixedDeposit||0);
-  const investments=Number(assets.etf||0)+Number(assets.depot||0)+Number(assets.other||0);
+function forecastAssetBuckets(accounts=forecastAccounts()){
+  const liquidity=accounts.filter(item=>item.bucket==='liquidity').reduce((sum,item)=>sum+item.amount,0);
+  const investments=accounts.filter(item=>item.bucket==='investments').reduce((sum,item)=>sum+item.amount,0);
   return {liquidity,investments,total:liquidity+investments};
 }
 
@@ -54,7 +59,7 @@ function forecastReturnBuckets(assets=forecastAssets(),assumptions=forecastAssum
 }
 
 function forecastData(){
-  const baseYear=ForecastStateStore.year(),ui=forecastUi(),assets=forecastAssets(),assumptions=forecastAssumptions(),buckets=forecastAssetBuckets(assets);
+  const baseYear=ForecastStateStore.year(),ui=forecastUi(),assets=forecastAssets(),accounts=forecastAccounts(),assumptions=forecastAssumptions(),buckets=forecastAssetBuckets(accounts);
   const calculationUi=ui.focus==='debtFree'?{...ui,endYear:baseYear+40}:ui,input=buildForecastInput(calculationUi,assets,assumptions),result=ForecastEngine.project(input);
-  return {baseYear,ui,assets,assumptions,startAssets:buckets.total,buckets,returnBuckets:forecastReturnBuckets(assets,assumptions),baseline:input.variableBaseline,...result};
+  return {baseYear,ui,assets,accounts,assumptions,startAssets:buckets.total,buckets,baseline:input.variableBaseline,...result};
 }

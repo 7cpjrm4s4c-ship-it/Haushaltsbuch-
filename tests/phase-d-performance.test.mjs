@@ -12,11 +12,11 @@ assert.ok(engine.includes('totals=new Map()'),'Historische variable Ausgaben mü
 assert.ok(!/for\s*\([^)]*offset[^)]*\)[\s\S]{0,250}bookings\.filter/.test(engine),'Buchungen dürfen nicht pro Rückblicksmonat vollständig gefiltert werden');
 assert.ok(renderers.includes('const byYear=new Map()'),'Prognosemonate müssen für Jahresdetails einmalig gruppiert werden');
 assert.ok(!renderers.includes('months.filter(item=>item.year===row.year)'),'Jahresrenderer darf nicht für jedes Jahr alle Monate erneut scannen');
-assert.ok(view.includes("setForecastBucket('liquidity'"),'Vereinfachte Prognose muss Liquidität als aggregierten Ausgangswert ändern');
-assert.ok(view.includes("setForecastBucket('investments'"),'Vereinfachte Prognose muss Anlagevermögen als aggregierten Ausgangswert ändern');
+assert.ok(view.includes("openForecastAccounts('liquidity'"),'Vereinfachte Prognose muss Liquiditätskonten im Overlay verwalten');
+assert.ok(view.includes("openForecastAccounts('investments'"),'Vereinfachte Prognose muss Anlagen im Overlay verwalten');
 assert.ok(view.includes('forecastPrimaryResult(ui.focus,ui,months,summary)'),'Hauptansicht muss genau das gewählte Ergebnis rendern');
 assert.ok(!view.includes('forecastYearDetails(')&&!view.includes('forecastTimeline('),'Jährliche Aufstellungen dürfen nicht mehr Teil der Hauptansicht sein');
-assert.ok(viewModel.includes('forecastAssetBuckets(assets)'),'Forecast-ViewModel darf Assets für Buckets nicht erneut aus dem Store lesen');
+assert.ok(viewModel.includes('forecastAssetBuckets(accounts)'),'Forecast-ViewModel darf Konten für Buckets nicht erneut aus dem Store lesen');
 assert.ok(dataConsistency.includes('const events=planningEventsSnapshot()'),'Monatsberechnung muss Planungsereignisse einmalig vorbereiten');
 assert.ok(dataConsistency.includes('consistentValue(year,month,cat,events)'),'Monatsberechnung muss denselben Planungs-Snapshot pro Kategorie wiederverwenden');
 assert.ok(!bookingStore.includes('return all().filter'),'Monatsfilter darf nicht vorher die komplette Buchungsliste klonen');

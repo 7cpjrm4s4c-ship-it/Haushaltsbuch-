@@ -52,5 +52,5 @@ function forecastBaseMonths(startYear,startMonth,endYear,endMonth=11,eventsOverr
 function buildForecastInput(ui,assetBreakdown,assumptions,eventsOverride){
   const variableIds=S.cats.filter(cat=>cat.t==='V').map(cat=>cat.id);
   const variableBaseline=ForecastEngine.historicalVariableAverage({bookings:S.buchungen,variableCategoryIds:variableIds,baseYear:S.year,baseMonth:S.month,lookbackMonths:ui.lookbackMonths});
-  return {baseMonths:forecastBaseMonths(S.year,S.month,ui.endYear,11,eventsOverride),variableBaseline,annualInflation:ui.annualInflation,scenarioKey:ui.scenarioKey,startAssetBreakdown:{...(assetBreakdown||{})},annualReturns:{...(assumptions?.annualReturns||{})},purchasingPowerInflation:Number(assumptions?.purchasingPowerInflation)||0,savingsTarget:assumptions?.savingsTarget||'etf'};
+  return {baseMonths:forecastBaseMonths(S.year,S.month,ui.endYear,11,eventsOverride),variableBaseline,annualInflation:ui.annualInflation,scenarioKey:ui.scenarioKey,startAssetBreakdown:{...(assetBreakdown||{})},startAccounts:Array.isArray(S.forecastAccounts)?S.forecastAccounts.map(item=>({...item})):undefined,annualReturns:{...(assumptions?.annualReturns||{})},purchasingPowerInflation:Number(assumptions?.purchasingPowerInflation)||0,savingsTarget:assumptions?.savingsTarget||'etf'};
 }
