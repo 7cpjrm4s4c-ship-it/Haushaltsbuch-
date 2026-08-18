@@ -8,6 +8,7 @@ for(const label of ['Vermögen in einem Jahr','Wann bin ich schuldenfrei?','Liqu
 assert.ok(view.includes('Zieljahr'));
 assert.ok(view.includes('Liquidität heute')&&view.includes('Anlagevermögen heute')&&view.includes('Restschulden heute'));
 for(const label of ['Annahmen pro Jahr','Kaufkraftverlust (%)','Variable Ausgaben (%)','Verzinsung Liquidität (%)','Rendite Anlagevermögen (%)'])assert.ok(view.includes(label));
+assert.ok(view.includes('Monatsbasis:')&&view.includes('verringern Liquidität und Vermögen'));
 assert.ok(view.includes("setForecastBucketReturn('liquidity'")&&view.includes("setForecastBucketReturn('investments'"));
 for(const removed of ['Jährlicher Finanzierungsspielraum','Jahres- und Monatsdetails','Rendite & Kaufkraft','Szenario'])assert.ok(!view.includes(removed),`${removed} darf die einfache Hauptansicht nicht belasten`);
 assert.ok(model.includes("ui.focus==='debtFree'?{...ui,endYear:baseYear+40}:ui"),'Schuldenfreiheit braucht einen ausreichenden automatischen Horizont');

@@ -32,7 +32,8 @@
       totals.set(key,(totals.get(key)||0)+Number(item.betrag||0));
     }
     let total=0;for(let offset=0;offset<months;offset++)total+=totals.get(end-offset)||0;
-    return round2(total/months);
+    if(total>0)return round2(total/months);
+    return round2(totals.get(monthIndex(options.baseYear,options.baseMonth))||0);
   }
 
   function variableValue(baseAmount,monthsFromStart,annualInflation,scenarioKey){const scenario=SCENARIOS[scenarioKey]||SCENARIOS.realistic;const inflation=Math.max(-99,Number(annualInflation)||0)/100;return round2(Math.max(0,Number(baseAmount)||0)*scenario.variableFactor*Math.pow(1+inflation,Math.max(0,Number(monthsFromStart)||0)/12));}
