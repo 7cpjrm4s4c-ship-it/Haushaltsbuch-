@@ -7,6 +7,7 @@ assert.ok(!dashboard.includes('forecastAssumptions'));assert.ok(!dashboard.inclu
 for(const source of [schema,storage,backupStore,dataManagementStore])assert.ok(source.includes('financialEvents'),'Finanzereignisse müssen durch Schema, Persistenz, Backup und Reset geführt werden');
 assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/);assert.match(backupStore,/version:\d+/);
 assert.match(engine,/function\s+monthlyRate\s*\(/);assert.ok(engine.includes('annualReturns'));assert.ok(engine.includes('realNetWorth'));assert.ok(engine.includes('specialRepayment'));
+assert.match(renderers,/Kaufkraft in heutigen Euro/,'Die vereinfachte Prognose muss den realen Vermögenswert sichtbar machen');
 assert.ok(!/(^|[^\w$])S\s*\./m.test(engine));assert.ok(!/\b(?:globalThis|window)\s*\.\s*S\b/.test(engine));
 for(const forbidden of [/\bdocument\s*\./,/\blocalStorage\b/,/\bsessionStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/,/\bgv\s*\(/,/\bcreditBalanceAt\s*\(/,/\bcreditInterestAt\s*\(/])assert.ok(!forbidden.test(engine));
 for(const forbidden of [/\bdocument\s*\./,/\blocalStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/,/(^|[^\w$])S\s*\./m])assert.ok(!forbidden.test(events),'FinancialEvents muss eine reine Fachlogik bleiben');
@@ -14,7 +15,7 @@ assert.ok(adapter.includes('FinancialEvents.applyToBaseMonths'));assert.ok(adapt
 assert.ok(eventUi.includes('openFinancialEventDialog'));assert.ok(eventUi.includes('duplicateFinancialEvent'));assert.ok(eventUi.includes('fe-end-year'));assert.ok(eventUi.includes('fe-loan'));
 assert.ok(eventUi.includes('financialEventsPanel'),'Finanzereignis-Panel gehört in die Feature-UI');
 assert.ok(renderers.includes('forecastEventBadges'),'Ereignis-Badges gehören in die Renderer-Schicht');
-assert.ok(view.includes('Sondertilgungen'),'Basis-View muss Sondertilgungs-KPI weiterhin anzeigen');
+assert.ok(eventUi.includes('+ Sondertilgung'),'Vereinfachte Prognose muss Sondertilgungen weiterhin direkt erfassbar machen');
 assert.ok(dataManagementStore.includes('s.financialEvents=[]'));assert.ok(backupStore.includes('financialEvents'));
 assert.ok(index.includes('js/financial-events.js'));assert.ok(index.includes('js/financial-events-ui.js'));
 assert.ok(index.indexOf('js/financial-events.js')<index.indexOf('js/forecast-adapter.js'),'Ereignislogik muss vor dem Adapter geladen werden');

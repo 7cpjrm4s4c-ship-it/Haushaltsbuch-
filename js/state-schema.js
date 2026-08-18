@@ -5,7 +5,7 @@
 'use strict';
 
 (function(root){
-  const CURRENT_VERSION = 7;
+  const CURRENT_VERSION = 8;
   const ASSET_FIELDS=['cash','callMoney','fixedDeposit','etf','depot','other'];
   const SAVINGS_TARGETS=new Set(ASSET_FIELDS);
   const SCENARIO_KEYS=new Set(['optimistic','realistic','cautious']);
@@ -20,6 +20,11 @@
 
   function normalizeYears(value,fallbackYears){const years=arrayOrEmpty(value).map(Number).filter(year=>Number.isInteger(year)&&year>=2000&&year<=2200);const unique=[...new Set(years)].sort((a,b)=>a-b);if(unique.length)return unique;const fallback=typeof fallbackYears==='function'?fallbackYears():fallbackYears;return arrayOrEmpty(fallback).map(Number).filter(Number.isInteger).sort((a,b)=>a-b);}
   function normalizeForecastAssets(value){const source=objectOrEmpty(value),result={};for(const field of ASSET_FIELDS){const amount=Number(source[field]);result[field]=Number.isFinite(amount)&&amount>=0?amount:0;}return result;}
+  function normalizeForecastAccounts(value,legacyAssets={},legacyAssumptions={}){
+    if(Array.isArray(value))return value.filter(isRecord).map((item,index)=>({id:String(item.id||`forecast_account_${index+1}`),name:String(item.name||'Konto'),bucket:item.bucket==='investments'?'investments':'liquidity',amount:Math.max(0,finite(item.amount,0)),annualReturn:clamp(item.annualReturn,-99,100,0)}));
+    const assets=normalizeForecastAssets(legacyAssets),returns=normalizeForecastAssumptions(legacyAssumptions).annualReturns,labels={cash:'Girokonto',callMoney:'Tagesgeld',fixedDeposit:'Festgeld',etf:'ETF',depot:'Depot',other:'Sonstiges Vermögen'};
+    return ASSET_FIELDS.filter(field=>assets[field]>0).map(field=>({id:`legacy_${field}`,name:labels[field],bucket:['cash','callMoney','fixedDeposit'].includes(field)?'liquidity':'investments',amount:assets[field],annualReturn:returns[field]}));
+  }
   function normalizeAccountBalances(value){const source=objectOrEmpty(value),result={};for(const [key,raw] of Object.entries(source)){const match=/^(\d{4})_(\d{1,2})$/.exec(key),amount=Number(raw);if(!match||!Number.isFinite(amount))continue;const year=Number(match[1]),month=Number(match[2]);if(year<2000||year>2200||month<0||month>11)continue;result[`${year}_${month}`]=amount;}return result;}
 
   /**
@@ -42,7 +47,7 @@
    * @param {Function|Array<number>} [options.defaultYears] Fallback für verfügbare Jahre.
    * @returns {Object} Vollständiger Zustand im aktuellen Schema.
    */
-  function normalize(raw,options={}){const source=isRecord(raw)?raw:{},fallbackYears=typeof options.defaultYears==='function'?options.defaultYears():options.defaultYears,currentYear=Array.isArray(source.years)&&source.years.length?Math.min(...source.years.map(Number).filter(Number.isFinite)):Array.isArray(fallbackYears)&&fallbackYears.length?Math.min(...fallbackYears.map(Number).filter(Number.isFinite)):new Date().getFullYear();return {schemaVersion:CURRENT_VERSION,data:objectOrEmpty(source.data),cats:arrayOrEmpty(source.cats),kredite:arrayOrEmpty(source.kredite),years:normalizeYears(source.years,options.defaultYears),buchungen:arrayOrEmpty(source.buchungen),budgets:objectOrEmpty(source.budgets),recurringRules:arrayOrEmpty(source.recurringRules),annualAdjustments:arrayOrEmpty(source.annualAdjustments),percentageAdjustments:arrayOrEmpty(source.percentageAdjustments),amountAdjustments:arrayOrEmpty(source.amountAdjustments),oneTimeEntries:arrayOrEmpty(source.oneTimeEntries),accountBalances:normalizeAccountBalances(source.accountBalances),forecastAssets:normalizeForecastAssets(source.forecastAssets),forecastAssumptions:normalizeForecastAssumptions(source.forecastAssumptions),financialEvents:normalizeFinancialEvents(source.financialEvents),forecastScenarios:normalizeForecastScenarios(source.forecastScenarios,currentYear),forecastGoals:normalizeForecastGoals(source.forecastGoals,currentYear)};}
+  function normalize(raw,options={}){const source=isRecord(raw)?raw:{},fallbackYears=typeof options.defaultYears==='function'?options.defaultYears():options.defaultYears,currentYear=Array.isArray(source.years)&&source.years.length?Math.min(...source.years.map(Number).filter(Number.isFinite)):Array.isArray(fallbackYears)&&fallbackYears.length?Math.min(...fallbackYears.map(Number).filter(Number.isFinite)):new Date().getFullYear();return {schemaVersion:CURRENT_VERSION,data:objectOrEmpty(source.data),cats:arrayOrEmpty(source.cats),kredite:arrayOrEmpty(source.kredite),years:normalizeYears(source.years,options.defaultYears),buchungen:arrayOrEmpty(source.buchungen),budgets:objectOrEmpty(source.budgets),recurringRules:arrayOrEmpty(source.recurringRules),annualAdjustments:arrayOrEmpty(source.annualAdjustments),percentageAdjustments:arrayOrEmpty(source.percentageAdjustments),amountAdjustments:arrayOrEmpty(source.amountAdjustments),oneTimeEntries:arrayOrEmpty(source.oneTimeEntries),accountBalances:normalizeAccountBalances(source.accountBalances),forecastAssets:normalizeForecastAssets(source.forecastAssets),forecastAssumptions:normalizeForecastAssumptions(source.forecastAssumptions),forecastAccounts:normalizeForecastAccounts(source.forecastAccounts,source.forecastAssets,source.forecastAssumptions),financialEvents:normalizeFinancialEvents(source.financialEvents),forecastScenarios:normalizeForecastScenarios(source.forecastScenarios,currentYear),forecastGoals:normalizeForecastGoals(source.forecastGoals,currentYear)};}
 
-  root.StateSchema=Object.freeze({CURRENT_VERSION,ASSET_FIELDS:Object.freeze([...ASSET_FIELDS]),normalize,isRecord,normalizeAccountBalances,normalizeForecastAssumptions,normalizeFinancialEvents,normalizeForecastScenarios,normalizeForecastGoals});
+  root.StateSchema=Object.freeze({CURRENT_VERSION,ASSET_FIELDS:Object.freeze([...ASSET_FIELDS]),normalize,isRecord,normalizeAccountBalances,normalizeForecastAccounts,normalizeForecastAssumptions,normalizeFinancialEvents,normalizeForecastScenarios,normalizeForecastGoals});
 })(typeof globalThis!=='undefined'?globalThis:window);

@@ -7,10 +7,10 @@
 
   function composeForecastView(){
     const html=baseView();
-    const anchor='<section class="forecast-kpis">';
-    const extensions=ForecastPanelRegistry.render('beforeKpis');
+    const anchor='<div class="forecast-events-slot"></div>';
+    const extensions=ForecastPanelRegistry.render('beforeKpis',undefined,{include:['financial-events']});
     if(!extensions)return html;
-    return html.includes(anchor)?html.replace(anchor,extensions+anchor):html+extensions;
+    return html.includes(anchor)?html.replace(anchor,extensions):html+extensions;
   }
 
   AppExtensionRegistry.registerView('einstellungen',composeForecastView,200);

@@ -26,7 +26,9 @@
   function setAssumptions(value){S.forecastAssumptions=clone(value||{});return assumptions();}
   function assets(){return clone(S.forecastAssets||{});}
   function setAssets(value){S.forecastAssets=clone(value||{});return assets();}
+  function accounts(){return clone(array(S.forecastAccounts));}
+  function setAccounts(value){S.forecastAccounts=clone(array(value));return accounts();}
   /** Persistiert den aktuellen App-Zustand über die zentrale Persistenzschnittstelle. @returns {void} */
   function save(){if(typeof persist!=='function')throw new Error('Persistenzschnittstelle ist nicht verfügbar');persist();}
-  root.ForecastStateStore=Object.freeze({year,month,loans,financialEvents,setFinancialEvents,scenarios,setScenarios,goals,setGoals,forecastUi,setForecastUi,assumptions,setAssumptions,assets,setAssets,save});
+  root.ForecastStateStore=Object.freeze({year,month,loans,financialEvents,setFinancialEvents,scenarios,setScenarios,goals,setGoals,forecastUi,setForecastUi,assumptions,setAssumptions,assets,setAssets,accounts,setAccounts,save});
 })(typeof globalThis!=='undefined'?globalThis:window);

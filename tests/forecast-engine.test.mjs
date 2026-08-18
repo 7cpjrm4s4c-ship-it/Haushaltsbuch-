@@ -8,6 +8,8 @@ assert.ok(engine);
 const bookings=[{catId:'food',betrag:60,year:2026,month:0},{catId:'car',betrag:30,year:2026,month:0},{catId:'food',betrag:120,year:2026,month:1},{catId:'food',betrag:100,year:2026,month:2},{catId:'car',betrag:50,year:2026,month:2}];
 const baseline=engine.historicalVariableAverage({bookings,variableCategoryIds:['food','car'],baseYear:2026,baseMonth:3,lookbackMonths:3});
 assert.equal(baseline,120);assert.equal(engine.variableValue(120,0,0,'realistic'),120);assert.equal(engine.variableValue(120,0,0,'optimistic'),114);assert.equal(engine.variableValue(120,0,0,'cautious'),132);
+const currentFallback=engine.historicalVariableAverage({bookings:[{catId:'food',betrag:240,year:2026,month:3}],variableCategoryIds:['food'],baseYear:2026,baseMonth:3,lookbackMonths:3});
+assert.equal(currentFallback,240,'Ohne Historie muss der laufende Monat die variable Prognosebasis liefern');
 const baseMonths=Array.from({length:12},(_,month)=>({year:2026,month,income:3000,fixed:1000,savings:200,creditPayments:month<10?100:0,debt:Math.max(0,1200-month*110)}));
 const result=engine.project({baseMonths,variableBaseline:120,annualInflation:0,scenarioKey:'realistic',startAssets:10000});
 assert.equal(result.months.length,12);assert.equal(result.months[0].saldo,1580);assert.equal(result.months[0].assets,11780);assert.equal(result.years.length,1);assert.equal(result.years[0].income,36000);assert.equal(result.summary.endNetWorth,result.months[11].netWorth);

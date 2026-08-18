@@ -8,7 +8,7 @@
   globalThis.onStatePersistRequested=()=>store.markDirty();
 
   const dateText=value=>value?new Date(value).toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'}):'Noch kein Backup erstellt';
-  const assetTotal=d=>Object.values(d?.forecastAssets||{}).reduce((sum,value)=>sum+Math.max(0,Number(value)||0),0);
+  const assetTotal=d=>Array.isArray(d?.forecastAccounts)?d.forecastAccounts.reduce((sum,item)=>sum+Math.max(0,Number(item.amount)||0),0):Object.values(d?.forecastAssets||{}).reduce((sum,value)=>sum+Math.max(0,Number(value)||0),0);
   const downloadJson=payload=>{
     const stamp=new Date().toISOString().slice(0,10),blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');
     link.href=url;link.download=`Haushaltsbuch_Backup_${stamp}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);

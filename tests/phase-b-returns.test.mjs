@@ -42,4 +42,11 @@ const months=(count,savings=0)=>Array.from({length:count},(_,i)=>({year:2026+Mat
   assert.ok(Math.abs(result.summary.endRealNetWorth-(10000/1.02))<0.02);
 }
 
+// Mehrere frei benannte Konten werden mit ihrem jeweils eigenen Zinssatz fortgeschrieben.
+{
+  const result=engine.project({baseMonths:months(12),startAccounts:[{id:'giro',bucket:'liquidity',amount:1000,annualReturn:0},{id:'tg',bucket:'liquidity',amount:1000,annualReturn:4},{id:'etf-a',bucket:'investments',amount:1000,annualReturn:8},{id:'etf-b',bucket:'investments',amount:1000,annualReturn:12}],purchasingPowerInflation:0,variableBaseline:0,annualInflation:0,scenarioKey:'realistic'});
+  const end=result.months.at(-1).assetBreakdown;
+  assert.ok(Math.abs(end.giro-1000)<0.02);assert.ok(Math.abs(end.tg-1040)<0.02);assert.ok(Math.abs(end['etf-a']-1080)<0.02);assert.ok(Math.abs(end['etf-b']-1120)<0.02);
+}
+
 console.log('Phase-B-Rendite- und Realwerttests erfolgreich.');

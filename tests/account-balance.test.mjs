@@ -10,7 +10,7 @@ const [schemaSource,storeSource,uiSource,dashboardSource,storageSource,backupSou
 const schemaContext={Object,Array,Set,String,Number,Date,Math,RegExp};schemaContext.globalThis=schemaContext;vm.createContext(schemaContext);vm.runInContext(schemaSource,schemaContext);
 const normalized=schemaContext.StateSchema.normalize({years:[2026],accountBalances:{'2026_7':'1234.56','2026_12':99,'x':10,'2025_1':'invalid'}},{defaultYears:()=>[2026]});
 assert.deepEqual(JSON.parse(JSON.stringify(normalized.accountBalances)),{'2026_7':1234.56});
-assert.equal(normalized.schemaVersion,7);
+assert.equal(normalized.schemaVersion,8);
 
 let persists=0;const S={accountBalances:{'2026_7':100}};
 const storeContext={Object,Number,Math,RegExp,RangeError,TypeError,S,persist:()=>persists++};storeContext.globalThis=storeContext;vm.createContext(storeContext);vm.runInContext(storeSource,storeContext);

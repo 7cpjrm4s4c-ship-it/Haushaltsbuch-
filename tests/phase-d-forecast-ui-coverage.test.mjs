@@ -22,12 +22,15 @@ const [controllerSource,renderersSource,composerSource]=await Promise.all([
   },'js/forecast-view-controller.js');
   c.setForecastOption('lookbackMonths','12');assert.equal(ui.lookbackMonths,12);
   c.setForecastAsset('cash','-50');assert.equal(assets.cash,0);
+  c.setForecastBucket('liquidity','250');assert.equal(assets.cash,250);
   c.setForecastReturn('etf','250');assert.equal(assumptions.annualReturns.etf,100);
   c.setForecastReturn('etf','-150');assert.equal(assumptions.annualReturns.etf,-99);
+  c.setForecastBucketReturn('liquidity','2.5');assert.equal(assumptions.annualReturns.cash,2.5);assert.equal(assumptions.annualReturns.callMoney,2.5);assert.equal(assumptions.annualReturns.fixedDeposit,2.5);
+  c.setForecastBucketReturn('investments','6');assert.equal(assumptions.annualReturns.etf,6);assert.equal(assumptions.annualReturns.depot,6);assert.equal(assumptions.annualReturns.other,6);
   c.setForecastAssumption('purchasingPowerInflation','80');assert.equal(assumptions.purchasingPowerInflation,50);
   c.setForecastAssumption('purchasingPowerInflation','-40');assert.equal(assumptions.purchasingPowerInflation,-20);
   c.setForecastAssumption('savingsTarget','cash');assert.equal(assumptions.savingsTarget,'cash');
-  assert.equal(saves,7);assert.equal(renders,7);
+  assert.equal(saves,10);assert.equal(renders,10);
 }
 
 // Reine Forecast-Renderer: Auswahl, Leerzustaende, Gruppierung, positive/negative Werte und Escaping.
@@ -55,12 +58,16 @@ const [controllerSource,renderersSource,composerSource]=await Promise.all([
   assert.match(c.forecastSavingsTargetOptions('etf'),/etf" selected/);
   assert.equal(c.forecastLowPoint({minLiquidityYear:null,minLiquidityMonth:null}),'–');
   assert.equal(c.forecastLowPoint({minLiquidityYear:2027,minLiquidityMonth:2}),'Mär 2027');
+  const primary=c.forecastPrimaryResult('netWorth',{endYear:2030},[{year:2030,month:11,netWorth:1234,realNetWorth:1100}],{});assert.match(primary,/1234\.00 €/);assert.match(primary,/Kaufkraft in heutigen Euro/);assert.match(primary,/1100\.00 €/);
+  assert.match(c.forecastPrimaryResult('liquidity',{endYear:2030},[{year:2030,month:11,liquidity:-20}],{}),/forecast-negative/);
+  assert.match(c.forecastPrimaryResult('debtFree',{endYear:2030},[{year:2031,month:4,debt:0}],{startDebt:100}),/Mai 2031/);
+  assert.match(c.forecastPrimaryResult('debtFree',{endYear:2030},[],{startDebt:0}),/Bereits schuldenfrei/);
 }
 
 // Forecast-Komposition: Panels werden vor KPI-Anker eingefuegt, ohne Panel bleibt Basis unveraendert.
 {
   let registered=null;
-  const base='<div>Start</div><section class="forecast-kpis">KPIs</section>';
+  const base='<div>Start</div><div class="forecast-events-slot"></div>';
   const c=run(composerSource,{
     Object,TypeError,
     vPrognose:()=>base,
@@ -68,7 +75,7 @@ const [controllerSource,renderersSource,composerSource]=await Promise.all([
     AppExtensionRegistry:{registerView:(key,fn,priority)=>{registered={key,fn,priority};}}
   },'js/forecast-view-composer.js');
   assert.equal(registered.key,'einstellungen');assert.equal(registered.priority,200);
-  const html=registered.fn();assert.ok(html.indexOf('<aside>Panel</aside>')<html.indexOf('<section class="forecast-kpis">'));
+  const html=registered.fn();assert.ok(html.includes('<aside>Panel</aside>'));assert.ok(!html.includes('forecast-events-slot'));
 
   let registeredEmpty=null;
   run(composerSource,{
