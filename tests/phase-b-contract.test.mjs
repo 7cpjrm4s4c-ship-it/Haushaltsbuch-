@@ -7,6 +7,7 @@ assert.ok(!dashboard.includes('forecastAssumptions'));assert.ok(!dashboard.inclu
 for(const source of [schema,storage,backupStore,dataManagementStore])assert.ok(source.includes('financialEvents'),'Finanzereignisse müssen durch Schema, Persistenz, Backup und Reset geführt werden');
 assert.match(schema,/CURRENT_VERSION\s*=\s*\d+/);assert.match(backupStore,/version:\d+/);
 assert.match(engine,/function\s+monthlyRate\s*\(/);assert.ok(engine.includes('annualReturns'));assert.ok(engine.includes('realNetWorth'));assert.ok(engine.includes('specialRepayment'));
+assert.match(renderers,/Kaufkraft in heutigen Euro/,'Die vereinfachte Prognose muss den realen Vermögenswert sichtbar machen');
 assert.ok(!/(^|[^\w$])S\s*\./m.test(engine));assert.ok(!/\b(?:globalThis|window)\s*\.\s*S\b/.test(engine));
 for(const forbidden of [/\bdocument\s*\./,/\blocalStorage\b/,/\bsessionStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/,/\bgv\s*\(/,/\bcreditBalanceAt\s*\(/,/\bcreditInterestAt\s*\(/])assert.ok(!forbidden.test(engine));
 for(const forbidden of [/\bdocument\s*\./,/\blocalStorage\b/,/\bpersist\s*\(/,/\brender\s*\(/,/\btoast\s*\(/,/(^|[^\w$])S\s*\./m])assert.ok(!forbidden.test(events),'FinancialEvents muss eine reine Fachlogik bleiben');

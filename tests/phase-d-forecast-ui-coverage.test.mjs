@@ -25,10 +25,12 @@ const [controllerSource,renderersSource,composerSource]=await Promise.all([
   c.setForecastBucket('liquidity','250');assert.equal(assets.cash,250);
   c.setForecastReturn('etf','250');assert.equal(assumptions.annualReturns.etf,100);
   c.setForecastReturn('etf','-150');assert.equal(assumptions.annualReturns.etf,-99);
+  c.setForecastBucketReturn('liquidity','2.5');assert.equal(assumptions.annualReturns.cash,2.5);assert.equal(assumptions.annualReturns.callMoney,2.5);assert.equal(assumptions.annualReturns.fixedDeposit,2.5);
+  c.setForecastBucketReturn('investments','6');assert.equal(assumptions.annualReturns.etf,6);assert.equal(assumptions.annualReturns.depot,6);assert.equal(assumptions.annualReturns.other,6);
   c.setForecastAssumption('purchasingPowerInflation','80');assert.equal(assumptions.purchasingPowerInflation,50);
   c.setForecastAssumption('purchasingPowerInflation','-40');assert.equal(assumptions.purchasingPowerInflation,-20);
   c.setForecastAssumption('savingsTarget','cash');assert.equal(assumptions.savingsTarget,'cash');
-  assert.equal(saves,8);assert.equal(renders,8);
+  assert.equal(saves,10);assert.equal(renders,10);
 }
 
 // Reine Forecast-Renderer: Auswahl, Leerzustaende, Gruppierung, positive/negative Werte und Escaping.
@@ -56,7 +58,7 @@ const [controllerSource,renderersSource,composerSource]=await Promise.all([
   assert.match(c.forecastSavingsTargetOptions('etf'),/etf" selected/);
   assert.equal(c.forecastLowPoint({minLiquidityYear:null,minLiquidityMonth:null}),'–');
   assert.equal(c.forecastLowPoint({minLiquidityYear:2027,minLiquidityMonth:2}),'Mär 2027');
-  assert.match(c.forecastPrimaryResult('netWorth',{endYear:2030},[{year:2030,month:11,netWorth:1234}],{}),/1234\.00 €/);
+  const primary=c.forecastPrimaryResult('netWorth',{endYear:2030},[{year:2030,month:11,netWorth:1234,realNetWorth:1100}],{});assert.match(primary,/1234\.00 €/);assert.match(primary,/Kaufkraft in heutigen Euro/);assert.match(primary,/1100\.00 €/);
   assert.match(c.forecastPrimaryResult('liquidity',{endYear:2030},[{year:2030,month:11,liquidity:-20}],{}),/forecast-negative/);
   assert.match(c.forecastPrimaryResult('debtFree',{endYear:2030},[{year:2031,month:4,debt:0}],{startDebt:100}),/Mai 2031/);
   assert.match(c.forecastPrimaryResult('debtFree',{endYear:2030},[],{startDebt:0}),/Bereits schuldenfrei/);

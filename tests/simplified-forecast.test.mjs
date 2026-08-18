@@ -7,9 +7,13 @@ const [view,model,controller,events,composer,css]=await Promise.all(['js/forecas
 for(const label of ['Vermögen in einem Jahr','Wann bin ich schuldenfrei?','Liquidität in einem Jahr'])assert.ok(view.includes(label));
 assert.ok(view.includes('Zieljahr'));
 assert.ok(view.includes('Liquidität heute')&&view.includes('Anlagevermögen heute')&&view.includes('Restschulden heute'));
+for(const label of ['Annahmen pro Jahr','Kaufkraftverlust (%)','Variable Ausgaben (%)','Verzinsung Liquidität (%)','Rendite Anlagevermögen (%)'])assert.ok(view.includes(label));
+assert.ok(view.includes("setForecastBucketReturn('liquidity'")&&view.includes("setForecastBucketReturn('investments'"));
 for(const removed of ['Jährlicher Finanzierungsspielraum','Jahres- und Monatsdetails','Rendite & Kaufkraft','Szenario'])assert.ok(!view.includes(removed),`${removed} darf die einfache Hauptansicht nicht belasten`);
 assert.ok(model.includes("ui.focus==='debtFree'?{...ui,endYear:baseYear+40}:ui"),'Schuldenfreiheit braucht einen ausreichenden automatischen Horizont');
 assert.ok(controller.includes('function setForecastBucket('));
+assert.ok(controller.includes('function setForecastBucketReturn('));
+assert.ok(model.includes('function forecastReturnBuckets('));
 assert.ok(events.includes("['oneTimeExpense','specialRepayment']"));
 assert.ok(events.includes("+ Sonderausgabe")&&events.includes("+ Sondertilgung"));
 assert.ok(composer.includes("{include:['financial-events']}"),'Nur die einfache Ereignisplanung darf automatisch eingeblendet werden');

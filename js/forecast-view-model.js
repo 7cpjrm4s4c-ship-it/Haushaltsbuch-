@@ -44,8 +44,17 @@ function forecastAssetBuckets(assets=forecastAssets()){
   return {liquidity,investments,total:liquidity+investments};
 }
 
+function forecastReturnBuckets(assets=forecastAssets(),assumptions=forecastAssumptions()){
+  const average=keys=>{
+    const total=keys.reduce((sum,key)=>sum+Number(assets[key]||0),0);
+    if(total>0)return keys.reduce((sum,key)=>sum+Number(assets[key]||0)*Number(assumptions.annualReturns[key]||0),0)/total;
+    return keys.reduce((sum,key)=>sum+Number(assumptions.annualReturns[key]||0),0)/keys.length;
+  };
+  return {liquidity:average(['cash','callMoney','fixedDeposit']),investments:average(['etf','depot','other'])};
+}
+
 function forecastData(){
   const baseYear=ForecastStateStore.year(),ui=forecastUi(),assets=forecastAssets(),assumptions=forecastAssumptions(),buckets=forecastAssetBuckets(assets);
   const calculationUi=ui.focus==='debtFree'?{...ui,endYear:baseYear+40}:ui,input=buildForecastInput(calculationUi,assets,assumptions),result=ForecastEngine.project(input);
-  return {baseYear,ui,assets,assumptions,startAssets:buckets.total,buckets,baseline:input.variableBaseline,...result};
+  return {baseYear,ui,assets,assumptions,startAssets:buckets.total,buckets,returnBuckets:forecastReturnBuckets(assets,assumptions),baseline:input.variableBaseline,...result};
 }

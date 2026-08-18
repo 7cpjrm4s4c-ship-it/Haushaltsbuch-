@@ -34,6 +34,12 @@ function setForecastReturn(key,value){
   commitForecastChange(()=>ForecastStateStore.setAssumptions(assumptions));
 }
 
+function setForecastBucketReturn(bucket,value){
+  const assumptions=forecastAssumptions(),rate=Math.max(-99,Math.min(100,Number(value)||0)),keys=bucket==='liquidity'?['cash','callMoney','fixedDeposit']:['etf','depot','other'];
+  for(const key of keys)assumptions.annualReturns[key]=rate;
+  commitForecastChange(()=>ForecastStateStore.setAssumptions(assumptions));
+}
+
 function setForecastAssumption(key,value){
   const assumptions=forecastAssumptions();
   assumptions[key]=key==='purchasingPowerInflation'?Math.max(-20,Math.min(50,Number(value)||0)):value;
