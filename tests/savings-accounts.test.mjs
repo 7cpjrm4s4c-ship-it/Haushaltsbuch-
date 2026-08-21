@@ -23,7 +23,7 @@ context.SavingsStore.addTransfer({accountId:'s1',direction:'deposit',amount:25,y
 assert.equal(context.SavingsStore.balanceAtEnd('s1',2026,1),1175);assert.equal(persists,1);
 context.S.cats=[];context.S.data={};context.PlanningEvents={fromLegacy:()=>[],valueForMonth:()=>0};context.BookingStore={forMonth:()=>[{betrag:30}]};context.dkey=(year,month,id)=>`${year}_${month}_${id}`;context.AppExtensionRegistry={registerCalculation:(name,fn)=>{context[name]=fn;}};
 vm.runInContext(consistencySource,context,{filename:'js/data-consistency.js'});
-assert.deepEqual(JSON.parse(JSON.stringify(context.calcMonth(2026,1))),{e:0,f:100,v:55,k:0,s:125,aus:155,saldo:-105},'Regelmäßige Sparraten gehören zu Fixkosten, Einzeltransfers zu variablen Ausgaben');
+assert.deepEqual(JSON.parse(JSON.stringify(context.calcMonth(2026,1))),{e:0,f:100,v:5,k:0,s:125,aus:105,saldo:-105},'Regelmäßige Sparraten gehören zu Fixkosten; Einzel-Einzahlungen und Auszahlungen bilden den variablen Hauptkonto-Nettowert');
 const snapshot=context.SavingsStore.accounts();snapshot[0].openingBalance=0;assert.equal(context.S.savingsAccounts[0].openingBalance,1000);
 vm.runInContext(engineSource,context,{filename:'js/forecast-engine.js'});
 const projected=context.ForecastEngine.project({startAccounts:[{id:'main',bucket:'liquidity',amount:1000,annualReturn:0},{id:'savings_s1',bucket:'investments',amount:500,annualReturn:0}],baseMonths:[{year:2026,month:0,income:0,fixed:0,savings:100,savingsWithdrawals:0,accountTransfers:[{accountId:'s1',deposits:100,withdrawals:0}],debt:0}]});

@@ -16,7 +16,7 @@ function consistentMonthCalculation(year,month){
   }
   let v=BookingStore.forMonth(year,month).reduce((sum,booking)=>sum+Number(booking.betrag||0),0);
   const transfers=typeof SavingsStore!=='undefined'?SavingsStore.monthlyTotals(year,month):{regularDeposits:0,individualDeposits:0,deposits:0,withdrawals:0},legacySavings=s;
-  f+=transfers.regularDeposits;v+=transfers.individualDeposits;s+=transfers.deposits;const aus=f+v+k+legacySavings;return{e,f,v,k,s,aus,saldo:e+transfers.withdrawals-aus};
+  f+=transfers.regularDeposits;v+=transfers.individualDeposits-transfers.withdrawals;s+=transfers.deposits;const aus=f+v+k+legacySavings;return{e,f,v,k,s,aus,saldo:e-aus};
 }
 AppExtensionRegistry.registerCalculation('gv',consistentValue,100);
 AppExtensionRegistry.registerCalculation('calcMonth',consistentMonthCalculation,100);
