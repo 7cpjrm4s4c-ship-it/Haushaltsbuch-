@@ -21,17 +21,19 @@
     return current>=start&&(current-start)%interval===0?amount:0;
   }
   function movementsForMonth(year,month,accountId){
-    let deposits=0,withdrawals=0;
+    let regularDeposits=0,individualDeposits=0,withdrawals=0;
     const account=(state().savingsAccounts||[]).find(item=>item.id===accountId);
-    if(account)deposits+=due(account,year,month);
+    if(account)regularDeposits+=due(account,year,month);
     for(const item of state().savingsTransfers||[]){
       if(item.accountId!==accountId||Number(item.year)!==Number(year)||Number(item.month)!==Number(month))continue;
-      if(item.direction==='withdrawal')withdrawals+=Number(item.amount)||0;else deposits+=Number(item.amount)||0;
+      if(item.direction==='withdrawal')withdrawals+=Number(item.amount)||0;else individualDeposits+=Number(item.amount)||0;
     }
-    return {deposits:round2(deposits),withdrawals:round2(withdrawals),net:round2(deposits-withdrawals)};
+    const deposits=regularDeposits+individualDeposits;
+    return {regularDeposits:round2(regularDeposits),individualDeposits:round2(individualDeposits),deposits:round2(deposits),withdrawals:round2(withdrawals),net:round2(deposits-withdrawals)};
   }
   function monthlyTotals(year,month){
-    return (state().savingsAccounts||[]).reduce((sum,account)=>{const value=movementsForMonth(year,month,account.id);sum.deposits+=value.deposits;sum.withdrawals+=value.withdrawals;return sum;},{deposits:0,withdrawals:0});
+    const totals=(state().savingsAccounts||[]).reduce((sum,account)=>{const value=movementsForMonth(year,month,account.id);sum.regularDeposits+=value.regularDeposits;sum.individualDeposits+=value.individualDeposits;sum.deposits+=value.deposits;sum.withdrawals+=value.withdrawals;return sum;},{regularDeposits:0,individualDeposits:0,deposits:0,withdrawals:0});
+    return Object.fromEntries(Object.entries(totals).map(([key,value])=>[key,round2(value)]));
   }
   function balanceAtStart(accountId,year,month){
     const account=(state().savingsAccounts||[]).find(item=>item.id===accountId);if(!account)return null;
