@@ -45,3 +45,11 @@ Die Zerlegung erfolgt schrittweise, damit die funktionsfähige App nicht gleichz
 ## Datenschutz
 
 Das Repository sollte auf **privat** gestellt werden. Auch bei einem privaten Repository gehören persönliche Finanzwerte nicht in Commits, Issues oder Screenshots. Für Tests werden ausschließlich erfundene Werte verwendet.
+
+## Sparanlagen und Kontotransfers
+
+`SavingsStore` ist die einzige schreibende Zustands- und Fachgrenze für operative Sparanlagen. Ein Konto besitzt einen Guthaben-Stichtag, eine regelmäßige Sparrate, ein Intervall sowie eine Rendite- oder Zinsannahme. `savingsTransfers` speichert einzelne Ein- und Auszahlungen mit stabiler ID.
+
+Ein Transfer ist keine Einnahme und kein Verbrauch. Die Einzahlung vermindert den Hauptkontosaldo und erhöht dasselbe Sparkonto um denselben Betrag; die Auszahlung wirkt spiegelbildlich. Dadurch bleibt das Gesamtvermögen unverändert. Eine Auszahlung, die das verfügbare Sparkontoguthaben unterschreiten würde, wird abgewiesen.
+
+Die Prognose erhält die Sparanlagen über den bestehenden Adapter. Damit bleiben operative Zustände, Fachberechnung und Darstellung getrennt. Die Schema-Version 9 normalisiert die Felder `savingsAccounts` und `savingsTransfers`; ältere Zustände werden mit leeren Listen weitergeführt. Backup-Version 10 sichert beide Domänen mit ab.
