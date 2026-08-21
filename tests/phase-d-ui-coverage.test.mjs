@@ -20,6 +20,15 @@ const [importServiceSource,importStoreSource,loanControllerSource,dialogRuntimeS
   assert.deepEqual(plain(c.ImportService.resolveMonths('Jan März 12')),[0,2,11]);
   assert.equal(c.ImportService.resolveMonths('unbekannt').length,12);
 
+  const template=c.ImportService.createTemplate([2026,2027]);
+  const templateResult=c.ImportService.parse(template,[2026,2027]);
+  assert.equal(templateResult.errors.length,0);
+  assert.equal(templateResult.parsed.length,5);
+  assert.deepEqual(plain(templateResult.parsed.map(row=>row.typ)),['E','F','V','K','S']);
+  assert.equal(templateResult.parsed.every(row=>row._status==='ok'),true);
+  assert.equal(templateResult.parsed[2].jahre[0],2026);
+  assert.match(template,/nicht verknüpft/,'Kredit- und Sparbeispiele müssen ihre CSV-Grenze benennen');
+
   const parsed=c.ImportService.parse('Position;Gruppe;Typ;Betrag;Jahr;Monat\nMiete;Wohnen;F;1200,50;2026;Jan\nBonus;Einnahmen;X;1600;2026;12',[2026]);
   assert.equal(parsed.errors.length,0);assert.equal(parsed.parsed.length,2);
   assert.equal(parsed.parsed[0].betrag,1200.5);assert.equal(parsed.parsed[0].typ,'F');assert.deepEqual(plain(parsed.parsed[0].monate),[0]);

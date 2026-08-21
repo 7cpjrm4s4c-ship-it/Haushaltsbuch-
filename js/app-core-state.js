@@ -6,7 +6,7 @@ const TL={E:'Einnahmen',F:'Fixkosten',V:'Variabel',K:'Kredit',S:'Sparen'};
 const RC={E:'e',K:'k',S:'s'};
 const now=new Date();
 const LS_KEY='hp5';
-let S={view:'dashboard',year:now.getFullYear(),month:now.getMonth(),years:[],data:{},cats:[],kredite:[],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],accountBalances:{},forecastAssets:{},forecastAssumptions:{},forecastAccounts:[],financialEvents:[],forecastScenarios:[],forecastGoals:[],ui:{}};
+let S={view:'dashboard',year:now.getFullYear(),month:now.getMonth(),years:[],data:{},cats:[],kredite:[],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],accountBalances:{},savingsAccounts:[],savingsTransfers:[],forecastAssets:{},forecastAssumptions:{},forecastAccounts:[],financialEvents:[],forecastScenarios:[],forecastGoals:[],ui:{}};
 function defaultYears(){const year=now.getFullYear();return[year,year+1,year+2];}
 function deepClone(value){return JSON.parse(JSON.stringify(value));}
 function uid(){return'x'+Math.random().toString(36).slice(2,9);}
