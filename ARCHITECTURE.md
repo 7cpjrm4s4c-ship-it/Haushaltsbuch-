@@ -45,3 +45,17 @@ Die Zerlegung erfolgt schrittweise, damit die funktionsfähige App nicht gleichz
 ## Datenschutz
 
 Das Repository sollte auf **privat** gestellt werden. Auch bei einem privaten Repository gehören persönliche Finanzwerte nicht in Commits, Issues oder Screenshots. Für Tests werden ausschließlich erfundene Werte verwendet.
+
+## Sparanlagen und Kontotransfers
+
+`SavingsStore` ist die einzige schreibende Zustands- und Fachgrenze für operative Sparanlagen. Ein Konto besitzt einen Guthaben-Stichtag, eine regelmäßige Sparrate, ein Intervall sowie eine Rendite- oder Zinsannahme. `savingsTransfers` speichert einzelne Ein- und Auszahlungen mit stabiler ID.
+
+Ein Transfer ist keine Einnahme und kein Verbrauch. Die Einzahlung vermindert den Hauptkontosaldo und erhöht dasselbe Sparkonto um denselben Betrag; die Auszahlung wirkt spiegelbildlich. Dadurch bleibt das Gesamtvermögen unverändert. Eine Auszahlung, die das verfügbare Sparkontoguthaben unterschreiten würde, wird abgewiesen.
+
+Für die Hauptkonto-Sicht werden regelmäßige Sparraten als Fixkosten und einzelne Transfers als variable Bewegungen ausgewiesen. Einzahlungen auf eine Sparanlage erscheinen negativ, Auszahlungen von einer Sparanlage als positive Gutschrift. Der variable Monatswert ist der Nettowert aus gewöhnlichen variablen Ausgaben, einzelnen Einzahlungen und Auszahlungen. Die Kennzahl „Sparen“ kann beide Einzahlungsarten zusätzlich informativ zusammenfassen, ohne sie im Gesamtabfluss doppelt zu zählen.
+
+Die Prognose erhält die Sparanlagen über den bestehenden Adapter. Damit bleiben operative Zustände, Fachberechnung und Darstellung getrennt. Die Schema-Version 9 normalisiert die Felder `savingsAccounts` und `savingsTransfers`; ältere Zustände werden mit leeren Listen weitergeführt. Backup-Version 10 sichert beide Domänen mit ab.
+
+## CSV-Importgrenze
+
+Der CSV-/TSV-Import übernimmt ausschließlich Haushaltspositionen und deren Monatswerte für die Typen `E`, `F`, `V`, `K` und `S`. Eine Position vom Typ `K` oder `S` ist dabei nicht mit einem Kreditvertrag oder einer Sparanlage verknüpft. Kreditverträge, Sparkonten und einzelne Kontotransfers werden über ihre zuständigen Fachbereiche verwaltet und nur durch das JSON-Backup vollständig gesichert und wiederhergestellt. Die herunterladbare CSV-Vorlage kennzeichnet nicht verknüpfte Kredit- und Sparbeispiele ausdrücklich, um Doppelbuchungen zu vermeiden.

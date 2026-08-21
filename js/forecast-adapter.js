@@ -44,7 +44,9 @@ function forecastBaseMonths(startYear,startMonth,endYear,endMonth=11,eventsOverr
       if(cat.t==='E')income+=value;else if(cat.t==='F')fixed+=value;else if(cat.t==='S')savings+=value;
     }
     const credit=creditSchedule.get(`${year}-${month}`)||{creditPayments:0,openingDebt:0,debt:0,specialRepayment:0};
-    rows.push({year,month,income,fixed,savings,creditPayments:credit.creditPayments,openingDebt:credit.openingDebt,debt:credit.debt,specialRepayment:credit.specialRepayment});
+    const accountTransfers=typeof SavingsStore!=='undefined'?SavingsStore.accounts().map(account=>({accountId:account.id,...SavingsStore.movementsForMonth(year,month,account.id)})):[];
+    const savingsDeposits=accountTransfers.reduce((sum,item)=>sum+item.deposits,0),savingsWithdrawals=accountTransfers.reduce((sum,item)=>sum+item.withdrawals,0);
+    rows.push({year,month,income,fixed,savings:savings+savingsDeposits,savingsWithdrawals,accountTransfers,creditPayments:credit.creditPayments,openingDebt:credit.openingDebt,debt:credit.debt,specialRepayment:credit.specialRepayment});
   }
   return typeof FinancialEvents!=='undefined'?FinancialEvents.applyToBaseMonths(rows,events):rows;
 }
@@ -52,5 +54,7 @@ function forecastBaseMonths(startYear,startMonth,endYear,endMonth=11,eventsOverr
 function buildForecastInput(ui,assetBreakdown,assumptions,eventsOverride){
   const variableIds=S.cats.filter(cat=>cat.t==='V').map(cat=>cat.id);
   const variableBaseline=ForecastEngine.historicalVariableAverage({bookings:S.buchungen,variableCategoryIds:variableIds,baseYear:S.year,baseMonth:S.month,lookbackMonths:ui.lookbackMonths});
-  return {baseMonths:forecastBaseMonths(S.year,S.month,ui.endYear,11,eventsOverride),variableBaseline,annualInflation:ui.annualInflation,scenarioKey:ui.scenarioKey,startAssetBreakdown:{...(assetBreakdown||{})},startAccounts:Array.isArray(S.forecastAccounts)?S.forecastAccounts.map(item=>({...item})):undefined,annualReturns:{...(assumptions?.annualReturns||{})},purchasingPowerInflation:Number(assumptions?.purchasingPowerInflation)||0,savingsTarget:assumptions?.savingsTarget||'etf'};
+  const forecastAccounts=Array.isArray(S.forecastAccounts)?S.forecastAccounts.map(item=>({...item})):[],savingsAccounts=typeof SavingsStore!=='undefined'?SavingsStore.forecastAccounts(S.year,S.month):[];
+  if(!forecastAccounts.some(item=>item.bucket!=='investments')){const opening=typeof AccountBalanceStore!=='undefined'?AccountBalanceStore.get(S.year,S.month):0;forecastAccounts.unshift({id:'operational_main_account',name:'Hauptkonto',bucket:'liquidity',amount:Math.max(0,Number(opening)||0),annualReturn:0});}
+  return {baseMonths:forecastBaseMonths(S.year,S.month,ui.endYear,11,eventsOverride),variableBaseline,annualInflation:ui.annualInflation,scenarioKey:ui.scenarioKey,startAssetBreakdown:{...(assetBreakdown||{})},startAccounts:[...forecastAccounts,...savingsAccounts],annualReturns:{...(assumptions?.annualReturns||{})},purchasingPowerInflation:Number(assumptions?.purchasingPowerInflation)||0,savingsTarget:assumptions?.savingsTarget||'etf'};
 }

@@ -59,7 +59,7 @@ function forecastReturnBuckets(assets=forecastAssets(),assumptions=forecastAssum
 }
 
 function forecastData(){
-  const baseYear=ForecastStateStore.year(),ui=forecastUi(),assets=forecastAssets(),accounts=forecastAccounts(),assumptions=forecastAssumptions(),buckets=forecastAssetBuckets(accounts);
+  const baseYear=ForecastStateStore.year(),month=ForecastStateStore.month(),ui=forecastUi(),assets=forecastAssets(),storedAccounts=forecastAccounts(),operational=typeof SavingsStore!=='undefined'?SavingsStore.forecastAccounts(baseYear,month):[],accounts=[...storedAccounts,...operational],assumptions=forecastAssumptions(),buckets=forecastAssetBuckets(accounts);
   const calculationUi=ui.focus==='debtFree'?{...ui,endYear:baseYear+40}:ui,input=buildForecastInput(calculationUi,assets,assumptions),result=ForecastEngine.project(input);
   return {baseYear,ui,assets,accounts,assumptions,startAssets:buckets.total,buckets,baseline:input.variableBaseline,...result};
 }

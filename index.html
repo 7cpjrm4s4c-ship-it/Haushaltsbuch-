@@ -25,15 +25,15 @@
 <link rel="stylesheet" href="css/responsive.css"/>
 </head>
 <body>
-<header class="header" id="appHeader"><div class="header-left"><div class="header-title" id="headerTitle">Haushaltsplan</div><div class="header-sub" id="headerSub">Lade…</div></div><button class="year-pill" id="yearPill" onclick="openYearSheet()">–</button></header>
+<header class="header" id="appHeader"><div class="header-left"><div class="header-title" id="headerTitle">Haushaltsplan</div><div class="header-sub" id="headerSub">Lade…</div></div><div class="header-actions"><button class="header-menu-btn" id="headerMenuButton" type="button" aria-label="Menü öffnen" aria-haspopup="menu" aria-expanded="false"><span></span><span></span><span></span></button><div class="header-menu" id="headerMenu" role="menu" hidden><button type="button" role="menuitem" data-header-view="import">Import und Backup</button></div><button class="year-pill" id="yearPill" onclick="openYearSheet()">–</button></div></header>
 <main class="main" id="main"></main><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="bnav-wrap" id="bnavWrap"><nav class="bnav" id="bnav"><div class="bnav-slider" id="bnavSlider"></div>
 <button class="bnav-btn active" data-v="dashboard"><svg class="bnav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="bnav-label">Dashboard</span></button>
 <button class="bnav-btn" data-v="ausgaben"><svg class="bnav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="bnav-label">Ausgaben</span></button>
 <button class="bnav-btn" data-v="uebersicht"><svg class="bnav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2"/></svg><span class="bnav-label">Fixkosten</span></button>
 <button class="bnav-btn" data-v="kredite"><svg class="bnav-icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg><span class="bnav-label">Kredite</span></button>
+<button class="bnav-btn" data-v="savings"><svg class="bnav-icon" viewBox="0 0 24 24"><path d="M4 8h16v11H4z"/><path d="M7 8V5h10v3"/><circle cx="12" cy="13.5" r="2"/></svg><span class="bnav-label">Sparanlagen</span></button>
 <button class="bnav-btn" data-v="einstellungen"><svg class="bnav-icon" viewBox="0 0 24 24"><polyline points="4 17 9 12 13 15 20 7"/><polyline points="15 7 20 7 20 12"/></svg><span class="bnav-label">Prognose</span></button>
-<button class="bnav-btn" data-v="import"><svg class="bnav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="bnav-label">Import</span></button>
 </nav></div>
 <div class="overlay" id="yearOverlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Jahr auswählen</div><div id="yearSheetBody"></div><div class="sheet-divider"></div><div id="yearSheetFooter"></div></div></div>
 <div class="overlay" id="genOverlay"><div class="sheet"><div class="sheet-handle"></div><div id="genBody"></div></div></div>
@@ -47,6 +47,8 @@
 <script src="js/data-management-store.js"></script>
 <script src="js/account-balance-store.js"></script>
 <script src="js/account-balance-ui.js"></script>
+<script src="js/savings-store.js"></script>
+<script src="js/savings-ui.js"></script>
 <script src="js/booking-store.js"></script>
 <script src="js/category-store.js"></script>
 <script src="js/manager-ui-state.js"></script>
