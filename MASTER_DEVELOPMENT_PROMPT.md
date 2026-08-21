@@ -4,7 +4,7 @@
 
 Dieser Vertrag ist die verbindliche Arbeitsgrundlage für jede Entwicklungsmaßnahme am Repository `7cpjrm4s4c-ship-it/Haushaltsbuch-`.
 
-Er gilt insbesondere für neue Funktionen, Änderungen und Fehlerbehebungen in den Bereichen Haushaltsplanung, Buchungen, Kategorien, Fixkosten, variable Ausgaben, Kontostände, Kredite, Finanzereignisse, Prognosen, Szenarien, Ziele, Entscheidungen, Import, Backup, Persistenz, Migration, PWA, Offlinebetrieb, UI/UX, Accessibility, Security, Performance, Tests, Dokumentation und Tooling.
+Er gilt insbesondere für neue Funktionen, Änderungen und Fehlerbehebungen in den Bereichen Haushaltsplanung, Buchungen, Kategorien, Fixkosten, variable Ausgaben, Kontostände, Sparanlagen, Kontotransfers, Kredite, Finanzereignisse, Prognosen, Szenarien, Ziele, Entscheidungen, Import, Backup, Persistenz, Migration, PWA, Offlinebetrieb, UI/UX, Accessibility, Security, Performance, Tests, Dokumentation und Tooling.
 
 Der Umfang einer Änderung reduziert die Qualitätsanforderungen nicht. Auch kleine Änderungen müssen alle für sie relevanten Prüfungen erfüllen. Nicht relevante Prüfungen sind begründet als `NOT APPLICABLE` zu kennzeichnen.
 
@@ -60,6 +60,7 @@ Soweit der aktuelle Repository-Stand nichts Abweichendes festlegt, gilt folgende
 - lokale Zustandsverwaltung und Persistenz im Browser
 - versioniertes Zustandsmodell über `StateSchema`
 - JSON-basierter Import sowie JSON-Backup mit Replace-/Merge-Verhalten
+- Sparanlagen mit regelmäßigen Sparraten und einzelnen Ein- beziehungsweise Auszahlungen zum Hauptkonto
 - Finanzprognose mit Konten beziehungsweise Anlageklassen, Renditen, Inflation, Szenarien, Zielen, Finanzereignissen und Krediten
 - installierbare PWA mit App-Shell und versioniertem Cache in `sw.js`
 
@@ -101,6 +102,8 @@ Jede Änderung muss folgende Invarianten erhalten oder bewusst und dokumentiert 
 - Vorzeichen, Zeitbezug, Periodisierung und Rundung finanzieller Werte sind konsistent.
 - Liquidität bezeichnet verfügbare Zahlungsmittel; Vermögen umfasst die hierfür fachlich vorgesehenen Vermögenswerte. Beide dürfen nicht ohne fachliche Begründung gleichgesetzt werden.
 - Konten und Anlageklassen behalten ihre individuellen Beträge, Renditen, Zinsen und gegebenenfalls ihre Liquiditätszuordnung.
+- Einzahlungen auf eine Sparanlage vermindern das Hauptkonto und erhöhen dasselbe Sparkonto um denselben Betrag; Auszahlungen wirken spiegelbildlich und dürfen das verfügbare Sparkontoguthaben nicht überschreiten.
+- Regelmäßige Sparraten werden in der Hauptkonto-Sicht als Fixkosten, einzelne Ein- und Auszahlungen als variable Bewegungen ausgewiesen. Interne Kontotransfers dürfen Einnahmen, Verbrauch oder Gesamtvermögen nicht verfälschen.
 - Kaufkraftverlust durch Inflation und nominale Wertentwicklung durch Zinsen beziehungsweise Renditen werden nicht vermischt.
 - Variable Kostenänderungen müssen nachweislich auf die dafür definierten Prognosewerte wirken.
 - Kreditberechnungen erhalten korrekte Restschuld, Zins, Tilgung, Laufzeit und Sondertilgungen.
@@ -216,6 +219,7 @@ Refactoring außerhalb des Änderungsbereichs ist zu vermeiden. Reines Refactori
 - Import und Backup
 - Replace- und Merge-Semantik
 - Datenkonsistenz nach Neustart und Offlinebetrieb
+- vollständiger Erhalt und konsistente Verknüpfung von `savingsAccounts` und `savingsTransfers`
 
 Eine Schemaänderung muss eine deterministische Migration besitzen. Migrationen müssen idempotent sein, soweit sie mehrfach auf bereits normalisierte Daten treffen können. Datenverlust ist nicht akzeptabel. Breaking Changes benötigen vor Umsetzung die ausdrückliche Freigabe des Nutzers und eine dokumentierte Rollback- beziehungsweise Wiederherstellungsstrategie.
 
@@ -228,6 +232,7 @@ Bei Änderungen an Finanzlogik sind Eingaben, Formeln, Zeitachsen und Ausgaben v
 - Inflation beziehungsweise Kaufkraftverlust
 - konten- oder anlageklassenspezifische Zinsen und Renditen
 - Sparraten, Entnahmen und Zielzuordnung
+- kontenspezifische Spartransfers und deren wertneutrale Gegenbuchung zwischen Hauptkonto und Sparanlage
 - variable und fixe Kostenanpassungen
 - einmalige und wiederkehrende Ereignisse
 - Kreditverläufe und Sondertilgungen
@@ -249,6 +254,8 @@ Zu prüfen sind insbesondere:
 - stabile IDs und nachvollziehbare Merge-Regeln
 - Wiederherstellbarkeit durch Backup
 - keine Protokollierung privater Finanzdaten
+
+Der CSV-/TSV-Import übernimmt ausschließlich Haushaltspositionen und Monatswerte. Kreditverträge, verknüpfte Sparkonten und einzelne Kontotransfers werden über ihre zuständigen Fachbereiche verwaltet und müssen durch das JSON-Backup vollständig gesichert und wiederhergestellt werden. CSV-Beispiele für Kredit- oder Sparpositionen dürfen keine fachliche Verknüpfung vortäuschen oder Doppelbuchungen begünstigen.
 
 ## 14. PWA und Offline-First
 
