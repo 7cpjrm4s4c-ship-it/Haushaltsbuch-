@@ -61,6 +61,7 @@ assert.match(css,/\.form-actions,\.dialog-actions\{[^}]*gap:var\(--space-2\)[^}]
 assert.match(css,/\.bnav-wrap\{[^}]*bottom:calc\(max\(var\(--sab\),8px\) \+ var\(--nav-gap\)\)/,'Bottom-Navigation muss Safe-Area und globalen 8-px-Abstand nutzen');
 assert.match(css,/@media\(orientation:landscape\) and \(max-height:600px\)\{[^}]*html,body\{[^}]*text-size-adjust:100%/,'Querformat muss die globale Schriftgröße stabil halten');
 assert.ok(!shellEvents.includes("classList.add('hidden')"),'Shell-JavaScript darf den Header nicht ausblenden');
+for(const undefinedToken of ['--border','--surface','--surface-2','--text','--muted'])assert.ok(!cssByFile['css/modules.css'].includes(`var(${undefinedToken})`),`Modul-CSS darf das nicht definierte Token ${undefinedToken} nicht verwenden`);
 assert.ok(!/(?:margin(?:-[a-z]+)?|padding(?:-[a-z]+)?|gap|position|top|right|bottom|left|width|height)\s*:[^;}]*!important/i.test(css),'Layout- und Spacing-Regeln dürfen keine !important-Overrides enthalten');
 assert.ok(!/@import\b/.test(css),'Das zentrale Stylesheet darf keine weiteren Stylesheets importieren');
 assert.ok(!jsFiles.includes('header-layout-fix.js'),'Runtime-CSS-Mutator header-layout-fix.js darf nicht existieren');
