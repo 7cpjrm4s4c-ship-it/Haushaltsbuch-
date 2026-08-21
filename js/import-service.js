@@ -19,6 +19,17 @@
     const result=[];for(const part of value.split(/[,;\/\s]+/)){const token=part.trim().toLowerCase();if(map[token]!==undefined){result.push(map[token]);continue;}const number=Number(token);if(Number.isInteger(number)&&number>=1&&number<=12)result.push(number-1);}
     return result.length?[...new Set(result)].sort((a,b)=>a-b):Array.from({length:12},(_,index)=>index);
   }
+  function createTemplate(availableYears=[]){
+    const year=availableYears.find(value=>Number.isInteger(Number(value)))||'alle';
+    return [
+      'Position;Gruppe;Typ;Betrag;Jahr;Monat',
+      'Gehalt (netto);Einnahmen;E;3500;alle;alle',
+      'Miete / Wohnkosten;Wohnen;F;900;alle;alle',
+      `Lebensmittel;Variable Ausgaben;V;400;${year};alle`,
+      'Zusätzliche Kreditrate (nicht verknüpft);Kredite;K;350;alle;alle',
+      'Zusätzliche Sparposition (nicht verknüpft);Sparen;S;200;alle;alle'
+    ].join('\n');
+  }
   function parse(raw,availableYears=[]){
     const lines=String(raw||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').map(line=>line.trim()).filter(Boolean);
     if(lines.length<2)return{rows:[],parsed:[],errors:['Weniger als 2 Zeilen']};
@@ -37,5 +48,5 @@
     }
     return{rows,parsed,errors:[]};
   }
-  root.ImportService=Object.freeze({parse,resolveYears,resolveMonths,normalizeType});
+  root.ImportService=Object.freeze({parse,resolveYears,resolveMonths,normalizeType,createTemplate});
 })(typeof globalThis!=='undefined'?globalThis:window);
