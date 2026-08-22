@@ -59,3 +59,15 @@ Die Prognose erhält die Sparanlagen über den bestehenden Adapter. Damit bleibe
 ## CSV-Importgrenze
 
 Der CSV-/TSV-Import übernimmt ausschließlich Haushaltspositionen und deren Monatswerte für die Typen `E`, `F`, `V`, `K` und `S`. Eine Position vom Typ `K` oder `S` ist dabei nicht mit einem Kreditvertrag oder einer Sparanlage verknüpft. Kreditverträge, Sparkonten und einzelne Kontotransfers werden über ihre zuständigen Fachbereiche verwaltet und nur durch das JSON-Backup vollständig gesichert und wiederhergestellt. Die herunterladbare CSV-Vorlage kennzeichnet nicht verknüpfte Kredit- und Sparbeispiele ausdrücklich, um Doppelbuchungen zu vermeiden.
+
+## Rahmenkredite und Kreditbewegungen
+
+Kredite verwenden die Typen `installment` (Ratenkredit) und `revolving` (Rahmenkredit). Bestehende Kredite ohne Typ werden durch State-Schema 10 deterministisch als Ratenkredit normalisiert. Ein Rahmenkredit besitzt zusätzlich einen Kreditrahmen und eine Zinstagebasis. Solange die Vertragsmethode unbekannt ist, wird `ACT/365` sichtbar als Annahme verwendet; alternativ sind `ACT/360` und `30E/360` auswählbar.
+
+`CreditMovementStore` ist die einzige schreibende Grenze für `creditMovements`. Rahmenkredite unterstützen Abrufe und Rückzahlungen, Ratenkredite unterstützen operative Sondertilgungen. Jede Bewegung besitzt ein konkretes Buchungsdatum. Der Store verhindert Abrufe oberhalb des Kreditrahmens, Rückzahlungen oberhalb der offenen Schuld und Sondertilgungen oberhalb der Restschuld nach regulärer Monatsrate.
+
+Rahmenkreditzinsen werden aus den zeitanteiligen Tagessalden berechnet. Die optionale Monatsrate wird am Monatsende vom Hauptkonto abgebucht, deckt zuerst die angefallenen Zinsen und verwendet den verbleibenden Betrag zur Tilgung. Ist die konfigurierte Rate kleiner als die Zinsen oder beträgt sie null, entspricht die tatsächliche Mindestzahlung den Zinsen. Zinsen erhöhen die Restschuld nicht. Die Monatsrate wird dynamisch unter „Kredite“ in den Fixkosten ausgewiesen und reduziert die Restschuld nur um ihren Tilgungsanteil. Gespeicherte Ratenkreditpositionen und dynamische Rahmenkreditpositionen werden in derselben Fixkostengruppe „Kredite“ zusammengeführt.
+
+Ein Kreditabruf erhöht Hauptkonto und Schuld in gleicher Höhe; einzelne Rückzahlungen und Sondertilgungen vermindern Hauptkonto und Schuld. Nur diese operativen Bewegungen erscheinen zur Nachvollziehbarkeit in der variablen Monatsansicht. Sie werden nicht als gewöhnliche Konsumausgaben in den historischen variablen Prognosedurchschnitt aufgenommen. Reguläre Ratenkreditzahlungen bleiben analog zu regelmäßigen Sparraten in den Fixkosten.
+
+Backup-Version 11 sichert Kreditverträge und Kreditbewegungen. Replace und Merge normalisieren beide Domänen gemeinsam, sodass verwaiste Bewegungen nicht übernommen werden. Neue produktive Datei `js/credit-movement-store.js` ist Bestandteil der versionierten PWA-App-Shell `hp-v32`.

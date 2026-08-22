@@ -9,7 +9,7 @@ const consistencySource=await readFile(new URL('../js/data-consistency.js',impor
 const context={console,JSON,Object,Array,Number,String,Math,Date,Set,Map,RangeError,Error};context.globalThis=context;vm.createContext(context);
 vm.runInContext(schemaSource,context,{filename:'js/state-schema.js'});
 const normalized=context.StateSchema.normalize({years:[2026],savingsAccounts:[{id:'s1',name:'Tagesgeld',openingBalance:'1000',balanceYear:2026,balanceMonth:0,monthlyAmount:'100',intervalMonths:1}],savingsTransfers:[{id:'t1',accountId:'s1',direction:'withdrawal',amount:'50',year:2026,month:1},{id:'orphan',accountId:'missing',amount:5,year:2026,month:1}]},{defaultYears:()=>[2026]});
-assert.equal(normalized.schemaVersion,9);assert.equal(normalized.savingsAccounts[0].openingBalance,1000);assert.equal(normalized.savingsTransfers.length,1);
+assert.equal(normalized.schemaVersion,context.StateSchema.CURRENT_VERSION);assert.equal(normalized.savingsAccounts[0].openingBalance,1000);assert.equal(normalized.savingsTransfers.length,1);
 
 let persists=0;context.S={savingsAccounts:normalized.savingsAccounts,savingsTransfers:normalized.savingsTransfers};context.persist=()=>persists++;context.uid=()=>`x${persists}`;
 vm.runInContext(storeSource,context,{filename:'js/savings-store.js'});

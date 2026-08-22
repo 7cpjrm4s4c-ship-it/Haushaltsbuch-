@@ -14,6 +14,7 @@ function fixedCostTypeOptions(selected){
 function fixedCostGroups(selected){
   const groups=[...new Set(CategoryStore.fixedPositions().map(cat=>cat.g))].sort((a,b)=>a.localeCompare(b,'de'));
   if(typeof SavingsStore!=='undefined'&&SavingsStore.accounts().some(account=>Number(account.monthlyAmount)>0)&&!groups.includes('Sparanlagen'))groups.push('Sparanlagen');
+  if(typeof LoanStore!=='undefined'&&LoanStore.all().some(loan=>creditType(loan)==='revolving')&&!groups.includes('Kredite'))groups.push('Kredite');
   return `<option value="all">Alle Kategorien</option>`+groups.map(group=>
     `<option value="${esc(group)}"${group===selected?' selected':''}>${esc(group)}</option>`
   ).join('');
@@ -77,6 +78,20 @@ function individualSavingsTransferGroup(year,month){
 
 function deleteSavingsTransfer(id){if(!confirm('Einzeltransfer wirklich löschen?'))return;if(SavingsStore.removeTransfer(id)){render();toast('Transfer gelöscht');}}
 
+function creditMovementGroup(year,month){
+  if(typeof CreditMovementStore==='undefined')return '';
+  const items=CreditMovementStore.displayEntries(year,month);if(!items.length)return '';
+  const totals=CreditMovementStore.monthlyTotals(year,month),labels=typeof CreditUi!=='undefined'?CreditUi.MOVEMENT_LABELS:{},net=totals.variableNetMainAccount;
+  return `<details class="manager-group"><summary><div class="manager-group-title">Kreditbewegungen</div><div class="manager-group-meta">${items.length} · Hauptkonto <span class="manager-total">${net>0?'+':net<0?'-':''}${fmt(Math.abs(net))}</span></div><span class="manager-chevron">▼</span></summary><div class="manager-group-body">${items.map(item=>{const inflow=item.type==='drawdown',label=labels[item.type]||'Kreditbewegung',date=new Date(`${item.date}T12:00:00`).toLocaleDateString('de-DE');return `<details class="manager-entry"><summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.note||label)}</div><div class="manager-entry-sub">${esc(label)} · ${esc(item.loanName)} · ${date}</div></div><div class="manager-entry-value ${inflow?'savings-transfer-income':'is-expense'}">${inflow?'+':'-'}${fmt(item.amount)}</div><span class="manager-chevron">▼</span></summary><div class="manager-entry-actions">${managerButton('Kredit öffnen',`nav('kredite')`)}${item.derived?'':managerButton('Löschen',`LoanActionsController.removeMovement('${esc(item.id)}')`,true)}</div></details>`;}).join('')}</div></details>`;
+}
+
+function recurringCreditFixedItems(year,month,ui){
+  if(typeof CreditMovementStore==='undefined')return {count:0,items:[]};
+  const search=ui.fixedSearch.trim().toLowerCase(),visible=(ui.fixedType==='all'||ui.fixedType==='K')&&(ui.fixedGroup==='all'||ui.fixedGroup==='Kredite');
+  const items=visible?CreditMovementStore.fixedPaymentEntries(year,month).filter(item=>!search||item.loanName.toLowerCase().includes(search)):[];
+  return {count:items.length,items};
+}
+
 function recurringSavingsFixedGroup(year,month,ui){
   if(typeof SavingsStore==='undefined')return {count:0,html:''};
   const search=ui.fixedSearch.trim().toLowerCase(),visible=(ui.fixedType==='all'||ui.fixedType==='F')&&(ui.fixedGroup==='all'||ui.fixedGroup==='Sparanlagen');
@@ -87,19 +102,20 @@ function recurringSavingsFixedGroup(year,month,ui){
   return {count:accounts.length,html:`<details class="manager-group"><summary><div class="manager-group-title">Sparanlagen</div><div class="manager-group-meta">Fixkosten · ${accounts.length} · <span class="manager-total">${fmtS(total)}</span></div><span class="manager-chevron">▼</span></summary><div class="manager-group-body">${rows}</div></details>`};
 }
 
-function fixedManagerGroups(categories){
+function fixedManagerGroups(categories,creditItems=[]){
   const typeOrder={E:0,F:1,K:2,S:3};
   const groups=new Map();
   categories.slice().sort((a,b)=>(typeOrder[a.t]-typeOrder[b.t])||a.g.localeCompare(b.g,'de')||a.p.localeCompare(b.p,'de')).forEach(cat=>{
     const key=`${cat.t}|${cat.g}`;
-    if(!groups.has(key))groups.set(key,{type:cat.t,name:cat.g,items:[]});
+    if(!groups.has(key))groups.set(key,{type:cat.t,name:cat.g,items:[],creditItems:[]});
     groups.get(key).items.push(cat);
   });
+  if(creditItems.length){const key='K|Kredite';if(!groups.has(key))groups.set(key,{type:'K',name:'Kredite',items:[],creditItems:[]});groups.get(key).creditItems.push(...creditItems);}
   const year=AppUiState.year(),month=AppUiState.month();
-  return [...groups.values()].map(group=>{
-    const total=group.items.reduce((sum,cat)=>sum+gv(year,month,cat),0);
+  return [...groups.values()].sort((a,b)=>(typeOrder[a.type]-typeOrder[b.type])||a.name.localeCompare(b.name,'de')).map(group=>{
+    const total=group.items.reduce((sum,cat)=>sum+gv(year,month,cat),0)+group.creditItems.reduce((sum,item)=>sum+Number(item.amount||0),0),count=group.items.length+group.creditItems.length;
     return `<details class="manager-group">
-      <summary><div class="manager-group-title">${esc(group.name)}</div><div class="manager-group-meta">${TL[group.type]} · ${group.items.length} · <span class="manager-total">${fmtS(total)}</span></div><span class="manager-chevron">▼</span></summary>
+      <summary><div class="manager-group-title">${esc(group.name)}</div><div class="manager-group-meta">${TL[group.type]} · ${count} · <span class="manager-total">${fmtS(total)}</span></div><span class="manager-chevron">▼</span></summary>
       <div class="manager-group-body">${group.items.map(cat=>{
         const rule=findRecurringRule(cat.id);
         const interval=INTERVALS.find(([months])=>months===Number(rule?.intervalMonths||1))?.[1]||'Monatlich';
@@ -107,7 +123,7 @@ function fixedManagerGroups(categories){
           <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(cat.p)}</div><div class="manager-entry-sub">${interval}${rule?` · ab ${MF[rule.startMonth]} ${rule.startYear}`:''}</div></div><div class="manager-entry-value ${RC[cat.t]||''}">${fmtS(gv(year,month,cat))}</div><span class="manager-chevron">▼</span></summary>
           <div class="manager-entry-actions">${managerButton('Bearbeiten',`openPositionDialog('${esc(cat.id)}')`)}${managerButton('Löschen',`deleteFixedPosition('${esc(cat.id)}')`,true)}</div>
         </details>`;
-      }).join('')}</div>
+      }).join('')}${group.creditItems.map(item=>`<details class="manager-entry"><summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.loanName)}</div><div class="manager-entry-sub">Monatsrate · davon ${fmt(item.interest)} Zinsen und ${fmt(item.principal)} Tilgung</div></div><div class="manager-entry-value ${RC.K||''}">${fmtS(item.amount)}</div><span class="manager-chevron">▼</span></summary><div class="manager-entry-actions">${managerButton('Kredit öffnen',`nav('kredite')`)}</div></details>`).join('')}</div>
     </details>`;
   }).join('');
 }
@@ -120,7 +136,7 @@ function applyManagerFixedSearch(){
 function compactExpensesView(){
   const y=AppUiState.year(),mo=AppUiState.month();
   const managerState=ManagerUiState.snapshot();
-  const groups=variableBookingGroups(y,mo)+individualSavingsTransferGroup(y,mo);
+  const groups=variableBookingGroups(y,mo)+individualSavingsTransferGroup(y,mo)+creditMovementGroup(y,mo);
   return `<div class="desktop-page-title">Ausgaben</div>
     <div class="layout-grid expenses-grid">
     <div class="grid-primary"><div class="card form-card"><div class="card-title">Variable Ausgabe erfassen</div>
@@ -139,14 +155,14 @@ function compactFixedCostsView(){
   const ui=ManagerUiState.snapshot(),type=ui.fixedType,group=ui.fixedGroup,search=ui.fixedSearch.trim().toLowerCase();
   const all=CategoryStore.fixedPositions();
   const categories=all.filter(c=>(type==='all'||c.t===type)&&(group==='all'||c.g===group)&&(!search||c.p.toLowerCase().includes(search)||c.g.toLowerCase().includes(search)));
-  const year=AppUiState.year(),month=AppUiState.month(),savings=recurringSavingsFixedGroup(year,month,ui);
+  const year=AppUiState.year(),month=AppUiState.month(),savings=recurringSavingsFixedGroup(year,month,ui),credits=recurringCreditFixedItems(year,month,ui);
   return `<div class="desktop-page-title">Fixkosten</div>
     <div class="layout-grid fixed-costs-grid">
     <div class="grid-primary"><div class="card form-card"><div class="card-title">Zeitraum und Filter</div><div class="form-grid two"><div class="field"><div class="lbl">Monat</div><div class="sw"><select class="sel" onchange="selMonth(Number(this.value))">${MF.map((x,i)=>`<option value="${i}"${i===month?' selected':''}>${x}</option>`).join('')}</select></div></div><div class="field"><div class="lbl">Jahr</div><div class="sw"><select class="sel" onchange="selYear(Number(this.value))">${AppUiState.years().map(y=>`<option value="${y}"${y===year?' selected':''}>${y}</option>`).join('')}</select></div></div></div>
       <div class="compact-toolbar"><input class="inp wide" id="fixed-search" placeholder="Position suchen" value="${esc(ui.fixedSearch)}"/><button class="btn btn-ghost" onclick="applyManagerFixedSearch()">Suchen</button><div class="sw"><select class="sel" onchange="ManagerUiState.setFixedType(this.value);render()">${fixedCostTypeOptions(type)}</select></div><div class="sw"><select class="sel" onchange="ManagerUiState.setFixedGroup(this.value);render()">${fixedCostGroups(group)}</select></div></div>
       <button class="btn btn-primary btn-full" onclick="openPositionDialog('')">Position hinzufügen</button><div class="category-tools"><button class="btn btn-ghost" type="button" onclick="openFixedCategoryManager()">Kategorien verwalten</button></div>
     </div></div>
-    <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title">Gespeicherte Positionen</div><span class="muted">${categories.length+savings.count} Einträge</span></div><div class="manager-groups">${fixedManagerGroups(categories)+savings.html||'<div class="manager-empty">Keine passenden Positionen.</div>'}</div></div>
+    <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title">Gespeicherte Positionen</div><span class="muted">${categories.length+savings.count+credits.count} Einträge</span></div><div class="manager-groups">${fixedManagerGroups(categories,credits.items)+savings.html||'<div class="manager-empty">Keine passenden Positionen.</div>'}</div></div>
     <div class="card"><div class="card-title">Verwaltung</div><div class="form-actions"><button class="btn btn-ghost" onclick="openAddYear()">Jahr hinzufügen</button><button class="btn btn-ghost" onclick="openFixedDataActions()">Daten verwalten</button></div></div></div>
     </div>`;
 }

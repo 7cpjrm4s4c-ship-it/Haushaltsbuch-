@@ -22,7 +22,7 @@ function makeContext(extra={}){const context={console,setTimeout,clearTimeout,Da
   const context=makeContext();await run('js/credit-calculation.js',context);
   const credit={id:'k1',n:'Test',s:1200,r:1200,m:100,z:12,balanceYear:2026,balanceMonth:0};
   assert.equal(context.creditInterestAt(credit,2026,0),12);assert.equal(context.creditPrincipalAt(credit,2026,0),88);assert.equal(context.creditBalanceAt(credit,2026,1),1112);assert.equal(context.creditRemainingMonthsFrom({...credit,m:10},2026,0),null);
-  const special=context.specialRepaymentAnalysis({...credit,z:0},2026,0,200);assert.equal(special.reducedPrincipal,1000);assert.ok(special.baseline.months>special.withPayment.months);
+  const special=context.specialRepaymentAnalysis({...credit,z:0},2026,0,200);assert.equal(special.reducedPrincipal,900);assert.ok(special.baseline.months>special.withPayment.months);
 }
 
 // Persistenz-Roundtrip einschließlich Prognoseannahmen, Financial Events, Szenarien und Finanzziele

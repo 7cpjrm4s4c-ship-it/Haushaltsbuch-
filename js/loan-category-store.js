@@ -8,6 +8,7 @@
   function makeId(){return typeof root.uid==='function'?root.uid():'x'+Math.random().toString(36).slice(2,9);}
   function findLinked(loan){const s=state();return (s.cats||[]).find(cat=>cat.loanId===loan.id)||(s.cats||[]).find(cat=>cat.t==='K'&&normalizeName(cat.p)===normalizeName(loan.n));}
   function sync(loan){
+    if(loan?.type==='revolving'){remove(loan.id);return null;}
     const s=state();let cat=findLinked(loan);
     if(!cat){cat={id:makeId(),g:'Kredite',p:loan.n,d:Number(loan.m)||0,t:'K',loanId:loan.id,source:SOURCE};s.cats.push(cat);}
     else Object.assign(cat,{g:'Kredite',p:loan.n,d:Number(loan.m)||0,t:'K',loanId:loan.id,source:SOURCE});

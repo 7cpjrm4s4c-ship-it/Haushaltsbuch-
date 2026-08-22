@@ -3,28 +3,29 @@
 
 function forecastCreditSchedule(startYear,startMonth,endYear,endMonth=11,eventsOverride){
   const events=Array.isArray(eventsOverride)?eventsOverride:(S.financialEvents||[]);
-  const balances=new Map((S.kredite||[]).map(credit=>[credit.id,Math.max(0,Number(creditBalanceAt(credit,startYear,startMonth))||0)]));
+  const movements=Array.isArray(S.creditMovements)?S.creditMovements:[];
+  const balances=new Map((S.kredite||[]).map(credit=>[credit.id,Math.max(0,Number(creditBalanceAt(credit,startYear,startMonth,movements))||0)]));
   const rows=new Map();
   const start=ForecastEngine.monthIndex(startYear,startMonth),end=ForecastEngine.monthIndex(endYear,endMonth);
   for(let index=start;index<=end;index++){
     const {year,month}=ForecastEngine.fromMonthIndex(index);
-    let creditPayments=0,openingDebt=0,debt=0,specialRepayment=0;
+    let creditPayments=0,creditDrawdowns=0,creditInterest=0,openingDebt=0,debt=0,specialRepayment=0;
     for(const credit of S.kredite||[]){
       let balance=Math.max(0,Number(balances.get(credit.id))||0);
       openingDebt+=balance;
+      if(creditType(credit)==='revolving'){
+        const result=revolvingMonth(credit,balance,year,month,movements);creditPayments+=result.repayments+result.scheduledPayment;creditDrawdowns+=result.drawdowns;creditInterest+=result.interest;balance=result.closingBalance;debt+=balance;balances.set(credit.id,balance);continue;
+      }
       if(balance<=0.005){balances.set(credit.id,0);continue;}
-      const monthlyRate=Math.max(0,Number(credit.z||0))/1200;
-      const interest=balance*monthlyRate;
-      const regularPayment=Math.min(Math.max(0,Number(credit.m)||0),balance+interest);
+      const regular=installmentMonth(credit,balance,year,month,movements);
       const requested=typeof FinancialEvents!=='undefined'?FinancialEvents.specialRepaymentForLoan(events,credit.id,year,month):0;
-      const afterRegular=Math.max(0,balance+interest-regularPayment);
-      const appliedSpecial=Math.min(afterRegular,Math.max(0,Number(requested)||0));
-      creditPayments+=regularPayment;specialRepayment+=appliedSpecial;
-      balance=Math.max(0,afterRegular-appliedSpecial);
+      const afterOperational=regular.closingBalance,appliedPlanned=Math.min(afterOperational,Math.max(0,Number(requested)||0));
+      creditPayments+=regular.regularPayment;creditInterest+=regular.interest;specialRepayment+=regular.specialRepayment+appliedPlanned;
+      balance=Math.max(0,afterOperational-appliedPlanned);
       debt+=balance;
       balances.set(credit.id,balance);
     }
-    rows.set(`${year}-${month}`,{creditPayments,openingDebt,debt,specialRepayment});
+    rows.set(`${year}-${month}`,{creditPayments,creditDrawdowns,creditInterest,openingDebt,debt,specialRepayment});
   }
   return rows;
 }
@@ -43,10 +44,10 @@ function forecastBaseMonths(startYear,startMonth,endYear,endMonth=11,eventsOverr
       const value=Math.max(0,Number(gv(year,month,cat))||0);
       if(cat.t==='E')income+=value;else if(cat.t==='F')fixed+=value;else if(cat.t==='S')savings+=value;
     }
-    const credit=creditSchedule.get(`${year}-${month}`)||{creditPayments:0,openingDebt:0,debt:0,specialRepayment:0};
+    const credit=creditSchedule.get(`${year}-${month}`)||{creditPayments:0,creditDrawdowns:0,creditInterest:0,openingDebt:0,debt:0,specialRepayment:0};
     const accountTransfers=typeof SavingsStore!=='undefined'?SavingsStore.accounts().map(account=>({accountId:account.id,...SavingsStore.movementsForMonth(year,month,account.id)})):[];
     const savingsDeposits=accountTransfers.reduce((sum,item)=>sum+item.deposits,0),savingsWithdrawals=accountTransfers.reduce((sum,item)=>sum+item.withdrawals,0);
-    rows.push({year,month,income,fixed,savings:savings+savingsDeposits,savingsWithdrawals,accountTransfers,creditPayments:credit.creditPayments,openingDebt:credit.openingDebt,debt:credit.debt,specialRepayment:credit.specialRepayment});
+    rows.push({year,month,income,fixed,savings:savings+savingsDeposits,savingsWithdrawals,accountTransfers,creditPayments:credit.creditPayments,creditDrawdowns:credit.creditDrawdowns,creditInterest:credit.creditInterest,openingDebt:credit.openingDebt,debt:credit.debt,specialRepayment:credit.specialRepayment});
   }
   return typeof FinancialEvents!=='undefined'?FinancialEvents.applyToBaseMonths(rows,events):rows;
 }
