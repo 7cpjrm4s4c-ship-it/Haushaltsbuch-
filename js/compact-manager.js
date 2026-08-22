@@ -77,6 +77,13 @@ function individualSavingsTransferGroup(year,month){
 
 function deleteSavingsTransfer(id){if(!confirm('Einzeltransfer wirklich löschen?'))return;if(SavingsStore.removeTransfer(id)){render();toast('Transfer gelöscht');}}
 
+function creditMovementGroup(year,month){
+  if(typeof CreditMovementStore==='undefined')return '';
+  const items=CreditMovementStore.displayEntries(year,month);if(!items.length)return '';
+  const totals=CreditMovementStore.monthlyTotals(year,month),labels=typeof CreditUi!=='undefined'?CreditUi.MOVEMENT_LABELS:{},net=totals.netMainAccount;
+  return `<details class="manager-group"><summary><div class="manager-group-title">Kreditbewegungen</div><div class="manager-group-meta">${items.length} · Hauptkonto <span class="manager-total">${net>0?'+':net<0?'-':''}${fmt(Math.abs(net))}</span></div><span class="manager-chevron">▼</span></summary><div class="manager-group-body">${items.map(item=>{const inflow=item.type==='drawdown',label=labels[item.type]||'Kreditbewegung',date=new Date(`${item.date}T12:00:00`).toLocaleDateString('de-DE');return `<details class="manager-entry"><summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.note||label)}</div><div class="manager-entry-sub">${esc(label)} · ${esc(item.loanName)} · ${date}</div></div><div class="manager-entry-value ${inflow?'savings-transfer-income':'is-expense'}">${inflow?'+':'-'}${fmt(item.amount)}</div><span class="manager-chevron">▼</span></summary><div class="manager-entry-actions">${managerButton('Kredit öffnen',`nav('kredite')`)}${item.derived?'':managerButton('Löschen',`LoanActionsController.removeMovement('${esc(item.id)}')`,true)}</div></details>`;}).join('')}</div></details>`;
+}
+
 function recurringSavingsFixedGroup(year,month,ui){
   if(typeof SavingsStore==='undefined')return {count:0,html:''};
   const search=ui.fixedSearch.trim().toLowerCase(),visible=(ui.fixedType==='all'||ui.fixedType==='F')&&(ui.fixedGroup==='all'||ui.fixedGroup==='Sparanlagen');
@@ -120,7 +127,7 @@ function applyManagerFixedSearch(){
 function compactExpensesView(){
   const y=AppUiState.year(),mo=AppUiState.month();
   const managerState=ManagerUiState.snapshot();
-  const groups=variableBookingGroups(y,mo)+individualSavingsTransferGroup(y,mo);
+  const groups=variableBookingGroups(y,mo)+individualSavingsTransferGroup(y,mo)+creditMovementGroup(y,mo);
   return `<div class="desktop-page-title">Ausgaben</div>
     <div class="layout-grid expenses-grid">
     <div class="grid-primary"><div class="card form-card"><div class="card-title">Variable Ausgabe erfassen</div>

@@ -19,9 +19,9 @@
    * @param {Function} makeId ID-Generator.
    * @returns {Object} Neu angelegter Kredit als defensive Kopie.
    */
-  function add(values,makeId){const loan={id:makeId(),...clone(values)};state().kredite=Array.isArray(state().kredite)?state().kredite:[];state().kredite.push(loan);root.LoanCategoryStore?.sync?.(loan);sortCategories();save();return clone(loan);}
+  function add(values,makeId){const loan={id:makeId(),...clone(values)};root.CreditMovementStore?.validateLoan?.(loan);state().kredite=Array.isArray(state().kredite)?state().kredite:[];state().kredite.push(loan);root.LoanCategoryStore?.sync?.(loan);sortCategories();save();return clone(loan);}
   /** @param {string} id Kredit-ID. @param {Object} values Aktualisierte Felder. @returns {Object|null} Aktualisierter Kredit. */
-  function update(id,values){const loan=(state().kredite||[]).find(item=>item.id===id);if(!loan)return null;Object.assign(loan,clone(values));root.LoanCategoryStore?.sync?.(loan);sortCategories();save();return clone(loan);}
+  function update(id,values){const loan=(state().kredite||[]).find(item=>item.id===id);if(!loan)return null;const next={...loan,...clone(values)};root.CreditMovementStore?.validateLoan?.(next);Object.assign(loan,next);root.LoanCategoryStore?.sync?.(loan);sortCategories();save();return clone(loan);}
   /**
    * Entfernt einen Kredit, bereinigt die verknüpfte Kategorie und emittiert das Lifecycle-Ereignis.
    * @param {string} id Kredit-ID.

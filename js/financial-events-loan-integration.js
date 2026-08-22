@@ -7,4 +7,4 @@ function removeSpecialRepaymentsForLoan(loanId){
   ForecastStateStore.setFinancialEvents(events);
 }
 
-LoanLifecycle.onDeleted(({loanId})=>removeSpecialRepaymentsForLoan(loanId));
+LoanLifecycle.onDeleted(({loanId})=>{removeSpecialRepaymentsForLoan(loanId);if(typeof CreditMovementStore!=='undefined')CreditMovementStore.removeForLoan(loanId,false);});
