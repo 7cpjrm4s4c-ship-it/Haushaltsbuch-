@@ -14,7 +14,7 @@ function forecastCreditSchedule(startYear,startMonth,endYear,endMonth=11,eventsO
       let balance=Math.max(0,Number(balances.get(credit.id))||0);
       openingDebt+=balance;
       if(creditType(credit)==='revolving'){
-        const result=revolvingMonth(credit,balance,year,month,movements);creditPayments+=result.repayments+result.interest;creditDrawdowns+=result.drawdowns;creditInterest+=result.interest;balance=result.closingBalance;debt+=balance;balances.set(credit.id,balance);continue;
+        const result=revolvingMonth(credit,balance,year,month,movements);creditPayments+=result.repayments+result.scheduledPayment;creditDrawdowns+=result.drawdowns;creditInterest+=result.interest;balance=result.closingBalance;debt+=balance;balances.set(credit.id,balance);continue;
       }
       if(balance<=0.005){balances.set(credit.id,0);continue;}
       const regular=installmentMonth(credit,balance,year,month,movements);

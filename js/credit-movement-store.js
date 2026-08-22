@@ -41,16 +41,17 @@
   function validateLoan(loan){validateTimeline(loan,(state().creditMovements||[]).filter(item=>item.loanId===loan.id));return true;}
   function validateDataset(loans,movements){for(const loan of loans||[])validateTimeline(loan,(movements||[]).filter(item=>item.loanId===loan.id));return true;}
   function monthlyTotals(year,month){
-    const entries=forMonth(year,month);let inflows=0,repayments=0,specialRepayments=0,interest=0;
+    const entries=forMonth(year,month);let inflows=0,repayments=0,specialRepayments=0,interest=0,scheduledPrincipal=0,scheduledPayments=0;
     for(const item of entries){if(item.type==='drawdown')inflows+=item.amount;else if(item.type==='repayment')repayments+=item.amount;else if(item.type==='specialRepayment')specialRepayments+=item.amount;}
-    for(const loan of state().kredite||[]){if(root.creditType(loan)!=='revolving')continue;const opening=root.creditBalanceAt(loan,year,month,state().creditMovements||[]);interest+=root.revolvingMonth(loan,opening,year,month,state().creditMovements||[]).interest;}
-    const outflows=repayments+specialRepayments+interest;return {inflows:round2(inflows),repayments:round2(repayments),specialRepayments:round2(specialRepayments),interest:round2(interest),outflows:round2(outflows),netMainAccount:round2(inflows-outflows)};
+    for(const loan of state().kredite||[]){if(root.creditType(loan)!=='revolving')continue;const opening=root.creditBalanceAt(loan,year,month,state().creditMovements||[]),result=root.revolvingMonth(loan,opening,year,month,state().creditMovements||[]);interest+=result.interest;scheduledPrincipal+=result.scheduledPrincipal;scheduledPayments+=result.scheduledPayment;}
+    const variableOutflows=repayments+specialRepayments,outflows=variableOutflows+scheduledPayments;return {inflows:round2(inflows),repayments:round2(repayments),specialRepayments:round2(specialRepayments),interest:round2(interest),scheduledPrincipal:round2(scheduledPrincipal),scheduledPayments:round2(scheduledPayments),variableOutflows:round2(variableOutflows),outflows:round2(outflows),variableNetMainAccount:round2(inflows-variableOutflows),netMainAccount:round2(inflows-outflows)};
   }
   function displayEntries(year,month){
     const loans=new Map((state().kredite||[]).map(item=>[item.id,item])),entries=forMonth(year,month).map(item=>({...item,loanName:loans.get(item.loanId)?.n||'Kredit',derived:false}));
-    const lastDay=new Date(Number(year),Number(month)+1,0).getDate();
-    for(const loan of state().kredite||[]){if(root.creditType(loan)!=='revolving')continue;const opening=root.creditBalanceAt(loan,year,month,state().creditMovements||[]),interest=root.revolvingMonth(loan,opening,year,month,state().creditMovements||[]).interest;if(interest>0)entries.push({id:`interest_${loan.id}_${year}_${month}`,loanId:loan.id,loanName:loan.n,type:'interest',amount:interest,date:`${year}-${String(Number(month)+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`,year:Number(year),month:Number(month),note:'Monatliche Zinsabbuchung',derived:true});}
     return entries.sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   }
-  root.CreditMovementStore=Object.freeze({all,forLoan,forMonth,add,remove,removeForLoan,validateLoan,validateDataset,monthlyTotals,displayEntries});
+  function fixedPaymentEntries(year,month){
+    const movements=state().creditMovements||[],lastDay=new Date(Number(year),Number(month)+1,0).getDate();return (state().kredite||[]).filter(loan=>root.creditType(loan)==='revolving').map(loan=>{const opening=root.creditBalanceAt(loan,year,month,movements),result=root.revolvingMonth(loan,opening,year,month,movements);return {id:`scheduled_${loan.id}_${year}_${month}`,loanId:loan.id,loanName:loan.n,type:'scheduledPayment',amount:result.scheduledPayment,interest:result.interest,principal:result.scheduledPrincipal,date:`${year}-${String(Number(month)+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`,year:Number(year),month:Number(month),derived:true};}).filter(item=>item.amount>0);
+  }
+  root.CreditMovementStore=Object.freeze({all,forLoan,forMonth,add,remove,removeForLoan,validateLoan,validateDataset,monthlyTotals,displayEntries,fixedPaymentEntries});
 })(typeof globalThis!=='undefined'?globalThis:window);

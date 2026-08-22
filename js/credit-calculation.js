@@ -40,17 +40,19 @@ function installmentMonth(k,openingBalance,year,month,movements=[]){
 }
 function revolvingMonth(k,openingBalance,year,month,movements=[]){
   const start=creditDate(year,month,1),end=creditDate(year,Number(month)+1,1),annualRate=Math.max(0,Number(k.z)||0)/100,limit=Math.max(0,Number(k.limit)||0),convention=['act360','30e360'].includes(k.dayCountConvention)?k.dayCountConvention:'act365';
-  let balance=Math.max(0,Number(openingBalance)||0),interest=0,drawdowns=0,repayments=0,cursor=start,overpayment=false;
+  let balance=Math.max(0,Number(openingBalance)||0),interest=0,drawdowns=0,repayments=0,cursor=start,overpayment=false,limitExceeded=balance>limit+0.005;
   const entries=creditMovementsInMonth(movements,k.id,year,month,['drawdown','repayment']);
   for(const item of entries){
     const date=creditMovementDate(item);if(!date||date<start||date>=end)continue;
     interest+=balance*annualRate*creditDayFraction(cursor,date,convention);
     const amount=Math.max(0,Number(item.amount)||0);
-    if(item.type==='drawdown'){balance+=amount;drawdowns+=amount;}else{if(amount>balance+0.005)overpayment=true;const applied=Math.min(balance,amount);balance-=applied;repayments+=applied;}
+    if(item.type==='drawdown'){balance+=amount;drawdowns+=amount;if(balance>limit+0.005)limitExceeded=true;}else{if(amount>balance+0.005)overpayment=true;const applied=Math.min(balance,amount);balance-=applied;repayments+=applied;}
     cursor=date;
   }
   interest+=balance*annualRate*creditDayFraction(cursor,end,convention);
-  return {openingBalance:creditRound(openingBalance),interest:creditRound(interest),drawdowns:creditRound(drawdowns),repayments:creditRound(repayments),closingBalance:creditRound(balance),available:creditRound(Math.max(0,limit-balance)),limitExceeded:balance>limit+0.005,overpayment};
+  const roundedInterest=creditRound(interest),configuredPayment=Math.max(0,Number(k.m)||0),scheduledPrincipal=Math.min(balance,Math.max(0,configuredPayment-roundedInterest)),scheduledPayment=roundedInterest+scheduledPrincipal;
+  balance=Math.max(0,balance-scheduledPrincipal);
+  return {openingBalance:creditRound(openingBalance),interest:roundedInterest,drawdowns:creditRound(drawdowns),repayments:creditRound(repayments),scheduledPayment:creditRound(scheduledPayment),scheduledPrincipal:creditRound(scheduledPrincipal),closingBalance:creditRound(balance),available:creditRound(Math.max(0,limit-balance)),limitExceeded,overpayment};
 }
 function creditBalanceAt(k,year,month,movements=[]){
   if(creditType(k)==='revolving'){
@@ -67,7 +69,7 @@ function creditBalanceAt(k,year,month,movements=[]){
   return creditRound(balance);
 }
 function creditInterestAt(k,year,month,movements=[]){const balance=creditBalanceAt(k,year,month,movements);return creditType(k)==='revolving'?revolvingMonth(k,balance,year,month,movements).interest:creditRound(balance*(Math.max(0,Number(k.z||0))/1200));}
-function creditPrincipalAt(k,year,month,movements=[]){if(creditType(k)==='revolving')return revolvingMonth(k,creditBalanceAt(k,year,month,movements),year,month,movements).repayments;const balance=creditBalanceAt(k,year,month,movements);if(balance<=0)return 0;return creditRound(Math.max(0,Math.min(balance,Number(k.m||0)-creditInterestAt(k,year,month,movements))));}
+function creditPrincipalAt(k,year,month,movements=[]){if(creditType(k)==='revolving')return revolvingMonth(k,creditBalanceAt(k,year,month,movements),year,month,movements).scheduledPrincipal;const balance=creditBalanceAt(k,year,month,movements);if(balance<=0)return 0;return creditRound(Math.max(0,Math.min(balance,Number(k.m||0)-creditInterestAt(k,year,month,movements))));}
 function creditPaidAmountAt(k,year,month,movements=[]){return Math.max(0,creditRound(creditStartAmount(k)-creditBalanceAt(k,year,month,movements)));}
 function creditRemainingMonthsFrom(k,year,month,movements=[]){
   if(creditType(k)==='revolving')return null;
