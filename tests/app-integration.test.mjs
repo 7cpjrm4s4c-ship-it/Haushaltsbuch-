@@ -35,18 +35,19 @@ function makeContext(extra={}){const context={console,setTimeout,clearTimeout,Da
   await run('js/state-schema.js',context);await run('js/state-storage.js',context);
   S.amountAdjustments=[{id:'a1',catId:'f1',amount:20,year:2027,month:8}];
   S.oneTimeEntries=[{id:'o1',catId:'e1',amount:1600,year:2026,month:11}];
+  S.buchungen=[{id:'income-1',direction:'income',catId:'',bezeichnung:'Person X',betrag:250,year:2026,month:10,ts:1}];
   S.financialEvents=[{id:'fe1',type:'oneTimeIncome',title:'Bonus',startYear:2026,startMonth:11,amount:1600,enabled:true}];
   S.forecastScenarios=[{id:'sc1',title:'Vorsichtig',ui:{scenarioKey:'cautious',lookbackMonths:6,annualInflation:2,endYear:2030},assumptions:{annualReturns:{etf:4},purchasingPowerInflation:2,savingsTarget:'etf'},financialEvents:S.financialEvents,createdAt:'2026-08-08',updatedAt:'2026-08-08'}];
   S.forecastGoals=[{id:'g1',title:'Reserve',type:'minLiquidity',targetAmount:15000,targetYear:2030,targetMonth:11,enabled:true}];
   context.StateStorage.save();await new Promise(r=>setTimeout(r,350));
   const raw=JSON.parse(localStorage.getItem('hp5'));
   assert.equal(raw.schemaVersion,context.StateSchema.CURRENT_VERSION);
-  assert.equal(raw.amountAdjustments.length,1);assert.equal(raw.oneTimeEntries.length,1);assert.equal(raw.forecastAssets.cash,1000);
+  assert.equal(raw.amountAdjustments.length,1);assert.equal(raw.oneTimeEntries.length,1);assert.equal(raw.buchungen[0].direction,'income');assert.equal(raw.forecastAssets.cash,1000);
   assert.equal(raw.forecastAssumptions.annualReturns.etf,7);assert.equal(raw.forecastAssumptions.purchasingPowerInflation,2.1);assert.equal(raw.forecastAssumptions.savingsTarget,'etf');
   assert.equal(raw.financialEvents.length,1);assert.equal(raw.financialEvents[0].type,'oneTimeIncome');assert.equal(raw.forecastScenarios.length,1);assert.equal(raw.forecastScenarios[0].title,'Vorsichtig');assert.equal(raw.forecastGoals.length,1);assert.equal(raw.forecastGoals[0].targetAmount,15000);
-  S.amountAdjustments=[];S.oneTimeEntries=[];S.forecastAssets={};S.forecastAssumptions={};S.financialEvents=[];S.forecastScenarios=[];S.forecastGoals=[];
+  S.amountAdjustments=[];S.oneTimeEntries=[];S.buchungen=[];S.forecastAssets={};S.forecastAssumptions={};S.financialEvents=[];S.forecastScenarios=[];S.forecastGoals=[];
   context.StateStorage.load();
-  assert.equal(S.amountAdjustments.length,1);assert.equal(S.oneTimeEntries.length,1);assert.equal(S.forecastAssets.cash,1000);assert.equal(S.forecastAssumptions.annualReturns.etf,7);
+  assert.equal(S.amountAdjustments.length,1);assert.equal(S.oneTimeEntries.length,1);assert.equal(S.buchungen[0].direction,'income');assert.equal(S.buchungen[0].betrag,250);assert.equal(S.forecastAssets.cash,1000);assert.equal(S.forecastAssumptions.annualReturns.etf,7);
   assert.equal(S.financialEvents.length,1);assert.equal(S.financialEvents[0].title,'Bonus');assert.equal(S.forecastScenarios.length,1);assert.equal(S.forecastScenarios[0].ui.scenarioKey,'cautious');assert.equal(S.forecastGoals.length,1);assert.equal(S.forecastGoals[0].type,'minLiquidity');
 }
 console.log('Alle App-Integrationstests erfolgreich.');

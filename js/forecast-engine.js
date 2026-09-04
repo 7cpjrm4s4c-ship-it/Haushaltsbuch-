@@ -27,6 +27,7 @@
     const bookings=Array.isArray(options.bookings)?options.bookings:[],variableIds=new Set(options.variableCategoryIds||[]),months=Math.max(1,Math.min(24,Number(options.lookbackMonths)||3));
     const end=monthIndex(options.baseYear,options.baseMonth)-1,totals=new Map();
     for(const item of bookings){
+      if(item.direction==='income')continue;
       if(!variableIds.has(item.catId))continue;
       const key=monthIndex(item.year,item.month);
       totals.set(key,(totals.get(key)||0)+Number(item.betrag||0));

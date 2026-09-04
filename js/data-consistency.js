@@ -14,7 +14,8 @@ function consistentMonthCalculation(year,month){
     const value=consistentValue(year,month,cat,events);
     if(cat.t==='E')e+=value;else if(cat.t==='F')f+=value;else if(cat.t==='K')k+=value;else if(cat.t==='S')s+=value;
   }
-  let v=BookingStore.forMonth(year,month).reduce((sum,booking)=>sum+Number(booking.betrag||0),0);
+  const bookingTotals=BookingStore.monthlyTotals(year,month);
+  e+=bookingTotals.inflows;let v=bookingTotals.expenses;
   const transfers=typeof SavingsStore!=='undefined'?SavingsStore.monthlyTotals(year,month):{regularDeposits:0,individualDeposits:0,deposits:0,withdrawals:0},legacySavings=s;
   const credit=typeof CreditMovementStore!=='undefined'?CreditMovementStore.monthlyTotals(year,month):{inflows:0,variableOutflows:0,scheduledPayments:0};
   f+=transfers.regularDeposits;v+=transfers.individualDeposits-transfers.withdrawals+credit.variableOutflows-credit.inflows;k+=credit.scheduledPayments;s+=transfers.deposits;const aus=f+v+k+legacySavings;return{e,f,v,k,s,aus,saldo:e-aus};

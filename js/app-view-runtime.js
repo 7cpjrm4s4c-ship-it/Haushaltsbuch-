@@ -6,7 +6,7 @@
 
 (function(root){
   const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  const VIEW_TITLES={dashboard:'Haushaltsplan',ausgaben:'Ausgaben',uebersicht:'Fixkosten',kredite:'Kredite',savings:'Sparanlagen',einstellungen:'Prognose',import:'Import'};
+  const VIEW_TITLES={dashboard:'Haushaltsplan',ausgaben:'Buchungen',uebersicht:'Fixkosten',kredite:'Kredite',savings:'Sparanlagen',einstellungen:'Prognose',import:'Import'};
   const VIEW_FUNCTIONS={dashboard:'vDashboard',ausgaben:'vAusgaben',uebersicht:'vUebersicht',kredite:'vKredite',savings:'vSavings',einstellungen:'vEinstellungen',import:'vImport'};
 
   function uiState(){if(!root.AppUiState)throw new Error('AppUiState fehlt');return root.AppUiState;}

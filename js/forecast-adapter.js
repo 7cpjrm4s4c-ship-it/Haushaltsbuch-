@@ -37,8 +37,9 @@ function forecastBaseMonths(startYear,startMonth,endYear,endMonth=11,eventsOverr
   if(end-start>600)throw new RangeError('Prognosezeitraum ist zu groß');
   const events=Array.isArray(eventsOverride)?eventsOverride:(S.financialEvents||[]);
   const creditSchedule=forecastCreditSchedule(startYear,startMonth,endYear,endMonth,events);
+  const bookingInflows=typeof BookingStore!=='undefined'&&typeof BookingStore.inflowsByMonth==='function'?BookingStore.inflowsByMonth():new Map();
   for(let index=start;index<=end;index++){
-    const {year,month}=ForecastEngine.fromMonthIndex(index);let income=0,fixed=0,savings=0;
+    const {year,month}=ForecastEngine.fromMonthIndex(index);let income=bookingInflows.get(`${year}_${month}`)||0,fixed=0,savings=0;
     for(const cat of S.cats){
       if(cat.t==='V'||cat.t==='K')continue;
       const value=Math.max(0,Number(gv(year,month,cat))||0);

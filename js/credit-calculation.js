@@ -50,7 +50,7 @@ function revolvingMonth(k,openingBalance,year,month,movements=[]){
     cursor=date;
   }
   interest+=balance*annualRate*creditDayFraction(cursor,end,convention);
-  const roundedInterest=creditRound(interest),configuredPayment=Math.max(0,Number(k.m)||0),scheduledPrincipal=Math.min(balance,Math.max(0,configuredPayment-roundedInterest)),scheduledPayment=roundedInterest+scheduledPrincipal;
+  const roundedInterest=creditRound(interest),configuredPrincipal=Math.max(0,Number(k.m)||0),scheduledPrincipal=Math.min(balance,configuredPrincipal),scheduledPayment=roundedInterest+scheduledPrincipal;
   balance=Math.max(0,balance-scheduledPrincipal);
   return {openingBalance:creditRound(openingBalance),interest:roundedInterest,drawdowns:creditRound(drawdowns),repayments:creditRound(repayments),scheduledPayment:creditRound(scheduledPayment),scheduledPrincipal:creditRound(scheduledPrincipal),closingBalance:creditRound(balance),available:creditRound(Math.max(0,limit-balance)),limitExceeded,overpayment};
 }
