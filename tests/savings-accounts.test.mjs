@@ -21,7 +21,7 @@ assert.throws(()=>context.SavingsStore.addTransfer({accountId:'s1',direction:'wi
 assert.equal(context.S.savingsTransfers.length,1);
 context.SavingsStore.addTransfer({accountId:'s1',direction:'deposit',amount:25,year:2026,month:1,note:'Extra'},()=> 't2');
 assert.equal(context.SavingsStore.balanceAtEnd('s1',2026,1),1175);assert.equal(persists,1);
-context.S.cats=[];context.S.data={};context.PlanningEvents={fromLegacy:()=>[],valueForMonth:()=>0};context.BookingStore={forMonth:()=>[{betrag:30}]};context.dkey=(year,month,id)=>`${year}_${month}_${id}`;context.AppExtensionRegistry={registerCalculation:(name,fn)=>{context[name]=fn;}};
+context.S.cats=[];context.S.data={};context.PlanningEvents={fromLegacy:()=>[],valueForMonth:()=>0};context.BookingStore={monthlyTotals:()=>({expenses:30,inflows:0})};context.dkey=(year,month,id)=>`${year}_${month}_${id}`;context.AppExtensionRegistry={registerCalculation:(name,fn)=>{context[name]=fn;}};
 vm.runInContext(consistencySource,context,{filename:'js/data-consistency.js'});
 assert.deepEqual(JSON.parse(JSON.stringify(context.calcMonth(2026,1))),{e:0,f:100,v:5,k:0,s:125,aus:105,saldo:-105},'Regelmäßige Sparraten gehören zu Fixkosten; Einzel-Einzahlungen und Auszahlungen bilden den variablen Hauptkonto-Nettowert');
 const snapshot=context.SavingsStore.accounts();snapshot[0].openingBalance=0;assert.equal(context.S.savingsAccounts[0].openingBalance,1000);

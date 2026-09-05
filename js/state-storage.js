@@ -9,7 +9,7 @@
     if(typeof StateSchema!=='undefined'){const normalized=StateSchema.normalize(raw,{defaultYears});if(typeof CreditMovementStore!=='undefined')CreditMovementStore.validateDataset(normalized.kredite,normalized.creditMovements);return normalized;}
     const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
     return {
-      schemaVersion:10,data:source.data&&typeof source.data==='object'&&!Array.isArray(source.data)?source.data:{},
+      schemaVersion:12,data:source.data&&typeof source.data==='object'&&!Array.isArray(source.data)?source.data:{},
       cats:Array.isArray(source.cats)?source.cats:[],kredite:Array.isArray(source.kredite)?source.kredite:[],creditMovements:Array.isArray(source.creditMovements)?source.creditMovements:[],years:Array.isArray(source.years)&&source.years.length?source.years:defaultYears(),
       buchungen:Array.isArray(source.buchungen)?source.buchungen:[],budgets:source.budgets&&typeof source.budgets==='object'&&!Array.isArray(source.budgets)?source.budgets:{},
       recurringRules:Array.isArray(source.recurringRules)?source.recurringRules:[],annualAdjustments:Array.isArray(source.annualAdjustments)?source.annualAdjustments:[],percentageAdjustments:Array.isArray(source.percentageAdjustments)?source.percentageAdjustments:[],

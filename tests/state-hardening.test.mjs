@@ -25,13 +25,13 @@ function makeContext(extra={}){const context={console,setTimeout,clearTimeout,Da
 }
 
 {
-  const oldState={schemaVersion:3,data:{},cats:[],kredite:[],years:[2026,2027],buchungen:[],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],forecastAssets:{cash:500},forecastAssumptions:{annualReturns:{etf:6},purchasingPowerInflation:2,savingsTarget:'etf'}};
+  const oldState={schemaVersion:3,data:{},cats:[],kredite:[],years:[2026,2027],buchungen:[{id:'legacy-expense',catId:'food',bezeichnung:'Einkauf',betrag:40,year:2026,month:0,ts:1}],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],forecastAssets:{cash:500},forecastAssumptions:{annualReturns:{etf:6},purchasingPowerInflation:2,savingsTarget:'etf'}};
   const store=new Map([['hp5',JSON.stringify(oldState)]]),localStorage={getItem:key=>store.has(key)?store.get(key):null,setItem:(key,value)=>store.set(key,String(value))};const S={...oldState,year:2026,month:0};
   const DataManagementStore={applyFactoryState:()=>{throw new Error('gültiger Altzustand darf nicht verworfen werden');},normalizeVariableCategories:()=>{},sortCategoriesInPlace:()=>{}};
   const context=makeContext({S,localStorage,LS_KEY:'hp5',now:new Date(2026,0,1),defaultYears:()=>[2026,2027,2028],DataManagementStore,LoanCategoryStore:{syncAll:()=>{}},creditStartAmount:k=>Number(k.s??0),creditReferenceYear:k=>Number(k.balanceYear??2026),creditReferenceMonth:k=>Number(k.balanceMonth??0)});
   await run('js/state-schema.js',context);await run('js/state-storage.js',context);context.StateStorage.load();
   const migrated=JSON.parse(localStorage.getItem('hp5'));
-  assert.equal(migrated.schemaVersion,context.StateSchema.CURRENT_VERSION);assert.deepEqual([...S.years],[2026,2027]);assert.equal(S.kredite.length,0);assert.deepEqual([...S.amountAdjustments],[]);assert.deepEqual([...S.oneTimeEntries],[]);assert.deepEqual([...S.financialEvents],[]);assert.equal(S.forecastAssets.cash,500);assert.equal(S.forecastAssumptions.savingsTarget,'etf');assert.equal(S.forecastAssumptions.purchasingPowerInflation,2);
+  assert.equal(migrated.schemaVersion,context.StateSchema.CURRENT_VERSION);assert.deepEqual([...S.years],[2026,2027]);assert.equal(S.kredite.length,0);assert.equal(S.buchungen[0].direction,'expense','Bestehende Buchungen ohne Buchungsart müssen Ausgaben bleiben');assert.deepEqual([...S.amountAdjustments],[]);assert.deepEqual([...S.oneTimeEntries],[]);assert.deepEqual([...S.financialEvents],[]);assert.equal(S.forecastAssets.cash,500);assert.equal(S.forecastAssumptions.savingsTarget,'etf');assert.equal(S.forecastAssumptions.purchasingPowerInflation,2);
 }
 
 const storageSource=await source('js/state-storage.js');

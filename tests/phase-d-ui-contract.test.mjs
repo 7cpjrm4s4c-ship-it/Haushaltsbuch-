@@ -25,6 +25,8 @@ assert.match(css,/--surface-gap\s*:\s*12px/,'Abstand zwischen Cards und eigenst�
 assert.match(css,/--page-inline\s*:\s*8px/,'Globaler Seitenabstand muss 8 px betragen');
 assert.match(css,/--nav-reserve\s*:\s*calc\(var\(--nav-h\) \+ var\(--nav-gap\) \+ var\(--space-4\)\)/,'Unterer Inhaltsbereich muss Navigation plus Sicherheitsabstand reservieren');
 assert.match(css,/html,body\{[^}]*-webkit-text-size-adjust:100%;text-size-adjust:100%/,'Globale Typografie darf im Querformat nicht automatisch skaliert werden');
+assert.match(cssByFile['css/base.css'],/html,body\{overflow-x:clip;/,'Die Root-Elemente dürfen auf WebKit keinen zusätzlichen Scroll-Container für die mobile App-Shell erzeugen');
+assert.ok(!/body\{[^}]*position:relative|body\{[^}]*background-attachment:fixed/.test(cssByFile['css/base.css']),'Der Body darf für fixierte Shell-Elemente keinen WebKit-kritischen Positionierungs- oder Hintergrundkontext erzeugen');
 assert.match(css,/--header-h\s*:\s*60px/,'Die mobile Header-Höhe muss zentral definiert sein');
 assert.match(css,/\.header\{[^}]*position:fixed[^}]*z-index:1000/,'Der Header muss fixiert über dem scrollenden Grid liegen');
 assert.match(css,/\.main\{[^}]*display:flex;flex-direction:column;gap:var\(--surface-gap\)[^}]*padding:calc\(var\(--sat\) \+ var\(--header-h\) \+ var\(--space-2\)\) var\(--page-inline\) calc\(max\(var\(--sab\),8px\) \+ var\(--nav-reserve\)\)/,'Hauptinhalt muss unter dem fixierten Header starten und anschließend darunter scrollen');
@@ -59,6 +61,7 @@ assert.match(css,/\.form-card,#genBody\{display:flex;flex-direction:column;gap:v
 assert.match(css,/\.field\{margin-bottom:0\}/,'Formularfelder dürfen keinen konkurrierenden eigenen Außenabstand besitzen');
 assert.match(css,/\.form-actions,\.dialog-actions\{[^}]*gap:var\(--space-2\)[^}]*margin-top:0/,'Formularaktionen müssen ihren Abstand ausschließlich vom Container erhalten');
 assert.match(css,/\.bnav-wrap\{[^}]*bottom:calc\(max\(var\(--sab\),8px\) \+ var\(--nav-gap\)\)/,'Bottom-Navigation muss Safe-Area und globalen 8-px-Abstand nutzen');
+assert.match(css,/\.bnav-wrap\{position:fixed;/,'Bottom-Navigation muss unabhängig vom Dokument-Scroll am Viewport verankert bleiben');
 assert.match(css,/@media\(orientation:landscape\) and \(max-height:600px\)\{[^}]*html,body\{[^}]*text-size-adjust:100%/,'Querformat muss die globale Schriftgröße stabil halten');
 assert.ok(!shellEvents.includes("classList.add('hidden')"),'Shell-JavaScript darf den Header nicht ausblenden');
 for(const undefinedToken of ['--border','--surface','--surface-2','--text','--muted'])assert.ok(!cssByFile['css/modules.css'].includes(`var(${undefinedToken})`),`Modul-CSS darf das nicht definierte Token ${undefinedToken} nicht verwenden`);

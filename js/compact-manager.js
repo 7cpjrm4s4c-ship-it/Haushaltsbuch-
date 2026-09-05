@@ -24,16 +24,23 @@ function variableCategoryOptionsForManager(selected=''){
   return CategoryStore.variable().map(cat=>`<option value="${esc(cat.id)}"${cat.id===selected?' selected':''}>${esc(cat.p)}</option>`).join('');
 }
 
-function saveStructuredExpense(){
-  const amount=Number(document.getElementById('quick-amount')?.value);
-  const catId=document.getElementById('quick-cat')?.value;
-  const name=document.getElementById('quick-name')?.value.trim()||'';
+function toggleVariableBookingType(value){
+  const income=value==='income',categoryArea=document.getElementById('quick-category-area'),name=document.getElementById('quick-name');
+  if(categoryArea)categoryArea.hidden=income;
+  if(name)name.placeholder=income?'z. B. Erstattung von Person X':'z. B. REWE oder Freizeitpark';
+}
+
+function saveStructuredBooking(){
+  const direction=document.getElementById('quick-direction')?.value==='income'?'income':'expense',amount=Number(document.getElementById('quick-amount')?.value);
+  const catId=direction==='income'?'':document.getElementById('quick-cat')?.value;
+  const name=document.getElementById('quick-name')?.value.trim()||(direction==='income'?'Zahlungseingang':'');
   if(!Number.isFinite(amount)||amount<=0)return toast('Bitte Betrag eingeben','err');
-  if(!catId)return toast('Bitte Kategorie auswählen','err');
-  BookingStore.add({id:uid(),catId,bezeichnung:name,betrag:amount,month:AppUiState.month(),year:AppUiState.year(),ts:Date.now()});
-  ManagerUiState.setExpenseCategory(catId);
+  if(direction==='expense'&&!catId)return toast('Bitte Kategorie auswählen','err');
+  try{BookingStore.add({id:uid(),direction,catId,bezeichnung:name,betrag:amount,month:AppUiState.month(),year:AppUiState.year(),ts:Date.now()});}
+  catch(error){return toast(error?.message||'Buchung konnte nicht gespeichert werden','err');}
+  if(direction==='expense')ManagerUiState.setExpenseCategory(catId);
   render();
-  toast('Ausgabe gespeichert');
+  toast(direction==='income'?'Zahlungseingang gespeichert':'Ausgabe gespeichert');
 }
 
 function managerButton(label, action, danger=false){
@@ -44,27 +51,30 @@ function variableBookingGroups(year, month){
   const categories=CategoryStore.variable();
   const categoryIds=new Set(categories.map(cat=>cat.id));
   const bookings=BookingStore.forMonth(year,month);
+  const expenses=bookings.filter(item=>item.direction!=='income');
   const regular=categories.map(cat=>{
-    const items=bookings.filter(item=>item.catId===cat.id).slice().sort((a,b)=>Number(b.ts||0)-Number(a.ts||0));
+    const items=expenses.filter(item=>item.catId===cat.id).slice().sort((a,b)=>Number(b.ts||0)-Number(a.ts||0));
     if(!items.length)return '';
     const total=items.reduce((sum,item)=>sum+Number(item.betrag||0),0);
     return `<details class="manager-group">
       <summary><div class="manager-group-title">${esc(cat.p)}</div><div class="manager-group-meta">${items.length} · <span class="manager-total">${fmt(total)}</span></div><span class="manager-chevron">▼</span></summary>
       <div class="manager-group-body">${items.map(item=>`<details class="manager-entry">
         <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung||cat.p)}</div><div class="manager-entry-sub">${new Date(item.ts).toLocaleDateString('de-DE')} · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value is-expense">-${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary>
-        <div class="manager-entry-actions">${managerButton('Bearbeiten',`openBookingDialog('${esc(item.id)}')`)}${managerButton('Löschen',`deleteBooking('${esc(item.id)}')`,true)}</div>
+        <div class="manager-entry-actions">${managerButton('Bearbeiten',`openBookingDialog(${esc(JSON.stringify(String(item.id)))})`)}${managerButton('Löschen',`deleteBooking(${esc(JSON.stringify(String(item.id)))})`,true)}</div>
       </details>`).join('')}</div>
     </details>`;
   }).join('');
 
-  const orphaned=bookings.filter(item=>!categoryIds.has(item.catId));
-  if(!orphaned.length)return regular;
+  const orphaned=expenses.filter(item=>!categoryIds.has(item.catId));
   const orphanTotal=orphaned.reduce((sum,item)=>sum+Number(item.betrag||0),0);
   const orphanRows=orphaned.map(item=>`<details class="manager-entry">
     <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung||'Ausgabe')}</div><div class="manager-entry-sub">Kategorie nicht mehr vorhanden · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value is-expense">-${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary>
-    <div class="manager-entry-actions">${managerButton('Bearbeiten',`openBookingDialog('${esc(item.id)}')`)}${managerButton('Löschen',`deleteBooking('${esc(item.id)}')`,true)}</div>
+    <div class="manager-entry-actions">${managerButton('Bearbeiten',`openBookingDialog(${esc(JSON.stringify(String(item.id)))})`)}${managerButton('Löschen',`deleteBooking(${esc(JSON.stringify(String(item.id)))})`,true)}</div>
   </details>`).join('');
-  return regular+`<details class="manager-group" open><summary><div class="manager-group-title">Ohne Kategorie</div><div class="manager-group-meta">${orphaned.length} · <span class="manager-total">${fmt(orphanTotal)}</span></div><span class="manager-chevron">▼</span></summary><div class="manager-group-body">${orphanRows}</div></details>`;
+  const orphanGroup=orphaned.length?`<details class="manager-group" open><summary><div class="manager-group-title">Ohne Kategorie</div><div class="manager-group-meta">${orphaned.length} · <span class="manager-total">${fmt(orphanTotal)}</span></div><span class="manager-chevron">▼</span></summary><div class="manager-group-body">${orphanRows}</div></details>`:'';
+  const inflows=bookings.filter(item=>item.direction==='income').slice().sort((a,b)=>Number(b.ts||0)-Number(a.ts||0)),inflowTotal=inflows.reduce((sum,item)=>sum+Number(item.betrag||0),0);
+  const inflowGroup=inflows.length?`<details class="manager-group"><summary><div class="manager-group-title">Zahlungseingänge</div><div class="manager-group-meta">${inflows.length} · Eingang <span class="manager-total">+${fmt(inflowTotal)}</span></div><span class="manager-chevron">▼</span></summary><div class="manager-group-body">${inflows.map(item=>`<details class="manager-entry"><summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.bezeichnung||'Zahlungseingang')}</div><div class="manager-entry-sub">Einmaliger Zahlungseingang · ${MF[item.month]} ${item.year}</div></div><div class="manager-entry-value savings-transfer-income">+${fmt(item.betrag)}</div><span class="manager-chevron">▼</span></summary><div class="manager-entry-actions">${managerButton('Bearbeiten',`openBookingDialog(${esc(JSON.stringify(String(item.id)))})`)}${managerButton('Löschen',`deleteBooking(${esc(JSON.stringify(String(item.id)))})`,true)}</div></details>`).join('')}</div></details>`:'';
+  return regular+orphanGroup+inflowGroup;
 }
 
 function individualSavingsTransferGroup(year,month){
@@ -123,7 +133,7 @@ function fixedManagerGroups(categories,creditItems=[]){
           <summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(cat.p)}</div><div class="manager-entry-sub">${interval}${rule?` · ab ${MF[rule.startMonth]} ${rule.startYear}`:''}</div></div><div class="manager-entry-value ${RC[cat.t]||''}">${fmtS(gv(year,month,cat))}</div><span class="manager-chevron">▼</span></summary>
           <div class="manager-entry-actions">${managerButton('Bearbeiten',`openPositionDialog('${esc(cat.id)}')`)}${managerButton('Löschen',`deleteFixedPosition('${esc(cat.id)}')`,true)}</div>
         </details>`;
-      }).join('')}${group.creditItems.map(item=>`<details class="manager-entry"><summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.loanName)}</div><div class="manager-entry-sub">Monatsrate · davon ${fmt(item.interest)} Zinsen und ${fmt(item.principal)} Tilgung</div></div><div class="manager-entry-value ${RC.K||''}">${fmtS(item.amount)}</div><span class="manager-chevron">▼</span></summary><div class="manager-entry-actions">${managerButton('Kredit öffnen',`nav('kredite')`)}</div></details>`).join('')}</div>
+      }).join('')}${group.creditItems.map(item=>`<details class="manager-entry"><summary><div class="manager-entry-main"><div class="manager-entry-title">${esc(item.loanName)}</div><div class="manager-entry-sub">Gesamtzahlung · ${fmt(item.principal)} Tilgung + ${fmt(item.interest)} Zinsen</div></div><div class="manager-entry-value ${RC.K||''}">${fmtS(item.amount)}</div><span class="manager-chevron">▼</span></summary><div class="manager-entry-actions">${managerButton('Kredit öffnen',`nav('kredite')`)}</div></details>`).join('')}</div>
     </details>`;
   }).join('');
 }
@@ -137,17 +147,18 @@ function compactExpensesView(){
   const y=AppUiState.year(),mo=AppUiState.month();
   const managerState=ManagerUiState.snapshot();
   const groups=variableBookingGroups(y,mo)+individualSavingsTransferGroup(y,mo)+creditMovementGroup(y,mo);
-  return `<div class="desktop-page-title">Ausgaben</div>
+  return `<div class="desktop-page-title">Buchungen</div>
     <div class="layout-grid expenses-grid">
-    <div class="grid-primary"><div class="card form-card"><div class="card-title">Variable Ausgabe erfassen</div>
-      <div class="form-grid two"><div class="field"><div class="lbl">Monat</div><div class="sw"><select class="sel" onchange="selMonth(Number(this.value))">${MF.map((x,i)=>`<option value="${i}"${i===mo?' selected':''}>${x}</option>`).join('')}</select></div></div><div class="field"><div class="lbl">Jahr</div><div class="sw"><select class="sel" onchange="selYear(Number(this.value))">${AppUiState.years().map(x=>`<option value="${x}"${x===y?' selected':''}>${x}</option>`).join('')}</select></div></div></div>
-      <div class="field"><div class="lbl">Betrag</div><input class="inp" id="quick-amount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00"/></div>
-      <div class="field"><div class="lbl">Kategorie</div><div class="sw"><select class="sel" id="quick-cat" onchange="ManagerUiState.setExpenseCategory(this.value)"><option value="">Bitte auswählen</option>${variableCategoryOptionsForManager(managerState.expenseCategoryId)}</select></div></div>
-      <div class="field"><div class="lbl">Bezeichnung</div><input class="inp" id="quick-name" placeholder="z. B. REWE oder Freizeitpark"/></div>
-      <div class="category-tools"><button class="btn btn-ghost" type="button" onclick="openVariableCategoryManager()">Kategorien verwalten</button></div>
-      <div class="dialog-actions"><button class="btn btn-cancel" onclick="clearExpenseForm();ManagerUiState.resetExpense()">Abbrechen</button><button class="btn btn-green" onclick="saveStructuredExpense()">Speichern</button></div>
+    <div class="grid-primary"><div class="card form-card"><div class="card-title">Variable Buchung erfassen</div>
+      <div class="form-grid two"><div class="field"><div class="lbl">Monat</div><div class="sw"><select class="sel" aria-label="Monat" onchange="selMonth(Number(this.value))">${MF.map((x,i)=>`<option value="${i}"${i===mo?' selected':''}>${x}</option>`).join('')}</select></div></div><div class="field"><div class="lbl">Jahr</div><div class="sw"><select class="sel" aria-label="Jahr" onchange="selYear(Number(this.value))">${AppUiState.years().map(x=>`<option value="${x}"${x===y?' selected':''}>${x}</option>`).join('')}</select></div></div></div>
+      <div class="form-grid two"><div class="field"><div class="lbl">Buchungsart</div><div class="sw"><select class="sel" id="quick-direction" aria-label="Buchungsart" aria-describedby="quick-direction-hint" onchange="toggleVariableBookingType(this.value)"><option value="expense">Ausgabe</option><option value="income">Zahlungseingang</option></select></div></div><div class="field"><div class="lbl">Betrag</div><input class="inp" id="quick-amount" aria-label="Betrag in Euro" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00"/></div></div>
+      <div id="quick-category-area"><div class="field"><div class="lbl">Kategorie</div><div class="sw"><select class="sel" id="quick-cat" aria-label="Kategorie" onchange="ManagerUiState.setExpenseCategory(this.value)"><option value="">Bitte auswählen</option>${variableCategoryOptionsForManager(managerState.expenseCategoryId)}</select></div></div>
+      <div class="category-tools"><button class="btn btn-ghost" type="button" onclick="openVariableCategoryManager()">Kategorien verwalten</button></div></div>
+      <div class="field"><div class="lbl">Bezeichnung</div><input class="inp" id="quick-name" aria-label="Bezeichnung" maxlength="120" placeholder="z. B. REWE oder Freizeitpark"/></div>
+      <p class="field-hint" id="quick-direction-hint">Zahlungseingänge werden ausschließlich im ausgewählten Monat dem Hauptkonto gutgeschrieben.</p>
+      <div class="dialog-actions"><button class="btn btn-cancel" onclick="clearExpenseForm()">Abbrechen</button><button class="btn btn-green" onclick="saveStructuredBooking()">Speichern</button></div>
     </div></div>
-    <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title">Gespeicherte Ausgaben</div><span class="muted">${MF[mo]} ${y}</span></div><div class="manager-groups">${groups||'<div class="manager-empty">Noch keine Ausgaben in diesem Monat.</div>'}</div></div></div>
+    <div class="grid-secondary"><div class="card"><div class="list-head"><div class="card-title">Gespeicherte Buchungen</div><span class="muted">${MF[mo]} ${y}</span></div><div class="manager-groups">${groups||'<div class="manager-empty">Noch keine Buchungen in diesem Monat.</div>'}</div></div></div>
     </div>`;
 }
 
