@@ -83,3 +83,7 @@ Ein Zahlungseingang erhöht ausschließlich im angegebenen Monat die Einnahmen, 
 Backup-Version 13 sichert die Buchungsart und die bestätigte Kreditart. Replace und Merge normalisieren Buchungen und Kredite über State-Schema 12. Die geänderten Produktivdateien sind Bestandteil der versionierten PWA-App-Shell `hp-v34`; es wurden keine neuen App-Shell-Dateien eingeführt.
 
 Vor dem Update sollte ein JSON-Backup des bisherigen Zustands erstellt werden. Für einen Rollback auf eine ältere Laufzeit ist dieses Vorab-Backup zu verwenden: Eine Backup-Datei der Version 13 mit Zahlungseingängen oder migrierter Kreditart darf nicht in einer älteren Laufzeit wiederhergestellt werden, da diese Zahlungseingänge als Ausgaben beziehungsweise den Rahmenkredit erneut als Ratenkredit interpretiert.
+
+## Mobile App-Shell und Navigation
+
+Header und Navigations-Pill sind direkte Kinder von `body` und über `position: fixed` am Viewport verankert. Die Root-Elemente verwenden `overflow-x: clip`, damit insbesondere WebKit/iOS keinen zusätzlichen Scroll-Container erzeugt, der fixierte Shell-Elemente in den Dokumentfluss verschiebt. Der dekorative Body-Hintergrund besitzt keine feste Hintergrundebene und der Body keinen eigenen Positionierungskontext. Safe-Area-Abstand und Inhaltsreserve bleiben über `--sab`, `--nav-gap` und `--nav-reserve` definiert. Die geänderte App-Shell wird mit PWA-Cache `hp-v35` ausgeliefert.
