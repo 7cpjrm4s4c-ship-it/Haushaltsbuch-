@@ -50,9 +50,9 @@ function revolvingMonth(k,openingBalance,year,month,movements=[]){
     cursor=date;
   }
   interest+=balance*annualRate*creditDayFraction(cursor,end,convention);
-  const roundedInterest=creditRound(interest),configuredPrincipal=Math.max(0,Number(k.m)||0),scheduledPrincipal=Math.min(balance,configuredPrincipal),scheduledPayment=roundedInterest+scheduledPrincipal;
+  const roundedInterest=creditRound(interest),balanceBeforeScheduledPayment=creditRound(balance),configuredPrincipal=Math.max(0,Number(k.m)||0),scheduledPrincipal=Math.min(balance,configuredPrincipal),scheduledPayment=roundedInterest+scheduledPrincipal;
   balance=Math.max(0,balance-scheduledPrincipal);
-  return {openingBalance:creditRound(openingBalance),interest:roundedInterest,drawdowns:creditRound(drawdowns),repayments:creditRound(repayments),scheduledPayment:creditRound(scheduledPayment),scheduledPrincipal:creditRound(scheduledPrincipal),closingBalance:creditRound(balance),available:creditRound(Math.max(0,limit-balance)),limitExceeded,overpayment};
+  return {openingBalance:creditRound(openingBalance),interest:roundedInterest,drawdowns:creditRound(drawdowns),repayments:creditRound(repayments),scheduledPayment:creditRound(scheduledPayment),scheduledPrincipal:creditRound(scheduledPrincipal),balanceBeforeScheduledPayment,closingBalance:creditRound(balance),available:creditRound(Math.max(0,limit-balanceBeforeScheduledPayment)),availableAfterPayment:creditRound(Math.max(0,limit-balance)),limitExceeded,overpayment};
 }
 function creditBalanceAt(k,year,month,movements=[]){
   if(creditType(k)==='revolving'){
@@ -67,6 +67,12 @@ function creditBalanceAt(k,year,month,movements=[]){
   if(difference>0){for(let i=0;i<difference&&balance>0.005;i++){const index=reference+i,y=Math.floor(index/12),m=index-y*12;balance=installmentMonth(k,balance,y,m,movements).closingBalance;}}
   else if(difference<0){for(let i=0;i<Math.abs(difference);i++){balance=monthlyRate>0?(balance+payment)/(1+monthlyRate):balance+payment;balance=Math.min(creditStartAmount(k)||balance,balance);}}
   return creditRound(balance);
+}
+function revolvingPaymentDueAt(k,year,month,movements=[]){
+  const target=creditMonthNumber(year,month),reference=creditMonthNumber(creditReferenceYear(k),creditReferenceMonth(k)),date=`${Number(year)}-${String(Number(month)+1).padStart(2,'0')}-01`;
+  if(creditType(k)!=='revolving'||target<=reference)return {amount:0,principal:0,interest:0,date,year:Number(year),month:Number(month)};
+  const previous=target-1,previousYear=Math.floor(previous/12),previousMonth=previous-previousYear*12,opening=creditBalanceAt(k,previousYear,previousMonth,movements),result=revolvingMonth(k,opening,previousYear,previousMonth,movements);
+  return {amount:result.scheduledPayment,principal:result.scheduledPrincipal,interest:result.interest,date,year:Number(year),month:Number(month),sourceYear:previousYear,sourceMonth:previousMonth};
 }
 function creditInterestAt(k,year,month,movements=[]){const balance=creditBalanceAt(k,year,month,movements);return creditType(k)==='revolving'?revolvingMonth(k,balance,year,month,movements).interest:creditRound(balance*(Math.max(0,Number(k.z||0))/1200));}
 function creditPrincipalAt(k,year,month,movements=[]){if(creditType(k)==='revolving')return revolvingMonth(k,creditBalanceAt(k,year,month,movements),year,month,movements).scheduledPrincipal;const balance=creditBalanceAt(k,year,month,movements);if(balance<=0)return 0;return creditRound(Math.max(0,Math.min(balance,Number(k.m||0)-creditInterestAt(k,year,month,movements))));}

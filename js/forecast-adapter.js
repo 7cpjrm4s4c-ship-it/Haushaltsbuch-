@@ -5,6 +5,7 @@ function forecastCreditSchedule(startYear,startMonth,endYear,endMonth=11,eventsO
   const events=Array.isArray(eventsOverride)?eventsOverride:(S.financialEvents||[]);
   const movements=Array.isArray(S.creditMovements)?S.creditMovements:[];
   const balances=new Map((S.kredite||[]).map(credit=>[credit.id,Math.max(0,Number(creditBalanceAt(credit,startYear,startMonth,movements))||0)]));
+  const pendingPayments=new Map((S.kredite||[]).filter(credit=>creditType(credit)==='revolving').map(credit=>[credit.id,revolvingPaymentDueAt(credit,startYear,startMonth,movements)]));
   const rows=new Map();
   const start=ForecastEngine.monthIndex(startYear,startMonth),end=ForecastEngine.monthIndex(endYear,endMonth);
   for(let index=start;index<=end;index++){
@@ -14,7 +15,7 @@ function forecastCreditSchedule(startYear,startMonth,endYear,endMonth=11,eventsO
       let balance=Math.max(0,Number(balances.get(credit.id))||0);
       openingDebt+=balance;
       if(creditType(credit)==='revolving'){
-        const result=revolvingMonth(credit,balance,year,month,movements);creditPayments+=result.repayments+result.scheduledPayment;creditDrawdowns+=result.drawdowns;creditInterest+=result.interest;balance=result.closingBalance;debt+=balance;balances.set(credit.id,balance);continue;
+        const due=pendingPayments.get(credit.id)||{amount:0,interest:0},result=revolvingMonth(credit,balance,year,month,movements);creditPayments+=result.repayments+due.amount;creditDrawdowns+=result.drawdowns;creditInterest+=due.interest;debt+=result.balanceBeforeScheduledPayment;balance=result.closingBalance;balances.set(credit.id,balance);pendingPayments.set(credit.id,{amount:result.scheduledPayment,principal:result.scheduledPrincipal,interest:result.interest});continue;
       }
       if(balance<=0.005){balances.set(credit.id,0);continue;}
       const regular=installmentMonth(credit,balance,year,month,movements);
