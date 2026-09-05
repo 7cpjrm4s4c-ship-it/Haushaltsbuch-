@@ -31,10 +31,20 @@ assert.equal(context.creditBalanceAt(installment,2026,1,special),900);
 
 vm.runInContext(await read('js/state-schema.js'),context,{filename:'js/state-schema.js'});
 const normalized=context.StateSchema.normalize({years:[2026],kredite:[frame,{id:'legacy',n:'Alt',r:800,g:200,m:100,z:2,balanceYear:2026,balanceMonth:0}],creditMovements:[...movements,{id:'orphan',loanId:'missing',type:'drawdown',amount:1,date:'2026-01-01'}]},{defaultYears:()=>[2026]});
-assert.equal(normalized.schemaVersion,11);assert.equal(normalized.kredite[1].type,'installment');assert.equal(normalized.kredite[1].s,1000);assert.equal(normalized.creditMovements.length,2);
+assert.equal(normalized.schemaVersion,12);assert.equal(normalized.kredite[1].type,'installment');assert.equal(normalized.kredite[1].s,1000);assert.equal(normalized.creditMovements.length,2);
 const migratedFrame=context.StateSchema.normalize({schemaVersion:10,kredite:[frameWithRate]},{defaultYears:()=>[2026]}).kredite[0];
 assert.equal(migratedFrame.m,50,'Der gespeicherte Zahlenwert bestehender Rahmenkredite muss bei der Migration erhalten bleiben');
 assert.equal(migratedFrame.paymentMode,'principalPlusInterest','Die neue Tilgungssemantik muss im normalisierten Zustand eindeutig sein');
+const legacyNamedState=context.StateSchema.normalize({schemaVersion:11,kredite:[{id:'legacy-frame',type:'installment',n:' Rahmenkredit ',s:25000,r:24489.54,m:200,z:7.98,balanceYear:2026,balanceMonth:9}],creditMovements:[{id:'legacy-special',loanId:'legacy-frame',type:'specialRepayment',amount:100,date:'2026-10-15'}]},{defaultYears:()=>[2026]});
+const legacyNamedFrame=legacyNamedState.kredite[0];
+assert.equal(legacyNamedFrame.type,'revolving','Der bestehende, eindeutig benannte Rahmenkredit muss einmalig umklassifiziert werden');
+assert.equal(legacyNamedFrame.limit,25000,'Der bisherige Startbetrag muss zum Kreditrahmen werden');
+assert.equal(legacyNamedFrame.r,24489.54);assert.equal(legacyNamedFrame.m,200);assert.equal(legacyNamedFrame.z,7.98);assert.equal(legacyNamedFrame.paymentMode,'principalPlusInterest');assert.equal(legacyNamedFrame.loanTypeConfirmed,true);
+assert.equal(legacyNamedState.creditMovements[0].type,'repayment','Bestehende Sondertilgungen müssen verlustfrei als Rahmenkredit-Rückzahlungen erhalten bleiben');
+const migratedOctober=context.revolvingMonth(legacyNamedFrame,legacyNamedFrame.r,2026,9,legacyNamedState.creditMovements);assert.equal(migratedOctober.scheduledPrincipal,200,'Auch der migrierte Altbestand muss die vollen 200 Euro tilgen');assert.ok(migratedOctober.scheduledPayment>200,'Die Zinsen müssen beim migrierten Altbestand zusätzlich zur Tilgung anfallen');
+const legacyNamedAgain=context.StateSchema.normalize(legacyNamedState,{defaultYears:()=>[2026]});assert.equal(JSON.stringify(legacyNamedAgain),JSON.stringify(legacyNamedState),'Die Kreditartmigration muss idempotent sein');
+const confirmedInstallment=context.StateSchema.normalize({schemaVersion:12,kredite:[{id:'confirmed',type:'installment',loanTypeConfirmed:true,n:'Rahmenkredit',s:1000,r:800,m:100,z:2,balanceYear:2026,balanceMonth:0}]},{defaultYears:()=>[2026]}).kredite[0];
+assert.equal(confirmedInstallment.type,'installment','Eine ausdrücklich bestätigte Kreditart darf nicht anhand des Namens überschrieben werden');
 
 let persists=0,id=0;context.S={kredite:[frame,installment],creditMovements:[]};context.persist=()=>persists++;context.uid=()=>`m${++id}`;
 vm.runInContext(await read('js/credit-movement-store.js'),context,{filename:'js/credit-movement-store.js'});

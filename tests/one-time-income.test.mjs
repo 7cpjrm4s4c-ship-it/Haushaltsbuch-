@@ -20,7 +20,7 @@ async function run(target,path){vm.runInContext(await read(path),target,{filenam
     {id:'legacy',catId:'food',bezeichnung:'Lebensmittel',betrag:'80',year:2026,month:0,ts:1},
     {id:'income',catId:'food',direction:'income',bezeichnung:'Person X',betrag:'250',year:2026,month:1,ts:2,futureField:'preserve'}
   ]},{defaultYears:()=>[2026]});
-  assert.equal(normalized.schemaVersion,11);
+  assert.equal(normalized.schemaVersion,12);
   assert.equal(normalized.buchungen[0].direction,'expense','Alte Buchungen müssen Ausgaben bleiben');
   assert.equal(normalized.buchungen[1].direction,'income');
   assert.equal(normalized.buchungen[1].catId,'','Zahlungseingänge dürfen keine Ausgabenkategorie vortäuschen');
@@ -88,7 +88,7 @@ async function run(target,path){vm.runInContext(await read(path),target,{filenam
   const S={data:{},cats:[],kredite:[],creditMovements:[],years:[2026],buchungen:[{id:'income',direction:'income',catId:'',bezeichnung:'Person X',betrag:250,year:2026,month:0,ts:1}],budgets:{},recurringRules:[],annualAdjustments:[],percentageAdjustments:[],amountAdjustments:[],oneTimeEntries:[],accountBalances:{},savingsAccounts:[],savingsTransfers:[],forecastAssets:{},forecastAssumptions:{},forecastAccounts:[],financialEvents:[],forecastScenarios:[],forecastGoals:[]};
   const context=makeContext({S,localStorage,defaultYears:()=>[2026],persist:()=>persists++,LoanCategoryStore:{syncAll(){}},DataManagementStore:{sortCategoriesInPlace(){}}});
   await run(context,'js/state-schema.js');await run(context,'js/backup-store.js');
-  const snapshot=context.BackupStore.snapshot();assert.equal(snapshot.version,12);assert.equal(snapshot.schemaVersion,11);
+  const snapshot=context.BackupStore.snapshot();assert.equal(snapshot.version,13);assert.equal(snapshot.schemaVersion,12);
   S.buchungen=[];context.BackupStore.apply(snapshot,'replace');assert.equal(S.buchungen[0].direction,'income');assert.equal(S.buchungen[0].betrag,250);
   context.BackupStore.apply({appData:{data:{},cats:[],kredite:[],years:[2026],buchungen:[{id:'legacy',catId:'food',bezeichnung:'Alt',betrag:40,year:2026,month:0}]}},'merge');
   assert.equal(S.buchungen.find(item=>item.id==='legacy').direction,'expense');assert.equal(persists,2);
